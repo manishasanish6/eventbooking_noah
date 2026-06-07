@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Noah Events – Celebrity Events & Ticketing</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@1,400&display=swap" rel="stylesheet">
+<style>
+  @font-face {
+    font-family: 'Nasalization Heavy';
+    src: url('fonts/Nasalization-Heavy.ttf') format('truetype');
+    font-display: swap;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --logo-purple: #8b44ff;
+    --logo-red: #ff3e37;
+    --logo-red-dark: #c61b21;
+    --black: #0A0A0A;
+    --dark: #111111;
+    --dark2: #1A1A1A;
+    --dark3: #222222;
+    --white: #F5F1EB;
+    --gray: #aaa;
+    --gold: #C9A84C;
+    --logo-bg-purple: rgba(139,68,255,0.16);
+    --logo-bg-red: rgba(255,62,55,0.14);
+    --logo-gradient: linear-gradient(135deg, var(--logo-purple), var(--logo-red));
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Montserrat', sans-serif;
+    background:
+      radial-gradient(circle at top left, rgba(139,68,255,0.16), transparent 24%),
+      radial-gradient(circle at bottom right, rgba(255,62,55,0.12), transparent 28%),
+      var(--black);
+    color: var(--white);
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; width: 100%; z-index: 100;
+    padding: 1.2rem 4rem;
+    display: flex; justify-content: space-between; align-items: center;
+    background: linear-gradient(to bottom, rgba(10,10,10,0.95), transparent);
+    backdrop-filter: blur(4px);
+  }
+
+  .nav-logo img {
+    height: 90px; width: auto;
+  }
+
+  .nav-links {
+    display: flex; gap: 2.5rem; list-style: none;
+  }
+
+  .nav-links a {
+    text-decoration: none; color: var(--white);
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--logo-purple); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    background: var(--black);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    padding: 10rem 4rem 4rem;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 60%, var(--logo-bg-red), transparent),
+      radial-gradient(ellipse 40% 60% at 80% 30%, var(--logo-bg-purple), transparent);
+  }
+
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(139,68,255,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,62,55,0.06) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .hero-content {
+    position: relative; z-index: 2;
+    max-width: 900px; text-align: center;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.72rem; letter-spacing: 0.35em; text-transform: uppercase;
+    color: var(--logo-purple); font-weight: 600; margin-bottom: 1.5rem;
+    display: flex; align-items: center; justify-content: center; gap: 1rem;
+  }
+
+  .hero-eyebrow::before,
+  .hero-eyebrow::after {
+    content: ''; display: block; height: 1px; width: 60px;
+    background: var(--logo-gradient);
+  }
+
+  .hero-title {
+    font-family: 'Nasalization Heavy', 'Bebas Neue', sans-serif;
+    font-size: clamp(5rem, 12vw, 9rem);
+    line-height: 0.9;
+    letter-spacing: 0.04em;
+    color: var(--white);
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-title span {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--logo-red);
+    font-size: 0.45em;
+    display: block;
+    margin-top: -0.2em;
+  }
+
+  .hero-sub {
+    font-size: 1.05rem; font-weight: 300; letter-spacing: 0.05em;
+    color: rgba(245,241,235,0.65);
+    max-width: 560px; margin: 0 auto 2.5rem;
+    line-height: 1.8;
+  }
+
+  .hero-btns {
+    display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    background: var(--logo-gradient); color: #fff;
+    padding: 1rem 2.5rem; border: none; cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.78rem; font-weight: 700; letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: background 0.2s, transform 0.15s;
+    text-decoration: none; display: inline-block;
+  }
+
+  .btn-primary:hover { background: linear-gradient(135deg, #7a28df, #c10f23); transform: translateY(-1px); }
+
+  .btn-outline {
+    background: transparent; color: var(--white);
+    padding: 1rem 2.5rem;
+    border: 1px solid rgba(245,241,235,0.3); cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.78rem; font-weight: 600; letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: border-color 0.2s, color 0.2s;
+    text-decoration: none; display: inline-block;
+  }
+
+  .btn-outline:hover { border-color: var(--logo-purple); color: var(--logo-purple); }
+
+  .hero-scroll {
+    position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    font-size: 0.65rem; letter-spacing: 0.25em; color: var(--gray);
+    text-transform: uppercase;
+  }
+
+  .hero-scroll-line {
+    width: 1px; height: 60px;
+    background: linear-gradient(to bottom, var(--logo-red), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  /* STATS BAR */
+  .stats-bar {
+    background: var(--dark2);
+    border-top: 1px solid rgba(255,62,55,0.18);
+    border-bottom: 1px solid rgba(255,62,55,0.18);
+    padding: 2rem 4rem;
+    display: flex; justify-content: center; align-items: center;
+    flex-wrap: wrap; gap: 2rem;
+    max-width: 1120px; margin: 0 auto;
+  }
+
+  .stat-item {
+    text-align: center;
+    flex: 1 1 200px;
+    min-width: 180px;
+  }
+
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.8rem; color: var(--logo-purple);
+    line-height: 1; display: block;
+  }
+
+  .stat-label {
+    font-size: 0.68rem; letter-spacing: 0.2em; color: var(--gray);
+    text-transform: uppercase; margin-top: 0.3rem;
+  }
+
+  /* SECTION SHARED */
+  section { padding: 6rem 4rem; }
+
+  .section-tag {
+    font-size: 0.68rem; letter-spacing: 0.3em; color: var(--logo-purple);
+    text-transform: uppercase; font-weight: 600;
+    margin-bottom: 1rem; display: block;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    line-height: 1; margin-bottom: 1rem;
+    color: var(--white);
+  }
+
+  .section-desc {
+    font-size: 0.95rem; color: rgba(245,241,235,0.6);
+    line-height: 1.8; max-width: 540px; font-weight: 300;
+  }
+
+  /* ABOUT */
+  #about {
+    background: var(--dark);
+    display: grid; grid-template-columns: 1fr; gap: 5rem; align-items: center;
+  }
+
+  .about-visual {
+    position: relative;
+  }
+
+  .about-img-frame {
+    width: 100%; aspect-ratio: 4/5;
+    background: var(--dark3);
+    border: 1px solid rgba(255,78,54,0.2);
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .about-img-frame::before {
+    content: '';
+    position: absolute; top: -2px; left: -2px;
+    width: 60px; height: 60px;
+    border-top: 3px solid var(--red);
+    border-left: 3px solid var(--red);
+  }
+
+  .about-img-frame::after {
+    content: '';
+    position: absolute; bottom: -2px; right: -2px;
+    width: 60px; height: 60px;
+    border-bottom: 3px solid var(--red);
+    border-right: 3px solid var(--red);
+  }
+
+  .about-icon {
+    font-size: 5rem; color: rgba(255,78,54,0.15);
+  }
+
+  .about-badge {
+    position: absolute; bottom: -1.5rem; right: -1.5rem;
+    background: var(--red); padding: 1.5rem;
+    text-align: center;
+  }
+
+  .about-badge-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem; line-height: 1; display: block; color: #fff;
+  }
+
+  .about-badge-text {
+    font-size: 0.65rem; letter-spacing: 0.15em;
+    text-transform: uppercase; color: rgba(255,255,255,0.8);
+  }
+
+  .about-quote {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 1.2rem; color: rgba(245,241,235,0.5);
+    border-left: 3px solid var(--red);
+    padding-left: 1.2rem; margin: 2rem 0;
+    line-height: 1.7;
+  }
+
+  .about-features {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem;
+  }
+
+  .about-feat {
+    display: flex; align-items: flex-start; gap: 0.7rem;
+  }
+
+  .feat-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--red); flex-shrink: 0; margin-top: 0.45rem;
+  }
+
+  .feat-text {
+    font-size: 0.82rem; color: rgba(245,241,235,0.7);
+    letter-spacing: 0.05em;
+  }
+
+  /* EVENTS */
+  #events { background: var(--black); }
+
+  .events-header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 3rem;
+  }
+
+  .events-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5px;
+  }
+
+  .event-card {
+    background: var(--dark2);
+    border: 1px solid rgba(255,78,54,0.1);
+    overflow: hidden; position: relative;
+    transition: border-color 0.3s, transform 0.3s;
+    cursor: pointer;
+  }
+
+  .event-card:hover {
+    border-color: rgba(255,78,54,0.5);
+    transform: translateY(-4px);
+  }
+
+  .event-card-img {
+    width: 100%; aspect-ratio: 16/10;
+    background: var(--dark3);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+
+  .event-card-img::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, transparent 40%, rgba(10,10,10,0.9));
+  }
+
+  .event-img-icon {
+    font-size: 3rem; color: rgba(255,78,54,0.2);
+  }
+
+  .event-badge {
+    position: absolute; top: 1rem; left: 1rem;
+    background: var(--red); color: #fff;
+    font-size: 0.6rem; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; padding: 0.3rem 0.7rem; z-index: 2;
+  }
+
+  .event-date-badge {
+    position: absolute; top: 1rem; right: 1rem;
+    background: rgba(10,10,10,0.85);
+    border: 1px solid rgba(255,78,54,0.3);
+    color: var(--white); text-align: center;
+    padding: 0.5rem 0.7rem; z-index: 2;
+  }
+
+  .event-date-day {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem; line-height: 1; display: block; color: var(--red);
+  }
+
+  .event-date-month {
+    font-size: 0.6rem; letter-spacing: 0.2em; color: var(--gray);
+    text-transform: uppercase;
+  }
+
+  .event-info { padding: 1.5rem; }
+
+  .event-cat {
+    font-size: 0.62rem; letter-spacing: 0.2em; color: var(--red);
+    text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;
+  }
+
+  .event-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem; letter-spacing: 0.05em; margin-bottom: 0.5rem;
+    color: var(--white);
+  }
+
+  .event-meta {
+    font-size: 0.75rem; color: rgba(245,241,235,0.5);
+    display: flex; gap: 1rem; align-items: center;
+    margin-bottom: 1.2rem;
+  }
+
+  .event-meta span { display: flex; align-items: center; gap: 0.3rem; }
+
+  .event-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid rgba(245,241,235,0.08);
+    padding-top: 1rem;
+  }
+
+  .event-price {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem; color: var(--white);
+  }
+
+  .event-price span { font-size: 0.75rem; color: var(--gray); font-family: 'Montserrat', sans-serif; }
+
+  .btn-ticket {
+    background: transparent; color: var(--red);
+    border: 1px solid var(--red); padding: 0.6rem 1.3rem;
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; cursor: pointer; font-family: 'Montserrat', sans-serif;
+    transition: background 0.3s, color 0.2s, box-shadow 0.3s, transform 0.2s;
+    box-shadow: 0 0 8px rgba(255,62,55,0.2);
+  }
+
+  .btn-ticket:hover {
+    background: linear-gradient(135deg, #7a28df, #c10f23);
+    color: #fff;
+    box-shadow: 0 0 18px rgba(255,62,55,0.4);
+    transform: translateY(-1px);
+  }
+
+  /* ADMIN LOGIN MODAL */
+  .admin-btn {
+    background: transparent; color: var(--gray);
+    border: 1px solid rgba(245,241,235,0.15);
+    padding: 0.6rem 1rem; cursor: pointer;
+    font-size: 1rem; transition: border-color 0.2s, color 0.2s;
+    display: flex; align-items: center; gap: 6px;
+    margin-left: 0.5rem;
+    text-decoration: none;
+  }
+
+  .admin-btn:hover { border-color: var(--logo-purple); color: var(--logo-purple); }
+
+  .admin-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+  .admin-link {
+    background: transparent; color: var(--gray);
+    border: 1px solid rgba(245,241,235,0.15);
+    padding: 0.6rem 1rem; cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em;
+    text-transform: uppercase;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+    display: flex; align-items: center; gap: 6px;
+    margin-left: 0.5rem;
+    text-decoration: none; white-space: nowrap;
+  }
+  .admin-link:hover { border-color: var(--logo-purple); color: var(--logo-purple); background: rgba(139,68,255,0.06); }
+  .admin-link svg { width: 16px; height: 16px; fill: currentColor; }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000; justify-content: center; align-items: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.active { display: flex; }
+
+  .modal-box {
+    background: var(--dark2);
+    border: 1px solid rgba(255,78,54,0.2);
+    padding: 2.5rem; width: 100%; max-width: 380px;
+    position: relative;
+  }
+
+  .modal-close {
+    position: absolute; top: 0.8rem; right: 1rem;
+    background: none; border: none; color: var(--gray);
+    font-size: 1.5rem; cursor: pointer; line-height: 1;
+    transition: color 0.2s;
+  }
+
+  .modal-close:hover { color: var(--white); }
+
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem; letter-spacing: 0.05em;
+    color: var(--white); margin-bottom: 0.3rem;
+  }
+
+  .modal-sub {
+    font-size: 0.75rem; color: var(--gray);
+    margin-bottom: 1.5rem; letter-spacing: 0.05em;
+  }
+
+  .modal-box .form-group { margin-bottom: 1rem; }
+
+  .modal-box .form-input { width: 100%; }
+
+  .modal-box .btn-primary { width: 100%; text-align: center; margin-top: 0.5rem; }
+
+  .modal-error {
+    color: var(--logo-red); font-size: 0.78rem;
+    margin-top: 0.8rem; display: none;
+  }
+
+  .modal-error.show { display: block; }
+
+  .modal-step { display: none; }
+  .modal-step.active { display: block; }
+
+  .modal-qr {
+    text-align: center; margin: 1rem 0;
+  }
+
+  .modal-qr img {
+    width: 180px; height: 180px;
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+  }
+
+  .modal-qr-label {
+    font-size: 0.72rem; color: var(--gray);
+    margin-top: 0.5rem; letter-spacing: 0.05em;
+  }
+
+  .modal-loading {
+    text-align: center; padding: 2rem 0;
+    color: var(--gray); font-size: 0.85rem;
+  }
+
+  .modal-code-input {
+    letter-spacing: 0.5em; font-size: 1.5rem !important;
+    text-align: center; font-weight: 600;
+  }
+
+  .modal-back-btn {
+    background: none; border: none; color: var(--gray);
+    font-size: 0.78rem; cursor: pointer; padding: 0;
+    margin-bottom: 1rem; display: inline-flex; align-items: center; gap: 4px;
+  }
+
+  .modal-back-btn:hover { color: var(--white); }
+
+  /* CELEBRITIES */
+  #celebrities {
+    background: var(--dark);
+    text-align: center;
+  }
+
+  .celeb-intro { margin-bottom: 3rem; }
+
+  .celebs-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .celeb-card {
+    position: relative; cursor: pointer; overflow: hidden;
+    border: 1px solid rgba(255,78,54,0.1);
+    transition: border-color 0.3s;
+    aspect-ratio: 3/4;
+    background: var(--dark2);
+    display: flex; align-items: flex-end;
+  }
+
+  .celeb-card:hover { border-color: var(--logo-purple); }
+
+  .celeb-card:hover .celeb-overlay { opacity: 1; }
+
+  .celeb-avatar {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .celeb-avatar-icon {
+    font-size: 4rem; color: rgba(255,78,54,0.15);
+  }
+
+  .celeb-overlay {
+    position: absolute; inset: 0;
+    background: rgba(255,78,54,0.08);
+    opacity: 0; transition: opacity 0.3s;
+  }
+
+  .celeb-info {
+    position: relative; z-index: 2;
+    width: 100%; padding: 1rem 0.8rem 0.8rem;
+    background: linear-gradient(to top, rgba(10,10,10,0.95), transparent);
+  }
+
+  .celeb-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem; letter-spacing: 0.05em; display: block;
+    color: var(--white);
+  }
+
+  .celeb-genre {
+    font-size: 0.6rem; color: var(--red); letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* HOW IT WORKS */
+  #how {
+    background: var(--black);
+    text-align: center;
+  }
+
+  .steps-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+    margin-top: 4rem; position: relative;
+  }
+
+  .steps-grid::before {
+    content: '';
+    position: absolute; top: 40px; left: 12.5%; right: 12.5%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--red), var(--red), transparent);
+    opacity: 0.3;
+  }
+
+  .step {
+    padding: 2rem 1.5rem;
+    position: relative;
+  }
+
+  .step-num-wrap {
+    width: 80px; height: 80px; margin: 0 auto 1.5rem;
+    border: 1px solid rgba(255,78,54,0.3);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; background: var(--dark2);
+    transition: border-color 0.3s;
+  }
+
+  .step:hover .step-num-wrap { border-color: var(--logo-purple); }
+
+  .step-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem; color: var(--red);
+  }
+
+  .step-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem; letter-spacing: 0.05em; margin-bottom: 0.7rem;
+    color: var(--white);
+  }
+
+  .step-desc {
+    font-size: 0.8rem; color: rgba(245,241,235,0.5);
+    line-height: 1.7; font-weight: 300;
+  }
+
+  /* TESTIMONIALS */
+  #testimonials { background: var(--dark); padding: 6rem 4rem; }
+
+  .testimonials-header { margin-bottom: 3rem; }
+
+  .testimonials-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: rgba(255,78,54,0.08);
+  }
+
+  .testimonial {
+    background: var(--dark2); padding: 2.5rem;
+    position: relative;
+  }
+
+  .testimonial::before {
+    content: '"';
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 8rem; color: var(--red); opacity: 0.08;
+    position: absolute; top: -1rem; left: 1rem;
+    line-height: 1;
+  }
+
+  .testimonial-text {
+    font-size: 0.9rem; line-height: 1.8;
+    color: rgba(245,241,235,0.7); font-weight: 300;
+    margin-bottom: 1.5rem; font-style: italic;
+  }
+
+  .testimonial-author {
+    display: flex; align-items: center; gap: 1rem;
+  }
+
+  .author-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--dark3);
+    border: 2px solid rgba(255,78,54,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--red);
+  }
+
+  .author-name {
+    font-size: 0.82rem; font-weight: 700; color: var(--white);
+    display: block; margin-bottom: 0.2rem;
+  }
+
+  .author-role {
+    font-size: 0.68rem; color: var(--gray); letter-spacing: 0.1em;
+  }
+
+  .star-row { color: var(--gold); font-size: 0.75rem; margin-bottom: 1rem; }
+
+  /* CONTACT */
+  #contact {
+    background: var(--dark); padding: 6rem 4rem;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 5rem;
+    align-items: start;
+  }
+
+  .contact-form { display: flex; flex-direction: column; gap: 1rem; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+
+  .form-label {
+    font-size: 0.68rem; letter-spacing: 0.15em; color: var(--gray);
+    text-transform: uppercase; font-weight: 600;
+  }
+
+  .form-input, .form-select, .form-textarea {
+    background: var(--dark3); border: 1px solid rgba(245,241,235,0.1);
+    color: var(--white); padding: 0.85rem 1rem;
+    font-family: 'Montserrat', sans-serif; font-size: 0.85rem;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: rgba(255,78,54,0.5);
+  }
+
+  .form-select option { background: var(--dark3); }
+
+  .form-textarea { resize: vertical; min-height: 140px; }
+
+  .contact-info { padding-top: 1rem; }
+
+  .contact-detail {
+    display: flex; align-items: flex-start; gap: 1.2rem;
+    margin-bottom: 2rem;
+  }
+
+  .contact-icon {
+    width: 44px; height: 44px; flex-shrink: 0;
+    border: 1px solid rgba(255,78,54,0.3);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--red); font-size: 1.1rem;
+  }
+
+  .contact-detail-label {
+    font-size: 0.65rem; letter-spacing: 0.2em; color: var(--gray);
+    text-transform: uppercase; margin-bottom: 0.3rem;
+  }
+
+  .contact-detail-value {
+    font-size: 0.9rem; color: var(--white); font-weight: 300;
+  }
+
+  .social-row {
+    display: flex; gap: 0.8rem; margin-top: 2.5rem;
+  }
+
+  .social-btn {
+    width: 40px; height: 40px;
+    border: 1px solid rgba(245,241,235,0.15);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--gray); font-size: 1rem; cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    text-decoration: none;
+  }
+
+  .social-btn:hover { border-color: var(--logo-purple); color: var(--logo-purple); }
+
+  /* FOOTER */
+  footer {
+    background: var(--black);
+    border-top: 1px solid rgba(255,78,54,0.15);
+    padding: 2.5rem 4rem;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 1.5rem;
+  }
+
+  .footer-logo img { height: 38px; width: auto; }
+
+  .footer-copy {
+    font-size: 0.72rem; color: var(--gray); letter-spacing: 0.05em;
+  }
+
+  .footer-links {
+    display: flex; gap: 2rem; list-style: none;
+  }
+
+  .footer-links a {
+    font-size: 0.72rem; color: var(--gray); text-decoration: none;
+    letter-spacing: 0.1em; transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--logo-purple); }
+
+  /* MOBILE */
+  @media (max-width: 900px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    section { padding: 4rem 1.5rem; }
+    #about { grid-template-columns: 1fr; gap: 3rem; }
+    .events-grid { grid-template-columns: 1fr; }
+    .celebs-grid { grid-template-columns: repeat(2, 1fr); }
+    .steps-grid { grid-template-columns: 1fr 1fr; }
+    .steps-grid::before { display: none; }
+    .testimonials-grid { grid-template-columns: 1fr; }
+    #contact { grid-template-columns: 1fr; }
+    .stats-bar { padding: 2rem 1.5rem; }
+    footer { padding: 2rem 1.5rem; flex-direction: column; text-align: center; }
+    .footer-links { justify-content: center; }
+    .hero { padding: 9rem 1.5rem 4rem; }
+    .events-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  }
+
+  /* ── BOOKING MODAL ── */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(4px)}
+  .overlay.open{opacity:1;pointer-events:all}
+  .bmodal{background:var(--dark2);border:1px solid rgba(255,78,54,0.2);width:92%;max-width:920px;max-height:92vh;overflow-y:auto;transform:translateY(20px);transition:transform .25s}
+  .overlay.open .bmodal{transform:translateY(0)}
+  .bm-header{padding:28px 32px 22px;border-bottom:1px solid rgba(255,78,54,0.15);display:flex;justify-content:space-between;align-items:flex-start;position:sticky;top:0;background:var(--dark2);z-index:2}
+  .bm-genre{font-size:0.68rem;font-weight:600;letter-spacing:0.3em;text-transform:uppercase;color:var(--logo-purple);margin-bottom:4px}
+  .bm-name{font-family:var(--font-d);font-size:40px;letter-spacing:2px;line-height:1;color:var(--white)}
+  .bm-sub{color:var(--gray);font-size:13px;margin-top:6px}
+  .close-x{background:none;border:none;color:var(--gray);width:34px;height:34px;cursor:pointer;font-size:1.5rem;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:color .2s}
+  .close-x:hover{color:var(--white)}
+  .bm-body{padding:28px 32px;display:grid;grid-template-columns:1fr 280px;gap:32px}
+  .seat-area h3{font-family:var(--font-d);font-size:18px;letter-spacing:2px;color:var(--gray);margin-bottom:12px}
+  .seat-legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:16px}
+  .sl-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gray)}
+  .sl-dot{width:12px;height:11px;flex-shrink:0}
+  .stage-bar{text-align:center;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gray);padding:8px;background:var(--dark3);border:1px solid rgba(255,78,54,0.1);margin-bottom:18px}
+  .pub-seat-grid{display:flex;flex-direction:column;gap:5px}
+  .pub-seat-row{display:flex;align-items:center;gap:3px}
+  .pub-rl{font-size:10px;color:var(--gray);width:18px;text-align:center;flex-shrink:0}
+  .pub-seat{width:26px;height:22px;cursor:pointer;border:none;transition:transform .1s,opacity .2s;position:relative}
+  .pub-seat:hover:not(.taken){transform:scale(1.15);z-index:2}
+  .pub-seat.taken{opacity:.25;cursor:not-allowed}
+  .pub-seat.chosen{outline:2px solid #fff;outline-offset:1px}
+
+  /* ── PUBLIC SEAT CANVAS ── */
+  .pub-canvas-wrap{background:var(--dark3);border:1px solid rgba(255,78,54,0.1);padding:12px}
+  .pub-canvas{position:relative;width:100%;aspect-ratio:16/9;background:#0a0a0a;border:1px solid rgba(245,241,235,0.06);overflow:hidden;min-height:200px}
+  .pub-canvas .pc-seat{position:absolute;width:24px;height:24px;border-radius:0;border:2px solid rgba(255,255,255,0.3);cursor:pointer;transform:translate(-50%,-50%);transition:opacity .2s,transform .1s;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:500;user-select:none}
+  .pub-canvas .pc-seat:hover:not(.taken):not(.held){transform:translate(-50%,-50%) scale(1.2);z-index:2}
+  .pub-canvas .pc-seat.taken{opacity:.2;cursor:not-allowed}
+  .pub-canvas .pc-seat.held{background:rgba(255,62,55,.25)!important;border-color:var(--logo-red)!important;cursor:not-allowed}
+  .pub-canvas .pc-seat.held::after{content:'🔒';position:absolute;font-size:10px;top:-9px;right:-9px}
+  .pub-canvas .pc-seat.chosen{outline:2px solid #fff;outline-offset:1px;z-index:3}
+
+  /* ── SUMMARY PANEL ── */
+  .sum-box{background:var(--dark3);border:1px solid rgba(255,78,54,0.1);padding:18px;margin-bottom:16px}
+  .sum-title{font-family:var(--font-d);font-size:14px;letter-spacing:2px;color:var(--gray);margin-bottom:12px}
+  .sum-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:var(--gray)}
+  .sum-row span:last-child{color:var(--white)}
+  .sum-row.total{border-top:1px solid rgba(255,78,54,0.15);margin-top:8px;padding-top:12px;color:var(--white);font-weight:500}
+  .sum-row.total span:last-child{font-family:var(--font-d);font-size:22px;color:var(--logo-red);letter-spacing:1px}
+  .seat-tags{display:flex;flex-wrap:wrap;gap:4px;min-height:22px;margin-top:4px}
+  .stag{background:rgba(139,68,255,.12);color:var(--logo-purple);font-size:10px;padding:2px 7px;border:1px solid rgba(139,68,255,.2)}
+  .book-now-btn{
+    width:100%;background:var(--logo-gradient);color:#fff;border:none;padding:15px;
+    font-family:var(--font-b);font-size:0.78rem;font-weight:700;letter-spacing:0.2em;
+    text-transform:uppercase;cursor:pointer;transition:background .2s,transform .1s;margin-bottom:10px;
+  }
+  .book-now-btn:hover{background:linear-gradient(135deg,#7a28df,#c10f23);transform:translateY(-1px)}
+  .book-now-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+  .secure-txt{font-size:10px;color:var(--gray);text-align:center;letter-spacing:.5px}
+
+  /* ── ADDON AREA ── */
+  .addon-area{margin-bottom:16px;border-top:1px solid rgba(255,78,54,0.12);padding-top:16px}
+  .addon-area h3{font-family:var(--font-d);font-size:18px;letter-spacing:2px;color:var(--gray);margin-bottom:12px}
+  .addon-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--dark3);border:1px solid rgba(255,78,54,0.08);margin-bottom:6px}
+  .addon-item input[type="checkbox"]{accent-color:var(--logo-purple);width:16px;height:16px;cursor:pointer;flex-shrink:0}
+  .addon-item label{flex:1;font-size:13px;color:var(--white);cursor:pointer}
+  .addon-item .addon-sub{font-size:11px;color:var(--gray);width:100%;margin-top:1px}
+  .addon-total{display:flex;justify-content:space-between;font-size:12px;color:var(--gray);padding:4px 12px;margin-top:4px}
+  .addon-total span:last-child{color:var(--white);font-weight:500}
+
+  /* ── TOAST ── */
+  .toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--dark2);color:var(--white);padding:12px 24px;border:1px solid rgba(255,78,54,0.2);font-weight:500;font-size:14px;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.error{background:var(--logo-red-dark);color:#fff}
+
+  @media(max-width:700px){
+    .bm-body{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <img src="logo.png" alt="Noah Events Logo" >
+
+  </div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#events">Events</a></li>
+    <li><a href="#celebrities">Artists</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;">
+    <a href="index.html" class="admin-link" id="adminLink">
+      <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+      Create Event
+    </a>
+    <button class="admin-link" id="logoutBtn" style="display:none" onclick="logout()">
+      <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+      Logout
+    </button>
+    <button class="admin-btn" id="adminBtn" title="Admin Login">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Where moments become memories</div>
+    <h1 class="hero-title">NOAH<br><span>EVENTS</span></h1>
+    <p class="hero-sub">We bring the world's biggest celebrations to your city. Unforgettable live experiences, seamless ticketing, flawless execution.</p>
+    <div class="hero-btns">
+      <a href="#events" class="btn-primary" >Browse Events</a>
+      <a href="#how" class="btn-outline">How It Works</a>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <div class="hero-scroll-line"></div>
+    Scroll
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <span class="stat-num">250+</span>
+    <span class="stat-label">Events Organized</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num">80+</span>
+    <span class="stat-label">Celebrity Appearances</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num">500K+</span>
+    <span class="stat-label">Happy Attendees</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num">100%</span>
+    <span class="stat-label">Satisfaction Rate</span>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-content">
+    <span class="section-tag">About Noah Events</span>
+    <h2 class="section-title">We Create Moments That Last a Lifetime</h2>
+    <blockquote class="about-quote">
+      "Where iconic talent meets extraordinary audiences — every event is a masterpiece."
+    </blockquote>
+    <p class="section-desc">Noah Events is the region's premier celebrity event management company. We specialize in bringing world-class artists, performers, and celebrities directly to your audience — from intimate fan meets to stadium-scale spectaculars.</p>
+    <div class="about-features">
+      <div class="about-feat"><div class="feat-dot"></div><span class="feat-text">World-class Artist Partnerships</span></div>
+      <div class="about-feat"><div class="feat-dot"></div><span class="feat-text">Seamless Ticketing Platform</span></div>
+      <div class="about-feat"><div class="feat-dot"></div><span class="feat-text">Full Event Production</span></div>
+      <div class="about-feat"><div class="feat-dot"></div><span class="feat-text">VIP Experience Packages</span></div>
+      <div class="about-feat"><div class="feat-dot"></div><span class="feat-text">Corporate & Private Events</span></div>
+      <div class="about-feat"><div class="feat-dot"></div><span class="feat-text">24/7 Event Support</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- EVENTS -->
+<section id="events">
+  <div class="events-header">
+    <div>
+      <span class="section-tag">Upcoming Events</span>
+      <h2 class="section-title">Don't Miss Out</h2>
+    </div>
+    <a href="#contact" class="btn-outline">View All Events</a>
+  </div>
+  <div class="events-grid" id="eventsGrid"></div>
+  <div class="pub-empty" id="eventsEmpty" style="display:none;text-align:center;padding:40px 20px;color:var(--gray)">
+    <p>No events published yet. Check back soon!</p>
+  </div>
+</section>
+
+<!-- CELEBRITIES -->
+<section id="celebrities">
+  <div class="celeb-intro">
+    <span class="section-tag">Our Artists</span>
+    <h2 class="section-title">Iconic Names, Live Stages</h2>
+    <p class="section-desc" style="margin: 0 auto;">We partner with the most celebrated talents from music, film, sports, and entertainment worldwide.</p>
+  </div>
+  <div class="celebs-grid">
+    <div class="celeb-card">
+      <div class="celeb-avatar"><div class="celeb-avatar-icon">🎵</div></div>
+      <div class="celeb-overlay"></div>
+      <div class="celeb-info"><span class="celeb-name">Pop Icon</span><span class="celeb-genre">Music Artist</span></div>
+    </div>
+    <div class="celeb-card">
+      <div class="celeb-avatar"><div class="celeb-avatar-icon">🎬</div></div>
+      <div class="celeb-overlay"></div>
+      <div class="celeb-info"><span class="celeb-name">Film Star</span><span class="celeb-genre">Hollywood Actor</span></div>
+    </div>
+    <div class="celeb-card">
+      <div class="celeb-avatar"><div class="celeb-avatar-icon">⚽</div></div>
+      <div class="celeb-overlay"></div>
+      <div class="celeb-info"><span class="celeb-name">Sports Legend</span><span class="celeb-genre">Football Champion</span></div>
+    </div>
+    <div class="celeb-card">
+      <div class="celeb-avatar"><div class="celeb-avatar-icon">🎤</div></div>
+      <div class="celeb-overlay"></div>
+      <div class="celeb-info"><span class="celeb-name">R&amp;B Sensation</span><span class="celeb-genre">Singer-Songwriter</span></div>
+    </div>
+    <div class="celeb-card">
+      <div class="celeb-avatar"><div class="celeb-avatar-icon">🎭</div></div>
+      <div class="celeb-overlay"></div>
+      <div class="celeb-info"><span class="celeb-name">Stage Performer</span><span class="celeb-genre">Theatre Artist</span></div>
+    </div>
+  </div>
+  <a href="#contact" class="btn-primary">Partner With Us</a>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <span class="section-tag">The Process</span>
+  <h2 class="section-title">How Noah Events Works</h2>
+  <div class="steps-grid">
+    <div class="step">
+      <div class="step-num-wrap"><div class="step-num">01</div></div>
+      <div class="step-title">Browse Events</div>
+      <p class="step-desc">Explore our upcoming celebrity events calendar and find the experience that excites you most.</p>
+    </div>
+    <div class="step">
+      <div class="step-num-wrap"><div class="step-num">02</div></div>
+      <div class="step-title">Choose Your Ticket</div>
+      <p class="step-desc">Select from General, Premium, or VIP tiers — each with unique access and exclusive perks.</p>
+    </div>
+    <div class="step">
+      <div class="step-num-wrap"><div class="step-num">03</div></div>
+      <div class="step-title">Secure Checkout</div>
+      <p class="step-desc">Book instantly with our secure payment gateway. Receive digital tickets to your email immediately.</p>
+    </div>
+    <div class="step">
+      <div class="step-num-wrap"><div class="step-num">04</div></div>
+      <div class="step-title">Attend & Enjoy</div>
+      <p class="step-desc">Arrive at the venue, flash your ticket, and experience an unforgettable moment with your favourite star.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="testimonials-header">
+    <span class="section-tag">What Fans Say</span>
+    <h2 class="section-title">Real Experiences,<br>Real Magic</h2>
+  </div>
+  <div class="testimonials-grid">
+    <div class="testimonial">
+      <div class="star-row">★★★★★</div>
+      <p class="testimonial-text">Noah Events made my dream come true. Getting to meet my favourite artist in person was surreal — every detail was perfectly handled.</p>
+      <div class="testimonial-author">
+        <div class="author-avatar">AR</div>
+        <div>
+          <span class="author-name">Aisha Rahman</span>
+          <span class="author-role">Attended: VIP Meet & Greet</span>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial">
+      <div class="star-row">★★★★★</div>
+      <p class="testimonial-text">The event was flawlessly organized. From ticketing to the show itself, everything was world-class. Highly recommend for any celebrity event.</p>
+      <div class="testimonial-author">
+        <div class="author-avatar">KL</div>
+        <div>
+          <span class="author-name">Kevin Lim</span>
+          <span class="author-role">Attended: Grand Stage Night</span>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial">
+      <div class="star-row">★★★★★</div>
+      <p class="testimonial-text">Spectacular from start to finish. The VIP lounge experience before the show was something I'll never forget. Worth every cent.</p>
+      <div class="testimonial-author">
+        <div class="author-avatar">PM</div>
+        <div>
+          <span class="author-name">Priya Menon</span>
+          <span class="author-role">Attended: Red Carpet Gala</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div>
+    <span class="section-tag">Get In Touch</span>
+    <h2 class="section-title">Let's Make Your Event Happen</h2>
+    <p class="section-desc" style="margin-bottom: 2.5rem;">Whether you're looking for tickets, partnerships, or a bespoke corporate event, we're here to make it extraordinary.</p>
+    <form class="contact-form" onsubmit="return false;">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">First Name</label>
+          <input class="form-input" type="text" placeholder="John">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name</label>
+          <input class="form-input" type="text" placeholder="Doe">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input class="form-input" type="email" placeholder="john@example.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Enquiry Type</label>
+        <select class="form-select">
+          <option value="">Select an option...</option>
+          <option>Event Tickets</option>
+          <option>VIP Package</option>
+          <option>Corporate Event</option>
+          <option>Partnership / Sponsorship</option>
+          <option>Media Enquiry</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Your Message</label>
+        <textarea class="form-textarea" placeholder="Tell us about your enquiry..."></textarea>
+      </div>
+      <button class="btn-primary" style="align-self: flex-start;">Send Enquiry →</button>
+    </form>
+  </div>
+  <div class="contact-info">
+    <span class="section-tag">Contact Information</span>
+    <h2 class="section-title" style="font-size: 2rem; margin-bottom: 2rem;">We'd Love<br>to Hear from You</h2>
+    <div class="contact-detail">
+      <div class="contact-icon">📍</div>
+      <div>
+        <div class="contact-detail-label">Our Office</div>
+        <div class="contact-detail-value">1 Raffles Place, #25-00<br>Singapore 048616</div>
+      </div>
+    </div>
+    <div class="contact-detail">
+      <div class="contact-icon">📞</div>
+      <div>
+        <div class="contact-detail-label">Phone</div>
+        <div class="contact-detail-value">+65 6338 4364</div>
+      </div>
+    </div>
+    <div class="contact-detail">
+      <div class="contact-icon">✉️</div>
+      <div>
+        <div class="contact-detail-label">Email</div>
+        <div class="contact-detail-value">hello@noahevents.com</div>
+      </div>
+    </div>
+    <div class="contact-detail">
+      <div class="contact-icon">🕐</div>
+      <div>
+        <div class="contact-detail-label">Office Hours</div>
+        <div class="contact-detail-value">Monday – Friday: 9am – 7pm<br>Saturday: 10am – 4pm</div>
+      </div>
+    </div>
+    <div class="social-row">
+      <a href="#" class="social-btn" title="Instagram">IG</a>
+      <a href="#" class="social-btn" title="Facebook">FB</a>
+      <a href="#" class="social-btn" title="Twitter/X">𝕏</a>
+      <a href="#" class="social-btn" title="TikTok">TK</a>
+      <a href="#" class="social-btn" title="YouTube">YT</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <img src="logo.png" alt="Noah Events">
+  </div>
+  <ul class="footer-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#events">Events</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#">Privacy Policy</a></li>
+  </ul>
+  <p class="footer-copy">© 2025 Noah Events. All rights reserved.</p>
+</footer>
+
+<!-- ADMIN LOGIN MODAL -->
+<div class="modal-overlay" id="adminModal">
+  <div class="modal-box">
+    <button class="modal-close" id="modalClose">&times;</button>
+    <div class="modal-title">Admin Login</div>
+    <div class="modal-sub" id="modalSub">Sign in to manage events &amp; bookings</div>
+
+    <!-- Step 1: Email -->
+    <div class="modal-step active" id="stepEmail">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input class="form-input" type="email" id="loginEmail" placeholder="admin@example.com" autocomplete="off">
+      </div>
+      <div class="modal-error" id="stepError">Invalid user.</div>
+      <button class="btn-primary" id="stepEmailBtn">Continue</button>
+    </div>
+
+    <!-- Step 2: TOTP Code -->
+    <div class="modal-step" id="stepTotp">
+      <button class="modal-back-btn" id="stepBackBtn">&larr; Back</button>
+      <div id="qrSection" style="display:none;">
+        <div class="modal-qr">
+          <img id="qrImage" src="" alt="QR Code">
+        </div>
+        <div id="qrFallback" style="display:none;text-align:center;margin:0.5rem 0;word-break:break-all;">
+          <p style="font-size:0.75rem;color:var(--gray);margin-bottom:0.5rem;">Open this link in your authenticator app:</p>
+          <code id="qrUriLink" style="font-size:0.7rem;color:var(--gold);"></code>
+        </div>
+        <div class="modal-qr-label">Scan this QR code with Google Authenticator or Authy</div>
+      </div>
+      <div class="form-group" style="margin-top:1rem;">
+        <label class="form-label">Authentication Code</label>
+        <input class="form-input modal-code-input" type="text" id="totpCode" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
+      </div>
+      <div class="modal-error" id="totpError">Invalid code. Try again.</div>
+      <button class="btn-primary" id="stepTotpBtn">Verify</button>
+    </div>
+
+    <!-- Loading -->
+    <div class="modal-step" id="stepLoading">
+      <div class="modal-loading">Verifying...</div>
+    </div>
+  </div>
+</div>
+
+<!-- BOOKING MODAL -->
+<div class="overlay" id="overlay">
+  <div class="bmodal">
+    <div class="bm-header">
+      <div>
+        <div class="bm-genre" id="bm-genre"></div>
+        <div class="bm-name" id="bm-name"></div>
+        <div class="bm-sub" id="bm-sub"></div>
+      </div>
+      <button class="close-x" onclick="closeBooking()">✕</button>
+    </div>
+    <div class="bm-body">
+      <div class="seat-area">
+        <h3>SELECT YOUR SEATS</h3>
+        <div class="seat-legend" id="bm-legend"></div>
+        <div class="stage-bar">◆ STAGE ◆</div>
+        <div class="pub-seat-grid" id="bm-seat-grid"></div>
+        <div class="pub-canvas-wrap" id="bm-canvas-wrap" style="display:none">
+          <div class="pub-canvas" id="bm-canvas"></div>
+        </div>
+      </div>
+      <div class="addon-area" id="bm-addons" style="display:none">
+        <h3>ADD-ONS</h3>
+        <div id="bm-addon-list"></div>
+      </div>
+      <div class="sum-panel">
+        <div class="sum-box">
+          <div class="sum-title">BOOKING SUMMARY</div>
+          <div class="sum-row"><span>Event</span><span id="sum-event" style="max-width:120px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</span></div>
+          <div class="sum-row"><span>Date</span><span id="sum-date">—</span></div>
+          <div class="sum-row"><span>Time</span><span id="sum-time">—</span></div>
+          <div class="sum-row"><span>Venue</span><span id="sum-venue" style="max-width:120px;text-align:right;font-size:11px">—</span></div>
+          <div class="sum-row"><span>Selected</span><span><span id="sum-count">0</span> seat(s)</span></div>
+          <div style="padding:6px 0"><div class="seat-tags" id="sum-seat-tags"></div></div>
+          <div class="sum-row"><span>Subtotal</span><span id="sum-sub">—</span></div>
+          <div class="sum-row" id="sum-eb-row" style="display:none"><span>🎉 Early Bird</span><span id="sum-eb" style="color:var(--green)">—</span></div>
+          <div class="sum-row" id="sum-gb-row" style="display:none"><span>👥 Group Buy</span><span id="sum-gb" style="color:var(--green)">—</span></div>
+          <div class="sum-row" id="sum-addon-row" style="display:none"><span>Add-ons</span><span id="sum-addon">—</span></div>
+          <div class="sum-row"><span>Service fee (8%)</span><span id="sum-fee">—</span></div>
+          <div class="sum-row total"><span>Total</span><span id="sum-total">—</span></div>
+        </div>
+        <input type="email" id="bookingEmail" placeholder="Your email for e-tickets"
+          style="width:100%;background:var(--dark3);border:1px solid rgba(245,241,235,0.1);
+          padding:10px 13px;color:var(--white);font-family:var(--font-b);font-size:14px;
+          margin-bottom:12px;font-weight:300;outline:none">
+        <button class="book-now-btn" id="book-now-btn" onclick="confirmBooking()" disabled>BOOK NOW</button>
+        <div class="secure-txt">🔒 Secured by Stripe · Instant e-tickets</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // Admin login with TOTP
+  const API = (window.location.protocol === 'file:' ? 'http://localhost:8000' : window.location.origin) + '/auth';
+
+  const adminBtn = document.getElementById('adminBtn');
+  const adminModal = document.getElementById('adminModal');
+  const modalClose = document.getElementById('modalClose');
+  const modalSub = document.getElementById('modalSub');
+
+  const stepEmail = document.getElementById('stepEmail');
+  const stepTotp = document.getElementById('stepTotp');
+  const stepLoading = document.getElementById('stepLoading');
+  const loginEmail = document.getElementById('loginEmail');
+  const stepEmailBtn = document.getElementById('stepEmailBtn');
+  const stepError = document.getElementById('stepError');
+  const totpCode = document.getElementById('totpCode');
+  const stepTotpBtn = document.getElementById('stepTotpBtn');
+  const totpError = document.getElementById('totpError');
+  const qrSection = document.getElementById('qrSection');
+  const qrImage = document.getElementById('qrImage');
+  const stepBackBtn = document.getElementById('stepBackBtn');
+
+  let currentEmail = '';
+
+  // Toggle nav elements based on login state
+  const loggedIn = localStorage.getItem('noah_user');
+  document.getElementById('adminLink').style.display = loggedIn ? 'flex' : 'none';
+  document.getElementById('logoutBtn').style.display = loggedIn ? 'flex' : 'none';
+  document.getElementById('adminBtn').style.display = loggedIn ? 'none' : 'flex';
+
+  function showStep(step) {
+    [stepEmail, stepTotp, stepLoading].forEach(s => s.classList.remove('active'));
+    step.classList.add('active');
+  }
+
+  function resetModal() {
+    showStep(stepEmail);
+    loginEmail.value = '';
+    totpCode.value = '';
+    stepError.classList.remove('show');
+    totpError.classList.remove('show');
+    qrSection.style.display = 'none';
+    currentEmail = '';
+    modalSub.textContent = 'Sign in to manage events & bookings';
+  }
+
+  adminBtn.addEventListener('click', () => {
+    resetModal();
+    adminModal.classList.add('active');
+    setTimeout(() => loginEmail.focus(), 200);
+  });
+
+  function closeModal() {
+    adminModal.classList.remove('active');
+    resetModal();
+  }
+
+  modalClose.addEventListener('click', closeModal);
+  adminModal.addEventListener('click', (e) => { if (e.target === adminModal) closeModal(); });
+
+  stepBackBtn.addEventListener('click', () => {
+    showStep(stepEmail);
+    stepError.classList.remove('show');
+    totpError.classList.remove('show');
+    modalSub.textContent = 'Sign in to manage events & bookings';
+  });
+
+  stepEmailBtn.addEventListener('click', async () => {
+    const email = loginEmail.value.trim();
+    if (!email) { stepError.textContent = 'Please enter your email.'; stepError.classList.add('show'); return; }
+
+    stepError.classList.remove('show');
+    showStep(stepLoading);
+    modalSub.textContent = 'Checking email...';
+
+    try {
+      const res = await fetch(API + '/check-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        stepError.textContent = data.detail || 'Invalid user.';
+        showStep(stepEmail);
+        stepError.classList.add('show');
+        modalSub.textContent = 'Sign in to manage events & bookings';
+        return;
+      }
+
+      const data = await res.json();
+      currentEmail = email;
+
+      if (data.status === 'setup') {
+        qrSection.style.display = 'block';
+        const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(data.provisioning_uri);
+        qrImage.src = qrUrl;
+        qrImage.onerror = function() {
+          this.style.display = 'none';
+          document.getElementById('qrFallback').style.display = 'block';
+        };
+        document.getElementById('qrFallback').style.display = 'none';
+        document.getElementById('qrUriLink').textContent = data.provisioning_uri;
+        modalSub.textContent = 'Scan QR with your authenticator app';
+      } else {
+        qrSection.style.display = 'none';
+        modalSub.textContent = 'Enter your authentication code';
+      }
+
+      showStep(stepTotp);
+      totpError.classList.remove('show');
+      totpCode.value = '';
+      setTimeout(() => totpCode.focus(), 200);
+
+    } catch (err) {
+      stepError.textContent = 'Connection error. Try again.';
+      showStep(stepEmail);
+      stepError.classList.add('show');
+      modalSub.textContent = 'Sign in to manage events & bookings';
+    }
+  });
+
+  async function verifyTotp() {
+    const code = totpCode.value.trim();
+    if (code.length !== 6) { totpError.textContent = 'Please enter a 6-digit code.'; totpError.classList.add('show'); return; }
+
+    totpError.classList.remove('show');
+    showStep(stepLoading);
+    modalSub.textContent = 'Verifying...';
+
+    try {
+      const res = await fetch(API + '/verify-totp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: currentEmail, code })
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        totpError.textContent = data.detail || 'Invalid code. Try again.';
+        showStep(stepTotp);
+        totpError.classList.add('show');
+        modalSub.textContent = 'Enter your authentication code';
+        return;
+      }
+
+      const data = await res.json();
+      localStorage.setItem('noah_token', data.access_token);
+      localStorage.setItem('noah_user', data.email);
+      closeModal();
+      window.location.href = 'index.html';
+
+    } catch (err) {
+      totpError.textContent = 'Connection error. Try again.';
+      showStep(stepTotp);
+      totpError.classList.add('show');
+      modalSub.textContent = 'Enter your authentication code';
+    }
+  }
+
+  stepTotpBtn.addEventListener('click', verifyTotp);
+
+  totpCode.addEventListener('input', () => {
+    totpError.classList.remove('show');
+    if (totpCode.value.length === 6) verifyTotp();
+  });
+
+  loginEmail.addEventListener('keydown', (e) => { if (e.key === 'Enter') stepEmailBtn.click(); });
+  totpCode.addEventListener('keydown', (e) => { if (e.key === 'Enter') stepTotpBtn.click(); });
+
+  API_BASE = (window.location.protocol === 'file:' ? 'http://localhost:8000' : window.location.origin);
+
+  let allEvents = [];
+  let bookingEvent = null;
+  let selectedSeats = [];
+  let selectedAddons = [];
+
+  async function loadEvents() {
+    try {
+      const res = await fetch(API_BASE + '/events/');
+      if (!res.ok) throw new Error('Failed');
+      const raw = await res.json();
+      allEvents = raw.filter(e => e.status === 'live');
+      allEvents.sort((a,b)=>new Date(a.date)-new Date(b.date));
+      const grid = document.getElementById('eventsGrid');
+      const empty = document.getElementById('eventsEmpty');
+      if (!allEvents.length) {
+        grid.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      grid.innerHTML = allEvents.map(e => {
+        const minPrice = e.zones && e.zones.length ? Math.min(...e.zones.map(z => z.price)) : '—';
+        const pct = e.total_seats > 0 ? Math.round((e.booked_seats?.length || 0) / e.total_seats * 100) : 0;
+        const badge = pct >= 100 ? 'Sold Out' : pct > 70 ? 'Last Few' : 'Selling Fast';
+        const bCls = pct >= 100 ? 'sold' : pct > 70 ? 'hot' : '';
+        const dateStr = e.date ? new Date(e.date + 'T12:00').toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+        const icons = ['🎵','🎤','🎭','🎪','🎸','🎹'];
+        const icon = icons[e.id % icons.length] || '🎵';
+        // Check if any zone has active early bird
+        const today = new Date().toISOString().split('T')[0];
+        let ebActive = (e.zones||[]).some(z => {
+          const eb = (z.promotions||{}).early_bird || {};
+          if(!eb.enabled || !eb.price) return false;
+          if(eb.starts_at && today < eb.starts_at) return false;
+          if(eb.ends_at && today > eb.ends_at) return false;
+          return true;
+        });
+        const ebBadge = ebActive ? '<div class="event-badge hot" style="top:56px;background:rgba(139,68,255,.2);color:#8b44ff">🎉 Early Bird</div>' : '';
+        const va = e.venue_address || {};
+        const addrStr = [va.address1, va.address2, va.address3].filter(Boolean).join(', ');
+        const mapQ = [e.venue, va.address1, va.address2, va.address3, va.postal_code].filter(Boolean).join(', ');
+        const mapLink = mapQ ? ' <a href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mapQ) + '" target="_blank" style="color:#8b44ff;font-size:11px;text-decoration:none;white-space:nowrap">📍 Show Map</a>' : '';
+
+        return `<div class="event-card" data-id="${e.id}">
+          <div class="event-card-img">
+            <div class="event-img-icon">${icon}</div>
+            <div class="event-badge ${bCls}">${badge}</div>
+            ${ebBadge}
+            <div class="event-date-badge" style="display:${dateStr?'flex':'none'}">
+              <span class="event-date-day">${dateStr.split(' ')[0]}</span>
+              <span class="event-date-month">${dateStr.split(' ').slice(1).join(' ')}</span>
+            </div>
+          </div>
+          <div class="event-info">
+            <div class="event-cat">${e.genre || 'Event'}</div>
+            <div class="event-name">${e.name}</div>
+            <div class="event-meta">
+              <span>📍 ${[e.venue,addrStr].filter(Boolean).join(', ')}</span>
+              <span>🕗 ${e.time || ''}</span>
+              ${mapLink?'<br>'+mapLink:''}
+            </div>
+            <div class="event-footer">
+              <div class="event-price">${minPrice !== '—' ? '$' + minPrice : '—'} <span>from</span></div>
+              <button class="btn-ticket">Book Now</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    } catch (err) {
+      console.warn('Could not load events:', err);
+    }
+  }
+
+  document.getElementById('eventsGrid').addEventListener('click', function(ev) {
+    const btn = ev.target.closest('.btn-ticket');
+    if (!btn) return;
+    const card = btn.closest('.event-card');
+    if (!card) return;
+    const id = card.dataset.id;
+    const evt = allEvents.find(e => String(e.id) === id);
+    if (!evt) return;
+    const pct = evt.total_seats > 0 ? Math.round((evt.booked_seats?.length || 0) / evt.total_seats * 100) : 0;
+    if (pct >= 100) { showToast('Sold out!', 'error'); return; }
+    openBooking(id);
+  });
+
+  function renderBookingAddons(e){
+    const area = document.getElementById('bm-addons');
+    const list = document.getElementById('bm-addon-list');
+    const addons = e.addons || [];
+    if(!addons.length){ area.style.display='none'; return; }
+    area.style.display='block';
+    selectedAddons = [];
+    list.innerHTML = addons.map((a,i) => {
+      const checked = selectedAddons.includes(a.id) ? 'checked' : '';
+      const seatCount = selectedSeats.length;
+      const perSeatNote = a.type==='per_seat' ? ` · +$${a.price}/seat` : ` · +$${a.price}`;
+      return `<div class="addon-item">
+        <input type="checkbox" id="addon-${i}" ${checked} onchange="toggleBookingAddon('${a.id}')">
+        <label for="addon-${i}">
+          ${a.name}<div class="addon-sub">${a.description||''}</div>
+        </label>
+        <div class="addon-price">${perSeatNote}</div>
+      </div>`;
+    }).join('');
+  }
+  function toggleBookingAddon(id){
+    const idx = selectedAddons.indexOf(id);
+    if(idx>-1) selectedAddons.splice(idx,1);
+    else selectedAddons.push(id);
+    updateSummary();
+  }
+
+  function openBooking(id){
+    const e = allEvents.find(x => String(x.id) === id);
+    if (!e) return;
+    bookingEvent = e; selectedSeats = []; selectedAddons = [];
+    const dateStr = e.date ? new Date(e.date+'T12:00').toLocaleDateString('en-SG',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) : 'TBA';
+    document.getElementById('bm-genre').textContent = e.genre;
+    document.getElementById('bm-name').textContent = e.name;
+    const va=e.venue_address||{};
+    const mapQ=[e.venue,va.address1,va.address2,va.address3,va.postal_code].filter(Boolean).join(', ');
+    const mapLink=mapQ?' <a href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(mapQ)+'" target="_blank" style="color:var(--logo-purple);font-size:11px;text-decoration:none;white-space:nowrap">📍 Show Map</a>':'';
+    document.getElementById('bm-sub').textContent = `${e.artist||''} · ${e.venue} · ${dateStr}${e.time?' · '+formatTime(e.time):''}`;
+    document.getElementById('sum-event').textContent = e.name;
+    document.getElementById('sum-date').textContent = dateStr;
+    const timeStr = formatTime(e.time||'') + (e.end_time ? ' — '+formatTime(e.end_time) : '');
+    document.getElementById('sum-time').textContent = timeStr;
+    document.getElementById('sum-venue').innerHTML = e.venue+mapLink;
+    const legend = document.getElementById('bm-legend');
+    legend.innerHTML = e.zones.map(z=>`<div class="sl-item"><div class="sl-dot" style="background:${z.color}55;border:1px solid ${z.color}99"></div>${z.name} · $${z.price}</div>`).join('')
+      + `<div class="sl-item"><div class="sl-dot" style="background:rgba(255,255,255,.08)"></div>Taken</div>`
+      + `<div class="sl-item"><div class="sl-dot" style="background:rgba(255,62,55,.25);border:1px solid var(--logo-red)"></div>Held</div>`
+      + `<div class="sl-item"><div class="sl-dot" style="background:var(--dark3);outline:2px solid #fff;outline-offset:1px"></div>Your pick</div>`;
+    buildPublicSeatGrid(e);
+    renderBookingAddons(e);
+    updateSummary();
+    document.getElementById('overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeBooking(){
+    document.getElementById('overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    bookingEvent = null; selectedSeats = []; selectedAddons = [];
+  }
+  const overlayEl = document.getElementById('overlay');
+  if (overlayEl) overlayEl.addEventListener('click',function(ev){if(ev.target===this) closeBooking();});
+
+  function buildPublicSeatGrid(e){
+    // Manual mode: render canvas
+    if(e.layout_mode==='manual'){
+      document.getElementById('bm-seat-grid').style.display='none';
+      const cw=document.getElementById('bm-canvas-wrap');
+      cw.style.display='block';
+      const canvas=document.getElementById('bm-canvas');
+      const booked=new Set(e.booked_seats||e.booked||[]);
+      const held=new Set(e.held_seats||[]);
+      const layout= e.seat_layout||[];
+      const zoneMap={}; e.zones.forEach(z=>{zoneMap[z.name]=z;});
+      const w=canvas.offsetWidth||400;
+      const h=canvas.offsetHeight||200;
+      const scaleX=w/600, scaleY=h/400;
+      canvas.innerHTML=layout.map(s=>{
+        const isTaken=booked.has(s.id);
+        const isHeld=held.has(s.id);
+        const disabled=isTaken||isHeld;
+        const zone=zoneMap[s.zone]||e.zones[0]||{color:'#8b44ff',price:0,name:''};
+        return `<div class="pc-seat${disabled?' taken':''}${isHeld?' held':''}"
+          style="left:${(s.x||50)*scaleX}px;top:${(s.y||50)*scaleY}px;background:${isHeld?'':isTaken?'rgba(255,255,255,0.06)':zone.color+'55'};border-color:${isHeld?'var(--logo-red)':isTaken?'rgba(255,255,255,0.04)':zone.color+'99'}"
+          data-seat="${s.id}" data-price="${zone.price}" data-zone="${zone.name}"
+          onclick="${!disabled?`toggleSeat(this,'${s.id}',${zone.price})`:'void(0)'}"
+          title="${isHeld?s.id+' — Held':isTaken?s.id+' — Taken':s.id+' · '+zone.name+' · $'+zone.price}">${isHeld?'🔒':''}</div>`;
+      }).join('');
+      return;
+    }
+    // Auto mode: render grid
+    document.getElementById('bm-seat-grid').style.display='';
+    document.getElementById('bm-canvas-wrap').style.display='none';
+    const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const zoneMap = buildZoneMapFromEvent(e);
+    const booked = new Set(e.booked_seats || e.booked || []);
+    const held = new Set(e.held_seats || []);
+    const grid = document.getElementById('bm-seat-grid');
+    grid.innerHTML = Array.from({length:e.rows},(_,r)=>{
+      const zone = zoneMap[r] || e.zones[e.zones.length-1] || {color:'#444',price:0,name:''};
+      const seats = Array.from({length:e.cols},(_,c)=>{
+        const sid = getSeatId(r,c,e.zones,e.cols,zoneMap);
+        const isTaken = booked.has(sid);
+        const isHeld = held.has(sid);
+        const disabled = isTaken || isHeld;
+        return `<button class="pub-seat${disabled?' taken':''}"
+          style="background:${isHeld?'rgba(255,62,55,.15)':isTaken?'rgba(255,255,255,0.06)':zone.color+'33'};border:1px solid ${isHeld?'var(--logo-red)':isTaken?'rgba(255,255,255,0.04)':zone.color+'66'}"
+          data-seat="${sid}" data-price="${zone.price}" data-zone="${zone.name}"
+          onclick="${!disabled?`toggleSeat(this,'${sid}',${zone.price})`:'void(0)'}"
+          title="${isHeld?sid+' — Held':isTaken?sid+' — Taken':sid+' · '+zone.name+' · $'+zone.price}">${isHeld?'🔒':''}</button>`;
+      }).join('');
+      return `<div class="pub-seat-row"><span class="pub-rl">${alpha[r]}</span>${seats}</div>`;
+    }).join('');
+  }
+
+  function buildZoneMapFromEvent(e){
+    const map = {}; let r = 0;
+    for(const z of e.zones){
+      for(let i=0;i<(z.rows||1)&&r<e.rows;i++,r++) map[r]=z;
+    }
+    while(r<e.rows){map[r]=e.zones[e.zones.length-1];r++;}
+    return map;
+  }
+  function getSeatId(row,col,zones,cols,zoneMap){
+    const zone=zoneMap[row]||zones[zones.length-1]||{};
+    const prefix=zone.seat_prefix||'A';
+    const start=zone.seat_start||1;
+    let rowsBefore=0;
+    for(const z of zones){
+      if(z===zone) break;
+      rowsBefore+=z.rows||0;
+    }
+    return prefix+(start+(row-rowsBefore)*cols+col);
+  }
+
+  function toggleSeat(el,sid,price){
+    const idx = selectedSeats.findIndex(s=>s.id===sid);
+    if(idx>-1){
+      selectedSeats.splice(idx,1);
+      el.classList.remove('chosen');
+    } else {
+      const zoneName = el.dataset.zone;
+      const zone = bookingEvent.zones.find(z=>z.name===zoneName);
+      const maxSeats = zone?.max_seats;
+      if(maxSeats){
+        const zoneCount = selectedSeats.filter(s=>s.zone===zoneName).length;
+        if(zoneCount >= maxSeats){
+          showToast(`Max ${maxSeats} seats in ${zoneName}`,'error');
+          return;
+        }
+      }
+      selectedSeats.push({id:sid, price, zone: zoneName});
+      el.classList.add('chosen');
+    }
+    updateSummary();
+  }
+
+  function _todayStr(){ return new Date().toISOString().split('T')[0]; }
+
+  function updateSummary(){
+    document.getElementById('sum-count').textContent = selectedSeats.length;
+    const tags = document.getElementById('sum-seat-tags');
+    tags.innerHTML = selectedSeats.map(s=>`<span class="stag">${s.id}</span>`).join('');
+    const btn = document.getElementById('book-now-btn');
+    if(!selectedSeats.length){
+      document.getElementById('sum-sub').textContent = '—';
+      document.getElementById('sum-eb-row').style.display='none';
+      document.getElementById('sum-gb-row').style.display='none';
+      document.getElementById('sum-fee').textContent = '—';
+      document.getElementById('sum-total').textContent = '—';
+      btn.disabled = true; return;
+    }
+
+    const e = bookingEvent;
+    const today = _todayStr();
+    const layoutMap = e.layout_mode==='manual' ? (()=>{const m={};(e.seat_layout||[]).forEach(s=>{m[s.id]=s;});return m;})() : null;
+
+    // Group seats by zone, apply per-zone early bird
+    const zoneBuckets = {};
+    let rawTotal = 0;
+
+    selectedSeats.forEach(s => {
+      let zone;
+      if(e.layout_mode==='manual'){
+        const sd = layoutMap?.[s.id];
+        zone = sd ? (e.zones||[]).find(z=>z.name===sd.zone) : null;
+      } else {
+        const sorted = [...e.zones].sort((a,b)=>(b.seat_prefix||'').length-(a.seat_prefix||'').length);
+        for(const z of sorted){
+          const pfx = z.seat_prefix || '';
+          if(pfx && s.id.startsWith(pfx)){ zone = z; break; }
+        }
+        if(!zone) zone = e.zones[e.zones.length-1];
+      }
+      zone = zone || {price:0, name:'Unknown', promotions:{}};
+      const p = zone.promotions || {};
+      const eb = p.early_bird || {};
+
+      let price = Number(zone.price);
+      if(eb.enabled && eb.price){
+        let ok = true;
+        if(eb.starts_at) ok = ok && today >= eb.starts_at;
+        if(eb.ends_at) ok = ok && today <= eb.ends_at;
+        if(ok) price = Number(eb.price);
+      }
+
+      rawTotal += Number(zone.price);
+      const zn = zone.name;
+      if(!zoneBuckets[zn]) zoneBuckets[zn] = {seats:[], zone, ebPrice: null};
+      if(price !== Number(zone.price)) zoneBuckets[zn].ebPrice = price;
+      zoneBuckets[zn].seats.push({id:s.id, price});
+    });
+
+    let finalSubtotal = 0;
+    let ebSavings = 0;
+    let gbSavings = 0;
+    let ebMsg = '';
+    let gbMsg = '';
+
+    Object.keys(zoneBuckets).forEach(zn => {
+      const b = zoneBuckets[zn];
+      const zSub = b.seats.reduce((a, s) => a + s.price, 0);
+      finalSubtotal += zSub;
+
+      if(b.ebPrice !== null) {
+        const zoneRaw = b.seats.length * Number(b.zone.price);
+        ebSavings += zoneRaw - zSub;
+      }
+
+      // Per-zone group buy
+      const p = b.zone.promotions || {};
+      const gb = p.group_buy || {};
+      if(gb.enabled && gb.discount_percent){
+        const mn = Number(gb.min_seats) || 0;
+        const mx = Number(gb.max_seats) || 999;
+        if(mn <= b.seats.length && b.seats.length <= mx){
+          const pct = Number(gb.discount_percent);
+          const gbAmt = Math.round(zSub * pct / 100);
+          finalSubtotal -= gbAmt;
+          gbSavings += gbAmt;
+          gbMsg = (gbMsg ? gbMsg + ' + ' : '') + zn + ' -' + pct + '%';
+        }
+      }
+    });
+
+    // Early bird msg
+    if(ebSavings > 0) ebMsg = 'Early Bird applied';
+
+    const ebRow = document.getElementById('sum-eb-row');
+    const ebEl = document.getElementById('sum-eb');
+    if(ebSavings > 0){
+      ebRow.style.display = 'flex';
+      ebEl.textContent = '-$' + ebSavings + ' ' + ebMsg;
+    } else {
+      ebRow.style.display = 'none';
+    }
+
+    document.getElementById('sum-sub').textContent = '$' + rawTotal;
+
+    const gbRow = document.getElementById('sum-gb-row');
+    const gbEl = document.getElementById('sum-gb');
+    if(gbSavings > 0){
+      gbRow.style.display = 'flex';
+      gbEl.textContent = '-$' + gbSavings + ' (' + gbMsg + ')';
+    } else {
+      gbRow.style.display = 'none';
+    }
+
+    // Addon costs
+    let addonTotal = 0;
+    const eventAddons = e.addons || [];
+    selectedAddons.forEach(id => {
+      const a = eventAddons.find(x => x.id === id);
+      if(!a) return;
+      if(a.type === 'per_seat') addonTotal += Number(a.price) * selectedSeats.length;
+      else addonTotal += Number(a.price);
+    });
+    const addonRow = document.getElementById('sum-addon-row');
+    const addonEl = document.getElementById('sum-addon');
+    if(addonTotal > 0){
+      addonRow.style.display = 'flex';
+      addonEl.textContent = '$' + Math.round(addonTotal);
+    } else {
+      addonRow.style.display = 'none';
+    }
+
+    const fee = Math.round((finalSubtotal + addonTotal) * 0.08);
+    const total = finalSubtotal + addonTotal + fee;
+    document.getElementById('sum-fee').textContent = '$' + fee;
+    document.getElementById('sum-total').textContent = '$' + total;
+    btn.disabled = false;
+  }
+
+  async function confirmBooking(){
+    if(!bookingEvent||!selectedSeats.length) return;
+    const email = document.getElementById('bookingEmail').value.trim();
+    if(!email){showToast('Please enter your email address','error');return;}
+
+    const e = allEvents.find(x => String(x.id) === String(bookingEvent.id));
+    if(!e) return;
+    const newBooked = selectedSeats.map(s=>s.id);
+    const alreadyTaken = newBooked.filter(s=>(e.booked_seats||e.booked||[]).includes(s));
+    if(alreadyTaken.length){showToast('Some seats just got taken. Please re-select.','error');buildPublicSeatGrid(e);selectedSeats=[];updateSummary();return;}
+
+    try {
+      const res = await fetch(API_BASE + '/bookings/', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ event_id: Number(e.id), seats:newBooked, user_id: null, email, addons: selectedAddons })
+      });
+      if(!res.ok){
+        const err = await res.json().catch(()=>null);
+        throw new Error(err?.detail || 'Booking failed');
+      }
+      await refreshEvent(e.id);
+      closeBooking();
+      loadEvents();
+      showToast(`✓ Booked ${newBooked.length} seat(s)! Check your email for tickets.`);
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || 'Booking failed','error');
+    }
+  }
+
+  async function refreshEvent(id){
+    try {
+      const res = await fetch(API_BASE + '/events/' + id);
+      if(!res.ok) throw new Error('Unable to refresh event');
+      const updated = await res.json();
+      const idx = allEvents.findIndex(e => String(e.id) === String(id));
+      if(idx > -1) allEvents[idx] = updated;
+    } catch (err) {
+      console.warn('Could not refresh event:', err);
+    }
+  }
+
+  function formatTime(t){ try{const [h,m]=t.split(':');const ap=+h>=12?'PM':'AM';return`${+h%12||12}:${m} ${ap}`}catch{return t;} }
+
+  function showToast(msg,type=''){
+    const t=document.getElementById('toast'); t.textContent=msg;
+    t.className='toast'+(type?' '+type:'');
+    setTimeout(()=>t.classList.add('show'),10);
+    setTimeout(()=>t.classList.remove('show'),3200);
+  }
+
+  loadEvents();
+
+  document.querySelector('.contact-form button').addEventListener('click', function() {
+    const inputs = document.querySelectorAll('.form-input, .form-select, .form-textarea');
+    let filled = true;
+    inputs.forEach(i => { if (!i.value.trim()) filled = false; });
+    if (filled) {
+      alert('Thank you! Your enquiry has been received. Our team will be in touch within 24 hours.');
+    } else {
+      alert('Please fill in all fields before submitting.');
+    }
+  });
+
+  function logout() {
+    localStorage.removeItem('noah_user');
+    localStorage.removeItem('noah_token');
+    window.location.reload();
+  }
+</script>
+
+</body>
+</html>
