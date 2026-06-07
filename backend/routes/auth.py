@@ -24,7 +24,10 @@ class TotpBody(BaseModel):
 def check_email(body: EmailBody, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == body.email).first()
     if not user:
-        raise HTTPException(status_code=404, detail="Invalid user")
+        user = User(email=body.email, hashed_password="totp_only", totp_secret=None)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
     if not user.totp_secret:
         secret = pyotp.random_base32()
