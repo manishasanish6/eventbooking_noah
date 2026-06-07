@@ -3,7 +3,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
-from backend.database import engine, Base
+from backend.database import engine, Base, SessionLocal
+from backend.models import User
 from backend.routes import events, bookings, auth
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s %(message)s")
@@ -37,6 +38,16 @@ with engine.connect() as conn:
 
     if 'addons' not in cols_b:
         conn.execute(text("ALTER TABLE bookings ADD COLUMN addons TEXT DEFAULT '[]'"))
+
+# Auto-seed admin users if table is empty
+db = SessionLocal()
+if db.query(User).count() == 0:
+    for email in ["manisha61090@gmail.com", "sanish.jony@gmail.com", "accounts@noahmarinegroup.com"]:
+        user = User(email=email, hashed_password="totp_only", totp_secret=None)
+        db.add(user)
+    db.commit()
+    logging.getLogger("noah").info("Seeded admin users")
+db.close()
 
 app = FastAPI(title="STAGEFRONT API", version="1.0")
 
