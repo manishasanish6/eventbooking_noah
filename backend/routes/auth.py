@@ -43,7 +43,7 @@ def setup_totp(body: TotpBody, db: Session = Depends(get_db)):
     if not user or not user.totp_secret:
         raise HTTPException(status_code=400, detail="Setup required")
 
-    if not pyotp.TOTP(user.totp_secret).verify(body.code):
+    if not pyotp.TOTP(user.totp_secret).verify(body.code, valid_window=1):
         raise HTTPException(status_code=401, detail="Invalid code")
 
     token = jwt.encode({"sub": str(user.id)}, SECRET, algorithm="HS256")
@@ -55,7 +55,7 @@ def verify_totp(body: TotpBody, db: Session = Depends(get_db)):
     if not user or not user.totp_secret:
         raise HTTPException(status_code=400, detail="Invalid user")
 
-    if not pyotp.TOTP(user.totp_secret).verify(body.code):
+    if not pyotp.TOTP(user.totp_secret).verify(body.code, valid_window=1):
         raise HTTPException(status_code=401, detail="Invalid code")
 
     token = jwt.encode({"sub": str(user.id)}, SECRET, algorithm="HS256")
