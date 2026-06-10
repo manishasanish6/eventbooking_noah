@@ -764,16 +764,20 @@
     display: flex; gap: 0.8rem; margin-top: 2.5rem;
   }
 
-  .social-btn {
-    width: 40px; height: 40px;
+  .back-to-top {
+    width: 44px; height: 44px;
     border: 1px solid rgba(245,241,235,0.15);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--gray); font-size: 1rem; cursor: pointer;
-    transition: border-color 0.2s, color 0.2s;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--gray); font-size: 1.2rem; cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s;
     text-decoration: none;
   }
-
-  .social-btn:hover { border-color: var(--logo-purple); color: var(--logo-purple); }
+  .back-to-top:hover {
+    border-color: var(--logo-purple);
+    color: var(--logo-purple);
+    box-shadow: 0 0 20px rgba(139,68,255,0.12);
+    transform: translateY(-2px);
+  }
 
   /* FOOTER */
   footer {
@@ -1178,7 +1182,7 @@
       </div>
     </div>
     <div class="social-row">
-      <a href="javascript:void(0)" class="social-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑ Back to Top</a>
+      <a href="javascript:void(0)" class="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</a>
     </div>
   </div>
 </section>
