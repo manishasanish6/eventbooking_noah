@@ -1,8 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
-from sqlalchemy.types import String as SQLString
 from backend.database import get_db
 from backend.models import Event
 from pydantic import BaseModel
@@ -49,15 +47,15 @@ class EventCreate(BaseModel):
 
 @router.get("/")
 def list_events(accessible_by: Optional[str] = None, db: Session = Depends(get_db)):
-    q = db.query(Event)
+    all_events = db.query(Event).all()
     if accessible_by:
-        q = q.filter(
-            or_(
-                Event.created_by == accessible_by,
-                Event.editors.cast(SQLString).contains(accessible_by)
-            )
-        )
-    return jsonable_encoder(q.all())
+        result = []
+        for ev in all_events:
+            editors = ev.editors or []
+            if ev.created_by == accessible_by or accessible_by in editors:
+                result.append(ev)
+        return jsonable_encoder(result)
+    return jsonable_encoder(all_events)
 
 @router.get("/{event_id}")
 def get_event(event_id: int, db: Session = Depends(get_db)):
@@ -100,7 +98,7 @@ def update_event(event_id: int, data: EventCreate, db: Session = Depends(get_db)
             setattr(ev, k.replace("cols","cols").replace("rows","rows"), v)
     ev.total_seats = data.rows * data.cols if data.layout_mode != "manual" else len(data.seat_layout or [])
     db.commit(); db.refresh(ev)
-    return ev
+    return jsonable_encoder(ev)
 
 @router.patch("/{event_id}/status")
 def toggle_status(event_id: int, status: str, db: Session = Depends(get_db)):

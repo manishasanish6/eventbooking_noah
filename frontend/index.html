@@ -862,7 +862,7 @@ async function saveEvent(){
       savedEvent = await res.json();
       const idx = events.findIndex(e=>e.id===editingId);
       if(idx > -1){
-        events[idx] = {...events[idx], ...normalizeEvent(savedEvent), booked: events[idx].booked};
+        events[idx] = {...events[idx], ...normalizeEvent(savedEvent), editors: savedEvent.editors ?? events[idx].editors ?? [], booked: events[idx].booked};
       }
     } else {
       const res = await fetch('/events/', {
