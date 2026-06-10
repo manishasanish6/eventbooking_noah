@@ -995,6 +995,9 @@
   <div class="pub-empty" id="eventsEmpty" style="display:none;text-align:center;padding:40px 20px;color:var(--gray)">
     <p>No events published yet. Check back soon!</p>
   </div>
+  <div id="showAllWrap" style="display:none;text-align:center;margin:28px 0 12px">
+    <button id="showAllBtn" class="admin-link" style="padding:10px 32px;cursor:pointer">＋ View All Events</button>
+  </div>
 </section>
 
 <!-- CELEBRITIES -->
@@ -1031,7 +1034,6 @@
       <div class="celeb-info"><span class="celeb-name">Stage Performer</span><span class="celeb-genre">Theatre Artist</span></div>
     </div>
   </div>
-  <a href="#contact" class="btn-primary">Partner With Us</a>
 </section>
 
 <!-- HOW IT WORKS -->
@@ -1176,11 +1178,7 @@
       </div>
     </div>
     <div class="social-row">
-      <a href="#" class="social-btn" title="Instagram">IG</a>
-      <a href="#" class="social-btn" title="Facebook">FB</a>
-      <a href="#" class="social-btn" title="Twitter/X">𝕏</a>
-      <a href="#" class="social-btn" title="TikTok">TK</a>
-      <a href="#" class="social-btn" title="YouTube">YT</a>
+      <a href="javascript:void(0)" class="social-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑ Back to Top</a>
     </div>
   </div>
 </section>
@@ -1477,6 +1475,56 @@
   let selectedSeats = [];
   let selectedAddons = [];
 
+  function renderEventCards(events) {
+    return events.map(e => {
+      const minPrice = e.zones && e.zones.length ? Math.min(...e.zones.map(z => z.price)) : '—';
+      const pct = e.total_seats > 0 ? Math.round((e.booked_seats?.length || 0) / e.total_seats * 100) : 0;
+      const badge = pct >= 100 ? 'Sold Out' : pct > 70 ? 'Last Few' : 'Selling Fast';
+      const bCls = pct >= 100 ? 'sold' : pct > 70 ? 'hot' : '';
+      const dateStr = e.date ? new Date(e.date + 'T12:00').toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+      const icons = ['🎵','🎤','🎭','🎪','🎸','🎹'];
+      const icon = icons[e.id % icons.length] || '🎵';
+      const today = new Date().toISOString().split('T')[0];
+      let ebActive = (e.zones||[]).some(z => {
+        const eb = (z.promotions||{}).early_bird || {};
+        if(!eb.enabled || !eb.price) return false;
+        if(eb.starts_at && today < eb.starts_at) return false;
+        if(eb.ends_at && today > eb.ends_at) return false;
+        return true;
+      });
+      const ebBadge = ebActive ? '<div class="event-badge hot" style="top:56px;background:rgba(139,68,255,.2);color:#8b44ff">🎉 Early Bird</div>' : '';
+      const va = e.venue_address || {};
+      const addrStr = [va.address1, va.address2, va.address3].filter(Boolean).join(', ');
+      const mapQ = [e.venue, va.address1, va.address2, va.address3, va.postal_code].filter(Boolean).join(', ');
+      const mapLink = mapQ ? ' <a href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mapQ) + '" target="_blank" style="color:#8b44ff;font-size:11px;text-decoration:none;white-space:nowrap">📍 Show Map</a>' : '';
+
+      return `<div class="event-card" data-id="${e.id}">
+        <div class="event-card-img">
+          <div class="event-img-icon">${icon}</div>
+          <div class="event-badge ${bCls}">${badge}</div>
+          ${ebBadge}
+          <div class="event-date-badge" style="display:${dateStr?'flex':'none'}">
+            <span class="event-date-day">${dateStr.split(' ')[0]}</span>
+            <span class="event-date-month">${dateStr.split(' ').slice(1).join(' ')}</span>
+          </div>
+        </div>
+        <div class="event-info">
+          <div class="event-cat">${e.genre || 'Event'}</div>
+          <div class="event-name">${e.name}</div>
+          <div class="event-meta">
+            <span>📍 ${[e.venue,addrStr].filter(Boolean).join(', ')}</span>
+            <span>🕗 ${e.time || ''}</span>
+            ${mapLink?'<br>'+mapLink:''}
+          </div>
+          <div class="event-footer">
+            <div class="event-price">${minPrice !== '—' ? '$' + minPrice : '—'} <span>from</span></div>
+            <button class="btn-ticket">Book Now</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
   async function loadEvents() {
     try {
       const res = await fetch(API_BASE + '/events/');
@@ -1484,62 +1532,19 @@
       const raw = await res.json();
       allEvents = raw.filter(e => e.status === 'live');
       allEvents.sort((a,b)=>new Date(a.date)-new Date(b.date));
+      const todayStr = new Date().toISOString().split('T')[0];
+      allEvents = allEvents.filter(e => e.date >= todayStr);
       const grid = document.getElementById('eventsGrid');
       const empty = document.getElementById('eventsEmpty');
       if (!allEvents.length) {
         grid.innerHTML = '';
         empty.style.display = 'block';
+        document.getElementById('showAllWrap').style.display = 'none';
         return;
       }
       empty.style.display = 'none';
-      grid.innerHTML = allEvents.map(e => {
-        const minPrice = e.zones && e.zones.length ? Math.min(...e.zones.map(z => z.price)) : '—';
-        const pct = e.total_seats > 0 ? Math.round((e.booked_seats?.length || 0) / e.total_seats * 100) : 0;
-        const badge = pct >= 100 ? 'Sold Out' : pct > 70 ? 'Last Few' : 'Selling Fast';
-        const bCls = pct >= 100 ? 'sold' : pct > 70 ? 'hot' : '';
-        const dateStr = e.date ? new Date(e.date + 'T12:00').toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
-        const icons = ['🎵','🎤','🎭','🎪','🎸','🎹'];
-        const icon = icons[e.id % icons.length] || '🎵';
-        // Check if any zone has active early bird
-        const today = new Date().toISOString().split('T')[0];
-        let ebActive = (e.zones||[]).some(z => {
-          const eb = (z.promotions||{}).early_bird || {};
-          if(!eb.enabled || !eb.price) return false;
-          if(eb.starts_at && today < eb.starts_at) return false;
-          if(eb.ends_at && today > eb.ends_at) return false;
-          return true;
-        });
-        const ebBadge = ebActive ? '<div class="event-badge hot" style="top:56px;background:rgba(139,68,255,.2);color:#8b44ff">🎉 Early Bird</div>' : '';
-        const va = e.venue_address || {};
-        const addrStr = [va.address1, va.address2, va.address3].filter(Boolean).join(', ');
-        const mapQ = [e.venue, va.address1, va.address2, va.address3, va.postal_code].filter(Boolean).join(', ');
-        const mapLink = mapQ ? ' <a href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mapQ) + '" target="_blank" style="color:#8b44ff;font-size:11px;text-decoration:none;white-space:nowrap">📍 Show Map</a>' : '';
-
-        return `<div class="event-card" data-id="${e.id}">
-          <div class="event-card-img">
-            <div class="event-img-icon">${icon}</div>
-            <div class="event-badge ${bCls}">${badge}</div>
-            ${ebBadge}
-            <div class="event-date-badge" style="display:${dateStr?'flex':'none'}">
-              <span class="event-date-day">${dateStr.split(' ')[0]}</span>
-              <span class="event-date-month">${dateStr.split(' ').slice(1).join(' ')}</span>
-            </div>
-          </div>
-          <div class="event-info">
-            <div class="event-cat">${e.genre || 'Event'}</div>
-            <div class="event-name">${e.name}</div>
-            <div class="event-meta">
-              <span>📍 ${[e.venue,addrStr].filter(Boolean).join(', ')}</span>
-              <span>🕗 ${e.time || ''}</span>
-              ${mapLink?'<br>'+mapLink:''}
-            </div>
-            <div class="event-footer">
-              <div class="event-price">${minPrice !== '—' ? '$' + minPrice : '—'} <span>from</span></div>
-              <button class="btn-ticket">Book Now</button>
-            </div>
-          </div>
-        </div>`;
-      }).join('');
+      grid.innerHTML = renderEventCards(allEvents.length > 10 ? allEvents.slice(0, 10) : allEvents);
+      document.getElementById('showAllWrap').style.display = allEvents.length > 10 ? 'block' : 'none';
     } catch (err) {
       console.warn('Could not load events:', err);
     }
@@ -1556,6 +1561,11 @@
     const pct = evt.total_seats > 0 ? Math.round((evt.booked_seats?.length || 0) / evt.total_seats * 100) : 0;
     if (pct >= 100) { showToast('Sold out!', 'error'); return; }
     openBooking(id);
+  });
+
+  document.getElementById('showAllBtn').addEventListener('click', function() {
+    document.getElementById('eventsGrid').innerHTML = renderEventCards(allEvents);
+    this.parentElement.style.display = 'none';
   });
 
   function renderBookingAddons(e){
