@@ -44,6 +44,7 @@ class EventCreate(BaseModel):
     addons: Optional[list] = []
     created_by: Optional[str] = ""
     editors: Optional[list] = []
+    images: Optional[list] = []
 
 @router.get("/")
 def list_events(accessible_by: Optional[str] = None, db: Session = Depends(get_db)):
@@ -79,7 +80,8 @@ def create_event(data: EventCreate, db: Session = Depends(get_db)):
         venue_address=data.venue_address,
         addons=data.addons or [],
         created_by=data.created_by or "",
-        editors=data.editors or []
+        editors=data.editors or [],
+        images=data.images or []
     )
     db.add(ev); db.commit(); db.refresh(ev)
     return jsonable_encoder(ev)
@@ -92,7 +94,7 @@ def update_event(event_id: int, data: EventCreate, db: Session = Depends(get_db)
     for k, v in data.dict().items():
         if k == "zones":
             setattr(ev, "zones", [z if isinstance(z, dict) else z.dict() for z in v])
-        elif k in ("layout_mode", "seat_layout", "venue_address", "addons", "editors"):
+        elif k in ("layout_mode", "seat_layout", "venue_address", "addons", "editors", "images"):
             setattr(ev, k, v)
         else:
             setattr(ev, k.replace("cols","cols").replace("rows","rows"), v)

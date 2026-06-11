@@ -36,6 +36,8 @@ if 'sqlite' in engine.url.drivername:
             conn.execute(text("ALTER TABLE events ADD COLUMN created_by VARCHAR DEFAULT ''"))
         if 'editors' not in cols_e:
             conn.execute(text("ALTER TABLE events ADD COLUMN editors TEXT DEFAULT '[]'"))
+        if 'images' not in cols_e:
+            conn.execute(text("ALTER TABLE events ADD COLUMN images TEXT DEFAULT '[]'"))
 
         cols_u = [row[1] for row in conn.execute(text("PRAGMA table_info(users)"))]
         if 'totp_secret' not in cols_u:

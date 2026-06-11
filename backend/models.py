@@ -32,6 +32,7 @@ class Event(Base):
     addons = Column(JSON, default=[])   # list of {id, name, type, price, description}
     created_by = Column(String, default="")  # admin email who created the event
     editors = Column(JSON, default=[])   # list of admin emails who can also edit
+    images = Column(JSON, default=[])   # list of base64 data URLs
 
 class Booking(Base):
     __tablename__ = "bookings"
