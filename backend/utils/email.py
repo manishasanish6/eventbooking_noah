@@ -52,8 +52,13 @@ body{{font-family:Arial,sans-serif;background:#111;color:#F5F1EB;padding:40px 20
     msg.attach(MIMEText(body, "html"))
 
     logger.info("Sending OTP to %s", to_email)
-    with smtplib.SMTP(host, port, timeout=15) as smtp:
+    use_ssl = os.getenv("SMTP_USE_SSL", "").lower() == "true"
+    if use_ssl:
+        smtp = smtplib.SMTP_SSL(host, port, timeout=15)
+    else:
+        smtp = smtplib.SMTP(host, port, timeout=15)
         smtp.starttls()
+    with smtp:
         smtp.login(user, password)
         smtp.send_message(msg)
     logger.info("OTP sent to %s", to_email)
@@ -172,8 +177,13 @@ h1{{font-family:'Bebas Neue',sans-serif;font-size:32px;color:#fff;margin:0 0 4px
         msg.attach(img_att)
 
     logger.info("Sending booking confirmation to %s for %s", to_email, event_name)
-    with smtplib.SMTP(host, port, timeout=15) as smtp:
+    use_ssl = os.getenv("SMTP_USE_SSL", "").lower() == "true"
+    if use_ssl:
+        smtp = smtplib.SMTP_SSL(host, port, timeout=15)
+    else:
+        smtp = smtplib.SMTP(host, port, timeout=15)
         smtp.starttls()
+    with smtp:
         smtp.login(user, password)
         smtp.send_message(msg)
     logger.info("Email sent to %s", to_email)
