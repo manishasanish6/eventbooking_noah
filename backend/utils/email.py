@@ -1,13 +1,8 @@
-import os
-import io
-import smtplib
-import logging
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.image import MIMEImage
+import os, io, base64, logging
 from dotenv import load_dotenv
 import qrcode
-from qrcode.image.pil import PilImage
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 logger = logging.getLogger("noah.email")
 
@@ -34,34 +29,25 @@ body{{font-family:Arial,sans-serif;background:#111;color:#F5F1EB;padding:40px 20
 </body>
 </html>"""
 
-    host = os.getenv("SMTP_HOST", "smtp.gmail.com")
-    port = int(os.getenv("SMTP_PORT", "587"))
-    user = os.getenv("SMTP_USER")
-    password = os.getenv("SMTP_PASS")
-    from_addr = os.getenv("EMAIL_FROM", user)
+    api_key = os.getenv("SENDGRID_API_KEY")
+    from_addr = os.getenv("EMAIL_FROM", "noreply@noahevents.com")
 
-    if not user or not password:
-        logger.warning("SMTP credentials not set — skipping OTP email to %s", to_email)
+    if not api_key:
+        logger.warning("SENDGRID_API_KEY not set — skipping OTP email to %s", to_email)
         return
 
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = from_addr
-    msg["To"] = to_email
-    msg.attach(MIMEText(f"Your Noah Events OTP is: {otp_code}. It expires in 5 minutes.", "plain"))
-    msg.attach(MIMEText(body, "html"))
+    msg = Mail(
+        from_email=from_addr,
+        to_emails=to_email,
+        subject=subject,
+        html_content=body
+    )
 
     logger.info("Sending OTP to %s", to_email)
-    use_ssl = os.getenv("SMTP_USE_SSL", "").lower() == "true"
-    if use_ssl:
-        smtp = smtplib.SMTP_SSL(host, port, timeout=15)
-    else:
-        smtp = smtplib.SMTP(host, port, timeout=15)
-        smtp.starttls()
-    with smtp:
-        smtp.login(user, password)
-        smtp.send_message(msg)
-    logger.info("OTP sent to %s", to_email)
+    sg = SendGridAPIClient(api_key)
+    response = sg.send(msg)
+    logger.info("OTP sent to %s (status %s)", to_email, response.status_code)
+
 
 def send_booking_confirmation(to_email, event_name, seats, total, venue, venue_address, date, time, booking_id, ticket_codes=None, addon_items=None):
     load_dotenv()
@@ -75,12 +61,16 @@ def send_booking_confirmation(to_email, event_name, seats, total, venue, venue_a
     qr_rows = ""
     for s in seats:
         code = ticket_codes.get(s, f"NOAH-{booking_id}-{s}")
+        buf = io.BytesIO()
+        qrcode.make(code).save(buf, format="PNG")
+        b64 = base64.b64encode(buf.getvalue()).decode()
+        src = f"data:image/png;base64,{b64}"
         qr_rows += (
             f'<tr><td style="padding:10px 0;border-bottom:1px solid rgba(255,78,54,0.08)">'
             f'<div style="font-weight:600;font-size:15px;margin-bottom:4px">{s}</div>'
             f'<div style="font-size:10px;color:#aaa;letter-spacing:1px">{code}</div></td>'
             f'<td style="text-align:right;padding:10px 0">'
-            f'<img src="cid:qr-{s}" width="80" height="80" style="display:block"></td></tr>'
+            f'<img src="{src}" width="80" height="80" style="display:block"></td></tr>'
         )
 
     addr_parts = []
@@ -109,7 +99,7 @@ def send_booking_confirmation(to_email, event_name, seats, total, venue, venue_a
     if addr_line:
         venue_html += f"<div style='font-size:12px;color:#aaa;margin-top:2px'>{addr_line}</div>"
     if map_link:
-        venue_html += f'<div style="margin-top:4px"><a href="{map_link}" target="_blank" style="color:#8b44ff;font-size:11px;text-decoration:none;letter-spacing:1px">📍 View on Map</a></div>'
+        venue_html += f'<div style="margin-top:4px"><a href="{map_link}" target="_blank" style="color:#8b44ff;font-size:11px;text-decoration:none;letter-spacing:1px">View on Map</a></div>'
 
     body = f"""\
 <!DOCTYPE html>
@@ -142,48 +132,21 @@ h1{{font-family:'Bebas Neue',sans-serif;font-size:32px;color:#fff;margin:0 0 4px
 </body>
 </html>"""
 
-    host = os.getenv("SMTP_HOST", "smtp.gmail.com")
-    port = int(os.getenv("SMTP_PORT", "587"))
-    user = os.getenv("SMTP_USER")
-    password = os.getenv("SMTP_PASS")
-    from_addr = os.getenv("EMAIL_FROM", user)
+    api_key = os.getenv("SENDGRID_API_KEY")
+    from_addr = os.getenv("EMAIL_FROM", "noreply@noahevents.com")
 
-    if not user or not password:
-        logger.warning("SMTP credentials not set — skipping email to %s", to_email)
+    if not api_key:
+        logger.warning("SENDGRID_API_KEY not set — skipping booking email to %s", to_email)
         return
 
-    msg = MIMEMultipart("related")
-    msg["Subject"] = subject
-    msg["From"] = from_addr
-    msg["To"] = to_email
-
-    msg_alt = MIMEMultipart("alternative")
-    msg_alt.attach(MIMEText(
-        f"Booking confirmed for {event_name}. Seats: {seats_str}. "
-        f"Ref: NOAH-{booking_id}. Total: ${total}. Show QR code at venue.",
-        "plain"
-    ))
-    msg_alt.attach(MIMEText(body, "html"))
-    msg.attach(msg_alt)
-
-    for s in seats:
-        code = ticket_codes.get(s, f"NOAH-{booking_id}-{s}")
-        qr_img = qrcode.make(code, image_factory=PilImage)
-        buf = io.BytesIO()
-        qr_img.save(buf, format="PNG")
-        img_att = MIMEImage(buf.getvalue(), _subtype="png")
-        img_att.add_header("Content-ID", f"<qr-{s}>")
-        img_att.add_header("Content-Disposition", "inline", filename=f"qr-{s}.png")
-        msg.attach(img_att)
+    msg = Mail(
+        from_email=from_addr,
+        to_emails=to_email,
+        subject=subject,
+        html_content=body
+    )
 
     logger.info("Sending booking confirmation to %s for %s", to_email, event_name)
-    use_ssl = os.getenv("SMTP_USE_SSL", "").lower() == "true"
-    if use_ssl:
-        smtp = smtplib.SMTP_SSL(host, port, timeout=15)
-    else:
-        smtp = smtplib.SMTP(host, port, timeout=15)
-        smtp.starttls()
-    with smtp:
-        smtp.login(user, password)
-        smtp.send_message(msg)
-    logger.info("Email sent to %s", to_email)
+    sg = SendGridAPIClient(api_key)
+    response = sg.send(msg)
+    logger.info("Email sent to %s (status %s)", to_email, response.status_code)
