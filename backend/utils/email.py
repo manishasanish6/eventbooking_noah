@@ -5,12 +5,14 @@ import logging
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
+from dotenv import load_dotenv
 import qrcode
 from qrcode.image.pil import PilImage
 
 logger = logging.getLogger("noah.email")
 
 def send_otp_email(to_email, otp_code):
+    load_dotenv()
     subject = f"Your Noah Events OTP — {otp_code}"
     body = f"""\
 <!DOCTYPE html>
@@ -57,6 +59,7 @@ body{{font-family:Arial,sans-serif;background:#111;color:#F5F1EB;padding:40px 20
     logger.info("OTP sent to %s", to_email)
 
 def send_booking_confirmation(to_email, event_name, seats, total, venue, venue_address, date, time, booking_id, ticket_codes=None, addon_items=None):
+    load_dotenv()
     subject = f"Booking Confirmed — {event_name}"
     time_str = f" at {time}" if time else ""
     seats_str = ", ".join(seats)
