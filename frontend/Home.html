@@ -534,21 +534,6 @@
   .modal-step { display: none; }
   .modal-step.active { display: block; }
 
-  .modal-qr {
-    text-align: center; margin: 1rem 0;
-  }
-
-  .modal-qr img {
-    width: 180px; height: 180px;
-    border: 2px solid rgba(255,255,255,0.1);
-    border-radius: 8px;
-  }
-
-  .modal-qr-label {
-    font-size: 0.72rem; color: var(--gray);
-    margin-top: 0.5rem; letter-spacing: 0.05em;
-  }
-
   .modal-loading {
     text-align: center; padding: 2rem 0;
     color: var(--gray); font-size: 0.85rem;
@@ -1242,25 +1227,19 @@
       <button class="btn-primary" id="stepEmailBtn">Continue</button>
     </div>
 
-    <!-- Step 2: TOTP Code -->
-    <div class="modal-step" id="stepTotp">
+    <!-- Step 2: OTP Code -->
+    <div class="modal-step" id="stepOtp">
       <button class="modal-back-btn" id="stepBackBtn">&larr; Back</button>
-      <div id="qrSection" style="display:none;">
-        <div class="modal-qr">
-          <img id="qrImage" src="" alt="QR Code">
-        </div>
-        <div id="qrFallback" style="display:none;text-align:center;margin:0.5rem 0;word-break:break-all;">
-          <p style="font-size:0.75rem;color:var(--gray);margin-bottom:0.5rem;">Open this link in your authenticator app:</p>
-          <code id="qrUriLink" style="font-size:0.7rem;color:var(--gold);"></code>
-        </div>
-        <div class="modal-qr-label">Scan this QR code with Google Authenticator or Authy</div>
+      <div style="margin-bottom:1rem;font-size:1rem;color:var(--white);font-weight:500">
+        <span id="otpSentEmail"></span>
       </div>
-      <div class="form-group" style="margin-top:1rem;">
-        <label class="form-label">Authentication Code</label>
-        <input class="form-input modal-code-input" type="text" id="totpCode" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
+      <div style="font-size:0.75rem;color:var(--gray);margin-bottom:1rem;">A 6-digit code was sent to this email. It expires in 5 minutes.</div>
+      <div class="form-group">
+        <label class="form-label">One-Time Code</label>
+        <input class="form-input modal-code-input" type="text" id="otpCode" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
       </div>
-      <div class="modal-error" id="totpError">Invalid code. Try again.</div>
-      <button class="btn-primary" id="stepTotpBtn">Verify</button>
+      <div class="modal-error" id="otpError">Invalid code. Try again.</div>
+      <button class="btn-primary" id="stepOtpBtn">Verify</button>
     </div>
 
     <!-- Loading -->
@@ -1328,7 +1307,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // Admin login with TOTP
+  // Admin login with email OTP
   const API = (window.location.protocol === 'file:' ? 'http://localhost:8000' : window.location.origin) + '/auth';
 
   const adminBtn = document.getElementById('adminBtn');
@@ -1337,16 +1316,15 @@
   const modalSub = document.getElementById('modalSub');
 
   const stepEmail = document.getElementById('stepEmail');
-  const stepTotp = document.getElementById('stepTotp');
+  const stepOtp = document.getElementById('stepOtp');
   const stepLoading = document.getElementById('stepLoading');
   const loginEmail = document.getElementById('loginEmail');
   const stepEmailBtn = document.getElementById('stepEmailBtn');
   const stepError = document.getElementById('stepError');
-  const totpCode = document.getElementById('totpCode');
-  const stepTotpBtn = document.getElementById('stepTotpBtn');
-  const totpError = document.getElementById('totpError');
-  const qrSection = document.getElementById('qrSection');
-  const qrImage = document.getElementById('qrImage');
+  const otpCode = document.getElementById('otpCode');
+  const stepOtpBtn = document.getElementById('stepOtpBtn');
+  const otpError = document.getElementById('otpError');
+  const otpSentEmail = document.getElementById('otpSentEmail');
   const stepBackBtn = document.getElementById('stepBackBtn');
 
   let currentEmail = '';
@@ -1358,17 +1336,16 @@
   document.getElementById('adminBtn').style.display = loggedIn ? 'none' : 'flex';
 
   function showStep(step) {
-    [stepEmail, stepTotp, stepLoading].forEach(s => s.classList.remove('active'));
+    [stepEmail, stepOtp, stepLoading].forEach(s => s.classList.remove('active'));
     step.classList.add('active');
   }
 
   function resetModal() {
     showStep(stepEmail);
     loginEmail.value = '';
-    totpCode.value = '';
+    otpCode.value = '';
     stepError.classList.remove('show');
-    totpError.classList.remove('show');
-    qrSection.style.display = 'none';
+    otpError.classList.remove('show');
     currentEmail = '';
     modalSub.textContent = 'Sign in to manage events & bookings';
   }
@@ -1390,7 +1367,7 @@
   stepBackBtn.addEventListener('click', () => {
     showStep(stepEmail);
     stepError.classList.remove('show');
-    totpError.classList.remove('show');
+    otpError.classList.remove('show');
     modalSub.textContent = 'Sign in to manage events & bookings';
   });
 
@@ -1400,7 +1377,7 @@
 
     stepError.classList.remove('show');
     showStep(stepLoading);
-    modalSub.textContent = 'Checking email...';
+    modalSub.textContent = 'Sending OTP...';
 
     try {
       const res = await fetch(API + '/check-email', {
@@ -1418,29 +1395,13 @@
         return;
       }
 
-      const data = await res.json();
       currentEmail = email;
-
-      if (data.status === 'setup') {
-        qrSection.style.display = 'block';
-        const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(data.provisioning_uri);
-        qrImage.src = qrUrl;
-        qrImage.onerror = function() {
-          this.style.display = 'none';
-          document.getElementById('qrFallback').style.display = 'block';
-        };
-        document.getElementById('qrFallback').style.display = 'none';
-        document.getElementById('qrUriLink').textContent = data.provisioning_uri;
-        modalSub.textContent = 'Scan QR with your authenticator app';
-      } else {
-        qrSection.style.display = 'none';
-        modalSub.textContent = 'Enter your authentication code';
-      }
-
-      showStep(stepTotp);
-      totpError.classList.remove('show');
-      totpCode.value = '';
-      setTimeout(() => totpCode.focus(), 200);
+      otpSentEmail.textContent = email;
+      modalSub.textContent = 'Enter the code sent to your email';
+      showStep(stepOtp);
+      otpError.classList.remove('show');
+      otpCode.value = '';
+      setTimeout(() => otpCode.focus(), 200);
 
     } catch (err) {
       stepError.textContent = 'Connection error. Try again.';
@@ -1450,16 +1411,16 @@
     }
   });
 
-  async function verifyTotp() {
-    const code = totpCode.value.trim();
-    if (code.length !== 6) { totpError.textContent = 'Please enter a 6-digit code.'; totpError.classList.add('show'); return; }
+  async function verifyOtp() {
+    const code = otpCode.value.trim();
+    if (code.length !== 6) { otpError.textContent = 'Please enter a 6-digit code.'; otpError.classList.add('show'); return; }
 
-    totpError.classList.remove('show');
+    otpError.classList.remove('show');
     showStep(stepLoading);
     modalSub.textContent = 'Verifying...';
 
     try {
-      const res = await fetch(API + '/verify-totp', {
+      const res = await fetch(API + '/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: currentEmail, code })
@@ -1467,10 +1428,10 @@
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        totpError.textContent = data.detail || 'Invalid code. Try again.';
-        showStep(stepTotp);
-        totpError.classList.add('show');
-        modalSub.textContent = 'Enter your authentication code';
+        otpError.textContent = data.detail || 'Invalid code. Try again.';
+        showStep(stepOtp);
+        otpError.classList.add('show');
+        modalSub.textContent = 'Enter the code sent to your email';
         return;
       }
 
@@ -1481,22 +1442,22 @@
       window.location.href = 'index.html';
 
     } catch (err) {
-      totpError.textContent = 'Connection error. Try again.';
-      showStep(stepTotp);
-      totpError.classList.add('show');
-      modalSub.textContent = 'Enter your authentication code';
+      otpError.textContent = 'Connection error. Try again.';
+      showStep(stepOtp);
+      otpError.classList.add('show');
+      modalSub.textContent = 'Enter the code sent to your email';
     }
   }
 
-  stepTotpBtn.addEventListener('click', verifyTotp);
+  stepOtpBtn.addEventListener('click', verifyOtp);
 
-  totpCode.addEventListener('input', () => {
-    totpError.classList.remove('show');
-    if (totpCode.value.length === 6) verifyTotp();
+  otpCode.addEventListener('input', () => {
+    otpError.classList.remove('show');
+    if (otpCode.value.length === 6) verifyOtp();
   });
 
   loginEmail.addEventListener('keydown', (e) => { if (e.key === 'Enter') stepEmailBtn.click(); });
-  totpCode.addEventListener('keydown', (e) => { if (e.key === 'Enter') stepTotpBtn.click(); });
+  otpCode.addEventListener('keydown', (e) => { if (e.key === 'Enter') stepOtpBtn.click(); });
 
   API_BASE = (window.location.protocol === 'file:' ? 'http://localhost:8000' : window.location.origin);
 

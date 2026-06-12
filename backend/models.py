@@ -7,6 +7,8 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     totp_secret = Column(String, nullable=True)
+    otp_code = Column(String, nullable=True)
+    otp_expires_at = Column(String, nullable=True)
 
 class Event(Base):
     __tablename__ = "events"

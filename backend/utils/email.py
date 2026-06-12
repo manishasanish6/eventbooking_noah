@@ -10,6 +10,52 @@ from qrcode.image.pil import PilImage
 
 logger = logging.getLogger("noah.email")
 
+def send_otp_email(to_email, otp_code):
+    subject = f"Your Noah Events OTP — {otp_code}"
+    body = f"""\
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><style>
+body{{font-family:Arial,sans-serif;background:#111;color:#F5F1EB;padding:40px 20px}}
+.container{{max-width:440px;margin:0 auto;background:#1A1A1A;border:1px solid rgba(255,78,54,0.2);padding:32px;text-align:center}}
+.code{{font-size:42px;font-weight:700;letter-spacing:6px;color:#8b44ff;margin:24px 0;font-family:monospace}}
+.footer{{margin-top:20px;font-size:11px;color:#aaa}}
+</style></head>
+<body>
+<div class="container">
+<div style="font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#8b44ff;margin-bottom:16px">Noah Events</div>
+<div style="font-size:15px;margin-bottom:8px">Your one-time login code</div>
+<div class="code">{otp_code}</div>
+<div style="font-size:13px;color:#aaa">This code expires in 5 minutes.</div>
+<div class="footer">If you did not request this, please ignore this email.</div>
+</div>
+</body>
+</html>"""
+
+    host = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    port = int(os.getenv("SMTP_PORT", "587"))
+    user = os.getenv("SMTP_USER")
+    password = os.getenv("SMTP_PASS")
+    from_addr = os.getenv("EMAIL_FROM", user)
+
+    if not user or not password:
+        logger.warning("SMTP credentials not set — skipping OTP email to %s", to_email)
+        return
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = from_addr
+    msg["To"] = to_email
+    msg.attach(MIMEText(f"Your Noah Events OTP is: {otp_code}. It expires in 5 minutes.", "plain"))
+    msg.attach(MIMEText(body, "html"))
+
+    logger.info("Sending OTP to %s", to_email)
+    with smtplib.SMTP(host, port, timeout=15) as smtp:
+        smtp.starttls()
+        smtp.login(user, password)
+        smtp.send_message(msg)
+    logger.info("OTP sent to %s", to_email)
+
 def send_booking_confirmation(to_email, event_name, seats, total, venue, venue_address, date, time, booking_id, ticket_codes=None, addon_items=None):
     subject = f"Booking Confirmed — {event_name}"
     time_str = f" at {time}" if time else ""

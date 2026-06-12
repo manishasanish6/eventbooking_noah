@@ -29,6 +29,8 @@ SQL_MIGRATIONS = {
     ],
     "users": [
         ("totp_secret", "VARCHAR"),
+        ("otp_code", "VARCHAR"),
+        ("otp_expires_at", "VARCHAR"),
     ],
 }
 
