@@ -1205,7 +1205,7 @@
     <li><a href="#about">About</a></li>
     <li><a href="#events">Events</a></li>
     <li><a href="#contact">Contact</a></li>
-    <li><a href="#">Privacy Policy</a></li>
+    <li><a href="javascript:void(0)" id="privacyLink">Privacy Policy</a></li>
   </ul>
   <p class="footer-copy">© 2025 Noah Events. All rights reserved.</p>
 </footer>
@@ -1232,6 +1232,27 @@
 
     <div class="modal-step" id="stepLoading">
       <div class="modal-loading">Signing in...</div>
+    </div>
+  </div>
+</div>
+
+<!-- PRIVACY POLICY MODAL -->
+<div class="modal-overlay" id="privacyModal">
+  <div class="modal-box" style="max-width:600px">
+    <button class="modal-close" id="privacyClose">&times;</button>
+    <div class="modal-title">Privacy Policy</div>
+    <div class="modal-sub" style="text-align:left;padding:1rem 0;max-height:60vh;overflow-y:auto">
+      <p style="font-size:0.8rem;color:var(--gray);margin-bottom:0.5rem">Last updated: June 2026</p>
+      <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">1. Information We Collect</h3>
+      <p style="font-size:0.85rem;line-height:1.7">When you book tickets or use Noah Events, we collect your name, email address, phone number, and payment details. We also collect event preferences and booking history to improve your experience.</p>
+      <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">2. How We Use Your Information</h3>
+      <p style="font-size:0.85rem;line-height:1.7">We use your data to process bookings, send confirmations and event updates, provide customer support, and improve our services. We do not sell your personal information to third parties.</p>
+      <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">3. Data Security</h3>
+      <p style="font-size:0.85rem;line-height:1.7">We implement industry-standard security measures including encryption and secure servers to protect your personal data.</p>
+      <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">4. Cookies</h3>
+      <p style="font-size:0.85rem;line-height:1.7">Our website uses cookies to enhance functionality and analyze usage. You can control cookie preferences through your browser settings.</p>
+      <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">5. Contact</h3>
+      <p style="font-size:0.85rem;line-height:1.7">For questions about this policy, contact us at hello@noahevents.com.</p>
     </div>
   </div>
 </div>
@@ -1512,6 +1533,16 @@
     const pct = evt.total_seats > 0 ? Math.round((evt.booked_seats?.length || 0) / evt.total_seats * 100) : 0;
     if (pct >= 100) { showToast('Sold out!', 'error'); return; }
     openBooking(id);
+  });
+
+  document.getElementById('privacyLink').addEventListener('click', () => {
+    document.getElementById('privacyModal').classList.add('active');
+  });
+  document.getElementById('privacyClose').addEventListener('click', () => {
+    document.getElementById('privacyModal').classList.remove('active');
+  });
+  document.getElementById('privacyModal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) e.target.classList.remove('active');
   });
 
   function showAllEvents() {
