@@ -35,6 +35,12 @@ class Event(Base):
     created_by = Column(String, default="")  # admin email who created the event
     editors = Column(JSON, default=[])   # list of admin emails who can also edit
     images = Column(JSON, default=[])   # list of base64 data URLs
+    artist_bio = Column(String, default="")
+    artist_photo = Column(String, default="")
+    artist_instagram = Column(String, default="")
+    artist_facebook = Column(String, default="")
+    artist_website = Column(String, default="")
+    artist_details = Column(String, default="")
 
 class Booking(Base):
     __tablename__ = "bookings"

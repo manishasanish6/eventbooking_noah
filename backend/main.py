@@ -22,6 +22,12 @@ SQL_MIGRATIONS = {
         ("created_by", "VARCHAR DEFAULT ''"),
         ("editors", "TEXT DEFAULT '[]'"),
         ("images", "TEXT DEFAULT '[]'"),
+        ("artist_bio", "VARCHAR DEFAULT ''"),
+        ("artist_photo", "VARCHAR DEFAULT ''"),
+        ("artist_instagram", "VARCHAR DEFAULT ''"),
+        ("artist_facebook", "VARCHAR DEFAULT ''"),
+        ("artist_website", "VARCHAR DEFAULT ''"),
+        ("artist_details", "VARCHAR DEFAULT ''"),
     ],
     "bookings": [
         ("email", "VARCHAR"),

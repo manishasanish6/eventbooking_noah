@@ -45,6 +45,12 @@ class EventCreate(BaseModel):
     created_by: Optional[str] = ""
     editors: Optional[list] = []
     images: Optional[list] = []
+    artist_bio: Optional[str] = ""
+    artist_photo: Optional[str] = ""
+    artist_instagram: Optional[str] = ""
+    artist_facebook: Optional[str] = ""
+    artist_website: Optional[str] = ""
+    artist_details: Optional[str] = ""
 
 @router.get("/")
 def list_events(accessible_by: Optional[str] = None, db: Session = Depends(get_db)):
@@ -81,7 +87,13 @@ def create_event(data: EventCreate, db: Session = Depends(get_db)):
         addons=data.addons or [],
         created_by=data.created_by or "",
         editors=data.editors or [],
-        images=data.images or []
+        images=data.images or [],
+        artist_bio=data.artist_bio or "",
+        artist_photo=data.artist_photo or "",
+        artist_instagram=data.artist_instagram or "",
+        artist_facebook=data.artist_facebook or "",
+        artist_website=data.artist_website or "",
+        artist_details=data.artist_details or ""
     )
     db.add(ev); db.commit(); db.refresh(ev)
     return jsonable_encoder(ev)

@@ -350,6 +350,38 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
       </div>
     </div>
 
+    <!-- CARD: Artist Details -->
+    <div class="form-card">
+      <div class="form-card-title">🎤 Artist Details</div>
+      <div class="field">
+        <label>Bio</label>
+        <textarea id="f-artist-bio" rows="3" placeholder="Short description about the artist..."></textarea>
+      </div>
+      <div class="field">
+        <label>Photo</label>
+        <input type="file" id="f-artist-photo" accept="image/*" onchange="handleArtistPhotoUpload(event)">
+        <div id="artist-photo-preview" style="margin-top:6px;max-width:160px"></div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Instagram</label>
+          <input type="text" id="f-artist-instagram" placeholder="https://instagram.com/...">
+        </div>
+        <div class="field">
+          <label>Facebook</label>
+          <input type="text" id="f-artist-facebook" placeholder="https://facebook.com/...">
+        </div>
+      </div>
+      <div class="field">
+        <label>Website</label>
+        <input type="text" id="f-artist-website" placeholder="https://...">
+      </div>
+      <div class="field">
+        <label>Additional Details <span style="font-weight:300;color:var(--gray)">(optional)</span></label>
+        <textarea id="f-artist-details" rows="2" placeholder="Any extra info about the artist..."></textarea>
+      </div>
+    </div>
+
     <!-- CARD: Venue -->
     <div class="form-card">
       <div class="form-card-title">📍 Venue</div>
@@ -556,6 +588,7 @@ let bookedSeats = {};
 let addons = [];
 let editors = [];
 let currentUser = '';
+let _artistPhotoData = '';
 
 function normalizeEvent(event){
   return {
@@ -852,6 +885,18 @@ function removeEventImage(idx) {
   renderImagePreviews();
 }
 
+function handleArtistPhotoUpload(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    _artistPhotoData = e.target.result;
+    document.getElementById('artist-photo-preview').innerHTML =
+      `<img src="${_artistPhotoData}" style="width:100%;border:1px solid rgba(255,78,54,0.15);display:block">`;
+  };
+  reader.readAsDataURL(file);
+}
+
 function renderImagePreviews() {
   const container = document.getElementById('images-preview');
   if (!_eventImagesData.length) {
@@ -904,7 +949,13 @@ async function saveEvent(){
     addons:JSON.parse(JSON.stringify(addons)),
     created_by: document.getElementById('f-creator').value || currentUser,
     editors: JSON.parse(JSON.stringify(editors)),
-    images: _eventImagesData
+    images: _eventImagesData,
+    artist_bio: document.getElementById('f-artist-bio').value,
+    artist_photo: _artistPhotoData,
+    artist_instagram: document.getElementById('f-artist-instagram').value,
+    artist_facebook: document.getElementById('f-artist-facebook').value,
+    artist_website: document.getElementById('f-artist-website').value,
+    artist_details: document.getElementById('f-artist-details').value
   };
 
   const btn=document.getElementById('save-btn-text');
@@ -959,6 +1010,16 @@ function editEvent(id){
   document.getElementById('f-end-time').value=e.end_time||'22:00';
   document.getElementById('f-genre').value=e.genre;
   document.getElementById('f-status').value=e.status;
+  document.getElementById('f-artist-bio').value=e.artist_bio||'';
+  _artistPhotoData = e.artist_photo||'';
+  if (_artistPhotoData) {
+    document.getElementById('artist-photo-preview').innerHTML =
+      `<img src="${_artistPhotoData}" style="width:100%;border:1px solid rgba(255,78,54,0.15);display:block">`;
+  }
+  document.getElementById('f-artist-instagram').value=e.artist_instagram||'';
+  document.getElementById('f-artist-facebook').value=e.artist_facebook||'';
+  document.getElementById('f-artist-website').value=e.artist_website||'';
+  document.getElementById('f-artist-details').value=e.artist_details||'';
   document.getElementById('f-rows').value=e.rows;
   document.getElementById('f-cols').value=e.cols;
   zones=JSON.parse(JSON.stringify(e.zones));
@@ -1001,6 +1062,14 @@ function cancelEdit(){
   editingId=null;
   document.getElementById('f-name').value='';
   document.getElementById('f-artist').value='';
+  document.getElementById('f-artist-bio').value='';
+  _artistPhotoData = '';
+  document.getElementById('artist-photo-preview').innerHTML = '';
+  document.getElementById('f-artist-photo').value = '';
+  document.getElementById('f-artist-instagram').value='';
+  document.getElementById('f-artist-facebook').value='';
+  document.getElementById('f-artist-website').value='';
+  document.getElementById('f-artist-details').value='';
   document.getElementById('f-venue').value='';
   document.getElementById('f-addr1').value='';
   document.getElementById('f-addr2').value='';
