@@ -310,6 +310,36 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
       <div class="field">
         <label>Artist / Subtitle</label>
         <input type="text" id="f-artist" placeholder="e.g. The Aether World Tour">
+        <button id="toggleArtistBtn" onclick="toggleArtistDetails()" style="background:none;border:none;color:var(--logo-purple);cursor:pointer;font-size:12px;padding:0;margin-top:4px;font-family:var(--font-b)">＋ Artist Info</button>
+      </div>
+      <div id="artistCollapse" style="display:none;margin-top:8px;padding:12px;background:var(--dark3);border:1px solid rgba(255,78,54,0.12)">
+        <div class="field" style="margin-bottom:0">
+          <label>Bio</label>
+          <textarea id="f-artist-bio" rows="3" placeholder="Short description about the artist..." style="margin-bottom:12px"></textarea>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Photo</label>
+          <input type="file" id="f-artist-photo" accept="image/*" onchange="handleArtistPhotoUpload(event)">
+          <div id="artist-photo-preview" style="margin-top:6px;max-width:160px"></div>
+        </div>
+        <div class="field-row" style="margin-bottom:12px">
+          <div class="field">
+            <label>Instagram</label>
+            <input type="text" id="f-artist-instagram" placeholder="https://instagram.com/...">
+          </div>
+          <div class="field">
+            <label>Facebook</label>
+            <input type="text" id="f-artist-facebook" placeholder="https://facebook.com/...">
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Website</label>
+          <input type="text" id="f-artist-website" placeholder="https://...">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Additional Details <span style="font-weight:300;color:var(--gray)">(optional)</span></label>
+          <textarea id="f-artist-details" rows="2" placeholder="Any extra info about the artist..."></textarea>
+        </div>
       </div>
       <div class="field-row">
         <div class="field">
@@ -347,38 +377,6 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
         <input type="file" id="f-images" accept="image/*" multiple onchange="handleImagesUpload(event)">
         <div id="images-preview" style="display:none;margin-top:8px;flex-wrap:wrap;gap:8px"></div>
         <div class="form-helper" style="font-size:11px;color:var(--gray);margin-top:4px">Select multiple photos. First photo shows first on the public page.</div>
-      </div>
-    </div>
-
-    <!-- CARD: Artist Details -->
-    <div class="form-card">
-      <div class="form-card-title">🎤 Artist Details</div>
-      <div class="field">
-        <label>Bio</label>
-        <textarea id="f-artist-bio" rows="3" placeholder="Short description about the artist..."></textarea>
-      </div>
-      <div class="field">
-        <label>Photo</label>
-        <input type="file" id="f-artist-photo" accept="image/*" onchange="handleArtistPhotoUpload(event)">
-        <div id="artist-photo-preview" style="margin-top:6px;max-width:160px"></div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label>Instagram</label>
-          <input type="text" id="f-artist-instagram" placeholder="https://instagram.com/...">
-        </div>
-        <div class="field">
-          <label>Facebook</label>
-          <input type="text" id="f-artist-facebook" placeholder="https://facebook.com/...">
-        </div>
-      </div>
-      <div class="field">
-        <label>Website</label>
-        <input type="text" id="f-artist-website" placeholder="https://...">
-      </div>
-      <div class="field">
-        <label>Additional Details <span style="font-weight:300;color:var(--gray)">(optional)</span></label>
-        <textarea id="f-artist-details" rows="2" placeholder="Any extra info about the artist..."></textarea>
       </div>
     </div>
 
@@ -1020,6 +1018,10 @@ function editEvent(id){
   document.getElementById('f-artist-facebook').value=e.artist_facebook||'';
   document.getElementById('f-artist-website').value=e.artist_website||'';
   document.getElementById('f-artist-details').value=e.artist_details||'';
+  if (e.artist_bio || e.artist_photo || e.artist_instagram || e.artist_facebook || e.artist_website || e.artist_details) {
+    document.getElementById('artistCollapse').style.display = 'block';
+    document.getElementById('toggleArtistBtn').textContent = '− Artist Info';
+  }
   document.getElementById('f-rows').value=e.rows;
   document.getElementById('f-cols').value=e.cols;
   zones=JSON.parse(JSON.stringify(e.zones));
@@ -1070,6 +1072,8 @@ function cancelEdit(){
   document.getElementById('f-artist-facebook').value='';
   document.getElementById('f-artist-website').value='';
   document.getElementById('f-artist-details').value='';
+  document.getElementById('artistCollapse').style.display='none';
+  document.getElementById('toggleArtistBtn').textContent='＋ Artist Info';
   document.getElementById('f-venue').value='';
   document.getElementById('f-addr1').value='';
   document.getElementById('f-addr2').value='';
@@ -1102,6 +1106,14 @@ function cancelEdit(){
   renderZonesManual();
   switchView('events');
 }
+function toggleArtistDetails(){
+  const el = document.getElementById('artistCollapse');
+  const btn = document.getElementById('toggleArtistBtn');
+  const open = el.style.display === 'block';
+  el.style.display = open ? 'none' : 'block';
+  btn.textContent = open ? '＋ Artist Info' : '− Artist Info';
+}
+
 function toggleAddr(){
   const el=document.getElementById('addr-fields');
   const btn=document.getElementById('addr-toggle-btn');
