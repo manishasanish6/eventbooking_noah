@@ -122,6 +122,10 @@ body{
 .sc-toolbar button{background:var(--dark2);border:1px solid rgba(0,0,0,0.1);padding:5px 10px;color:#000;font-size:11px;cursor:pointer;font-family:var(--font-b);transition:border-color .2s}
 .sc-toolbar button:hover{border-color:var(--logo-purple);color:var(--white)}
 .sc-walkway{position:absolute;top:0;bottom:0;width:2px;background:repeating-linear-gradient(180deg,transparent 0,transparent 4px,rgba(255,78,54,0.3) 4px,rgba(255,78,54,0.3) 8px);pointer-events:none;z-index:5}
+.sc-grid-line{position:absolute;pointer-events:none;opacity:0;transition:opacity .3s}
+.sc-grid-line.h{left:0;right:0;height:1px;border-top:1px dotted rgba(255,255,255,.06)}
+.sc-grid-line.v{top:0;bottom:0;width:1px;border-left:1px dotted rgba(255,255,255,.06)}
+.sc-grid-visible .sc-grid-line{opacity:1}
 .sc-info{font-size:11px;color:var(--gray);margin-top:6px;text-align:center}
 .field input[type="date"]::-webkit-calendar-picker-indicator,
 .field input[type="time"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.6}
@@ -422,11 +426,23 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
           </div>
           <div class="field">
             <label>Seats per row</label>
-            <input type="number" id="f-cols" min="1" max="30" value="12" oninput="previewVenue();renderHeldGrid()">
+            <input type="number" id="f-cols" min="1" max="50" value="12" oninput="previewVenue();renderHeldGrid()">
           </div>
         </div>
 
         <hr class="div">
+
+        <!-- AUDITORIUM PRESET -->
+        <div style="margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <span style="font-size:9px;text-transform:uppercase;letter-spacing:.15em;color:var(--gray)">Auditorium Preset</span>
+          <select id="hall-preset-select" style="background:var(--dark3);border:1px solid rgba(0,0,0,0.12);padding:6px 10px;color:var(--white);font-family:var(--font-b);font-size:13px;outline:none">
+            <option value="">— Select —</option>
+            <option value="small">Small Cinema (8×10 · 80 seats)</option>
+            <option value="medium">Medium Cinema (12×20 · 240 seats)</option>
+            <option value="large">Large Cinema (16×25 · 400 seats)</option>
+          </select>
+          <button class="add-zone-btn" style="width:auto;padding:6px 16px" onclick="applyHallPreset()">Apply</button>
+        </div>
 
         <!-- ZONE PRICING BUILDER -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -506,6 +522,12 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
           <div class="sc-toolbar">
             <label>Zone:</label>
             <select id="sc-zone-select"></select>
+            <label style="font-size:11px">Grid</label>
+            <input type="number" id="f-grid-size" value="40" min="20" max="60" style="width:50px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);padding:4px 6px;color:var(--white);font-family:var(--font-b);font-size:11px;outline:none" onchange="renderCanvas()" title="Grid spacing (px)">
+            <label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:2px">
+              <input type="checkbox" id="f-show-grid" onchange="renderCanvas()" checked> ⊞
+            </label>
+            <button onclick="autoGenerateSeats()">Auto Fill</button>
             <button onclick="clearCanvasSeats()">✕ Clear All</button>
           </div>
           <div class="seat-canvas" id="seat-canvas" oncontextmenu="return false"></div>
@@ -581,6 +603,28 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
 <script>
 // ─────────────────── STATE ───────────────────
 const ZONE_COLORS = ['#8b44ff','#ff3e37','#3ddc84','#5b9cf6','#c97bff','#ff9f43','#00cec9','#fd79a8'];
+const HALL_PRESETS={
+  small:{label:'Small Cinema (8×10 · 80 seats)',rows:8,cols:10,layout_mode:'auto',
+    zones:[
+      {name:'Premium',rows:2,price:80,color:'#8b44ff',seat_prefix:'A',seat_start:1,max_seats:8,walkway_mode:'none',walkway_width:1,walkway_numbering:'flow'},
+      {name:'Standard',rows:3,price:60,color:'#ff3e37',seat_prefix:'B',seat_start:1,max_seats:8,walkway_mode:'none',walkway_width:1,walkway_numbering:'flow'},
+      {name:'Budget',rows:3,price:40,color:'#ff9f43',seat_prefix:'C',seat_start:1,max_seats:8,walkway_mode:'none',walkway_width:1,walkway_numbering:'flow'}
+    ]},
+  medium:{label:'Medium Cinema (12×20 · 240 seats)',rows:12,cols:20,layout_mode:'auto',
+    zones:[
+      {name:'VIP',rows:2,price:120,color:'#8b44ff',seat_prefix:'A',seat_start:1,max_seats:8,walkway_mode:'single',walkway_width:1,walkway_numbering:'flow'},
+      {name:'Premium',rows:3,price:90,color:'#6c5ce7',seat_prefix:'B',seat_start:1,max_seats:8,walkway_mode:'single',walkway_width:1,walkway_numbering:'flow'},
+      {name:'Standard',rows:4,price:60,color:'#ff3e37',seat_prefix:'C',seat_start:1,max_seats:8,walkway_mode:'single',walkway_width:1,walkway_numbering:'flow'},
+      {name:'Budget',rows:3,price:40,color:'#ff9f43',seat_prefix:'D',seat_start:1,max_seats:8,walkway_mode:'single',walkway_width:1,walkway_numbering:'flow'}
+    ]},
+  large:{label:'Large Cinema (16×25 · 400 seats)',rows:16,cols:25,layout_mode:'auto',
+    zones:[
+      {name:'VIP',rows:2,price:150,color:'#8b44ff',seat_prefix:'A',seat_start:1,max_seats:8,walkway_mode:'dual',walkway_width:1,walkway_numbering:'flow'},
+      {name:'Premium',rows:4,price:100,color:'#6c5ce7',seat_prefix:'B',seat_start:1,max_seats:8,walkway_mode:'dual',walkway_width:1,walkway_numbering:'flow'},
+      {name:'Standard',rows:5,price:70,color:'#ff3e37',seat_prefix:'C',seat_start:1,max_seats:8,walkway_mode:'dual',walkway_width:1,walkway_numbering:'flow'},
+      {name:'Budget',rows:5,price:40,color:'#ff9f43',seat_prefix:'D',seat_start:1,max_seats:8,walkway_mode:'dual',walkway_width:1,walkway_numbering:'flow'}
+    ]}
+};
 let events = [];
 let zones = [{name:'VIP',rows:2,price:198,color:'#8b44ff'},{name:'Standard',rows:6,price:98,color:'#5b9cf6'}];
 let editingId = null;
@@ -1283,6 +1327,71 @@ function updateScZoneSelect(){
   if(!sel) return;
   sel.innerHTML=zones.map((z,i)=>`<option value="${i}">${z.name} ($${z.price})</option>`).join('');
 }
+function snapToGrid(v,gs){return Math.round(v/gs)*gs;}
+function getGridKey(x,y){return x+','+y;}
+function renderCanvasGrid(){
+  const canvas=document.getElementById('seat-canvas');
+  if(!canvas) return;
+  canvas.querySelectorAll('.sc-grid-line').forEach(el=>el.remove());
+  const show=document.getElementById('f-show-grid')?.checked;
+  if(!show) return;
+  const gs=+document.getElementById('f-grid-size')?.value||40;
+  const w=canvas.offsetWidth||400, h=canvas.scrollHeight||250;
+  for(let x=gs;x<w;x+=gs){
+    const l=document.createElement('div');
+    l.className='sc-grid-line v';l.style.left=x+'px';
+    canvas.appendChild(l);
+  }
+  for(let y=gs;y<h;y+=gs){
+    const l=document.createElement('div');
+    l.className='sc-grid-line h';l.style.top=y+'px';
+    canvas.appendChild(l);
+  }
+}
+function applyHallPreset(){
+  const sel=document.getElementById('hall-preset-select');
+  const key=sel.value;
+  if(!key||!HALL_PRESETS[key]){showToast('Select a preset','error');return;}
+  const p=HALL_PRESETS[key];
+  document.getElementById('f-rows').value=p.rows;
+  document.getElementById('f-cols').value=p.cols;
+  setLayoutMode(p.layout_mode);
+  zones=p.zones.map(z=>JSON.parse(JSON.stringify(z)));
+  renderZones();previewVenue();renderHeldGrid();
+  renderZonesManual();renderCanvas();
+  sel.value='';
+  showToast('Applied: '+p.label,'success');
+}
+function autoGenerateSeats(){
+  const canvas=document.getElementById('seat-canvas');
+  if(!canvas) return;
+  const gs=+document.getElementById('f-grid-size')?.value||40;
+  const sel=document.getElementById('sc-zone-select');
+  const zi=parseInt(sel?.value||'0');
+  const zone=zones[zi]||zones[0]||{name:'General',seat_prefix:'S',seat_start:1};
+  const zoneName=zone.name;
+  const prefix=zone.seat_prefix||'S';
+  const start=zone.seat_start||1;
+  const pad=4;
+  const w=canvas.offsetWidth-pad*2, h=canvas.scrollHeight-pad*2;
+  const cols=Math.max(1,Math.floor(w/gs));
+  const rows=Math.max(1,Math.floor(h/gs));
+  let count=0;
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const x=pad+c*gs+gs/2;
+      const y=pad+r*gs+gs/2;
+      const id=prefix+(start+count);
+      const key=getGridKey(x,y);
+      if(!canvasSeats.some(s=>getGridKey(s.x,s.y)===key)){
+        canvasSeats.push({id,x,y,zone:zoneName});
+        count++;
+      }
+    }
+  }
+  renderCanvas();
+  showToast('Placed '+count+' seats','success');
+}
 function renderCanvas(){
   const canvas=document.getElementById('seat-canvas');
   if(!canvas) return;
@@ -1319,6 +1428,7 @@ function renderCanvas(){
     const maxY=Math.max(...canvasSeats.map(s=>s.y));
     canvas.style.height=Math.max(250,parseInt(canvas.style.height)||300,maxY+60)+'px';
   }
+  renderCanvasGrid();
   updateScInfo();
 }
 let canvasDragId=null, canvasDragOffX=0, canvasDragOffY=0, canvasWasDragged=false;
@@ -1344,9 +1454,16 @@ function canvasMouseMove(e){
   x=Math.max(11,Math.min(canvas.offsetWidth-11,x));
   y=Math.max(11,Math.min(canvas.scrollHeight-11,y));
   const seat=canvasSeats.find(s=>s.id===canvasDragId);
-  if(seat){ seat.x=Math.round(x); seat.y=Math.round(y); }
+  if(seat){
+    const gs=+document.getElementById('f-grid-size')?.value||40;
+    const sx=snapToGrid(x,gs), sy=snapToGrid(y,gs);
+    const key=getGridKey(sx,sy);
+    if(!canvasSeats.some(s=>s.id!==canvasDragId&&getGridKey(s.x,s.y)===key)){
+      seat.x=sx; seat.y=sy;
+    }
+  }
   const el=canvas.querySelector(`.sc-seat[data-id="${canvasDragId}"]`);
-  if(el){ el.style.left=seat.x+'px'; el.style.top=seat.y+'px'; }
+  if(el&&seat){ el.style.left=seat.x+'px'; el.style.top=seat.y+'px'; }
 }
 function canvasMouseUp(){ canvasDragId=null; canvasWasDragged=false; document.removeEventListener('mousemove',canvasMouseMove); document.removeEventListener('mouseup',canvasMouseUp); }
 function canvasSeatRemove(id){
@@ -1379,6 +1496,10 @@ document.addEventListener('click',function(e){
   const r=canvas.getBoundingClientRect();
   const x=e.clientX-r.left, y=e.clientY-r.top+canvas.scrollTop;
   if(x<0||y<0||x>canvas.offsetWidth||y>canvas.scrollHeight) return;
+  const gs=+document.getElementById('f-grid-size')?.value||40;
+  const sx=snapToGrid(x,gs), sy=snapToGrid(y,gs);
+  if(sx<0||sy<0||sx>=canvas.offsetWidth||sy>=canvas.scrollHeight) return;
+  if(canvasSeats.some(s=>getGridKey(s.x,s.y)===getGridKey(sx,sy))){showToast('Seat already here','error');return;}
   const sel=document.getElementById('sc-zone-select');
   const zi=parseInt(sel?.value||'0');
   const zone=zones[zi]||zones[0]||{name:'General'};
@@ -1386,7 +1507,7 @@ document.addEventListener('click',function(e){
   const start=zone.seat_start||1;
   const zoneSeats=canvasSeats.filter(s=>s.zone===zone.name);
   const id=prefix+(start+zoneSeats.length);
-  canvasSeats.push({id,x:Math.round(x),y:Math.round(y),zone:zone.name});
+  canvasSeats.push({id,x:sx,y:sy,zone:zone.name});
   renderCanvas();
 });
 document.getElementById('seat-canvas')?.addEventListener('wheel',function(e){
