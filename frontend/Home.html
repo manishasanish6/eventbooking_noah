@@ -1002,7 +1002,7 @@
       <span class="section-tag">Upcoming Events</span>
       <h2 class="section-title">Don't Miss Out</h2>
     </div>
-    <a href="#contact" class="btn-outline">View All Events</a>
+    <button class="btn-outline" id="viewAllBtn">View All Events</button>
   </div>
   <div class="events-grid" id="eventsGrid"></div>
   <div class="pub-empty" id="eventsEmpty" style="display:none;text-align:center;padding:40px 20px;color:var(--gray)">
@@ -1514,10 +1514,13 @@
     openBooking(id);
   });
 
-  document.getElementById('showAllBtn').addEventListener('click', function() {
+  function showAllEvents() {
     document.getElementById('eventsGrid').innerHTML = renderEventCards(allEvents);
-    this.parentElement.style.display = 'none';
-  });
+    document.getElementById('showAllWrap').style.display = 'none';
+    document.getElementById('viewAllBtn').style.display = 'none';
+  }
+  document.getElementById('showAllBtn').addEventListener('click', showAllEvents);
+  document.getElementById('viewAllBtn').addEventListener('click', showAllEvents);
 
   function renderBookingAddons(e){
     const area = document.getElementById('bm-addons');
