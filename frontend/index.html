@@ -121,6 +121,7 @@ body{
 .sc-toolbar select{background:var(--dark2);border:1px solid rgba(0,0,0,0.1);padding:5px 8px;color:#000;font-family:var(--font-b);font-size:12px;outline:none}
 .sc-toolbar button{background:var(--dark2);border:1px solid rgba(0,0,0,0.1);padding:5px 10px;color:#000;font-size:11px;cursor:pointer;font-family:var(--font-b);transition:border-color .2s}
 .sc-toolbar button:hover{border-color:var(--logo-purple);color:var(--white)}
+.sc-walkway{position:absolute;top:0;bottom:0;width:2px;background:repeating-linear-gradient(180deg,transparent 0,transparent 4px,rgba(255,78,54,0.3) 4px,rgba(255,78,54,0.3) 8px);pointer-events:none;z-index:5}
 .sc-info{font-size:11px;color:var(--gray);margin-top:6px;text-align:center}
 .field input[type="date"]::-webkit-calendar-picker-indicator,
 .field input[type="time"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.6}
@@ -202,7 +203,8 @@ body{
 .vp-row{display:flex;align-items:center;gap:3px}
 .vp-seats-wrap{display:flex;gap:3px;margin:0 auto}
 .vp-label{font-size:10px;color:var(--gray);width:16px;text-align:center;flex-shrink:0}
-.vp-seat{width:18px;height:16px;border:1px solid rgba(255,255,255,.06)}
+.vp-seat{width:18px;height:16px;border:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.vp-walkway,.held-walkway{width:18px;height:16px;flex-shrink:0;background:repeating-linear-gradient(90deg,transparent,transparent 3px,rgba(255,78,54,0.2) 3px,rgba(255,78,54,0.2) 6px);border:1px dashed rgba(255,78,54,0.15);margin:0 1px}
 .vp-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
 .vp-leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gray)}
 .vp-leg-dot{width:10px;height:10px;flex-shrink:0}
@@ -700,6 +702,21 @@ function renderZones(){
             <b>📋 Max/Book</b>
             <input type="number" min="1" value="${z.max_seats||8}" oninput="zones[${i}].max_seats=+this.value" title="Max seats per booking">
           </div>
+          <div class="zp-row">
+            <b>⊞ Walkway</b>
+            <select onchange="zoneSetWalkwayMode(${i},this.value)">
+              <option value="none"${(z.walkway_mode||'none')==='none'?' selected':''}>None</option>
+              <option value="single"${z.walkway_mode==='single'?' selected':''}>Single</option>
+              <option value="dual"${z.walkway_mode==='dual'?' selected':''}>Dual</option>
+            </select>
+            <span>Gap</span>
+            <input type="number" min="1" max="4" value="${z.walkway_width||1}" oninput="zoneSetWalkwayWidth(${i},this.value)" style="width:40px">
+            <span>#</span>
+            <select onchange="zoneSetWalkwayNumbering(${i},this.value)">
+              <option value="flow"${(z.walkway_numbering||'flow')==='flow'?' selected':''}>Flow</option>
+              <option value="restart"${z.walkway_numbering==='restart'?' selected':''}>Restart</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>`;
@@ -708,7 +725,7 @@ function renderZones(){
 function addZone(){
   const used=new Set(zones.map(z=>z.color));const free=ZONE_COLORS.find(c=>!used.has(c));
   const prefix=String.fromCharCode(65+zones.length);
-  zones.push({name:'Zone '+(zones.length+1),rows:2,price:60,color:free||ZONE_COLORS[zones.length%ZONE_COLORS.length],seat_prefix:prefix,seat_start:1,max_seats:8});
+  zones.push({name:'Zone '+(zones.length+1),rows:2,price:60,color:free||ZONE_COLORS[zones.length%ZONE_COLORS.length],seat_prefix:prefix,seat_start:1,max_seats:8,walkway_mode:'none',walkway_width:1,walkway_numbering:'flow'});
   const totalZoneRows=zones.reduce((a,z)=>a+z.rows,0);
   const fr=document.getElementById('f-rows');
   if(totalZoneRows>+fr.value) fr.value=totalZoneRows;
@@ -717,6 +734,20 @@ function addZone(){
 function removeZone(i){ if(zones.length<=1){showToast('Need at least 1 zone','error');return;} zones.splice(i,1); renderZones(); previewVenue(); renderHeldGrid(); renderZonesManual(); updateCanvasHeldLegend(); }
 
 function ensurePromos(i){ if(!zones[i].promotions) zones[i].promotions={}; }
+function ensureWalkway(i){
+  const z=zones[i];
+  if(z.walkway_mode===undefined) z.walkway_mode='none';
+  if(z.walkway_width===undefined) z.walkway_width=1;
+  if(z.walkway_numbering===undefined) z.walkway_numbering='flow';
+}
+function getWalkwayPositions(cols,mode){
+  if(mode==='single') return [Math.floor(cols/2)];
+  if(mode==='dual') return [Math.floor(cols/3),Math.floor(2*cols/3)];
+  return [];
+}
+function zoneSetWalkwayMode(i,val){ ensureWalkway(i); zones[i].walkway_mode=val; renderZones(); previewVenue(); renderHeldGrid(); renderCanvas(); }
+function zoneSetWalkwayWidth(i,val){ ensureWalkway(i); zones[i].walkway_width=+val; renderZones(); previewVenue(); renderHeldGrid(); renderCanvas(); }
+function zoneSetWalkwayNumbering(i,val){ ensureWalkway(i); zones[i].walkway_numbering=val; renderZones(); renderHeldGrid(); }
 function zoneToggleEB(i,on){
   ensurePromos(i);
   zones[i].promotions.early_bird=zones[i].promotions.early_bird||{};
@@ -801,8 +832,17 @@ function previewVenue(){
   const grid=document.getElementById('vp-grid');
   grid.innerHTML=Array.from({length:rows},(_,r)=>{
     const zone=zoneMap[r]||zones[zones.length-1]||{color:'#444'};
-    const seats=Array.from({length:cols},(_,c)=>`<div class="vp-seat" style="background:${zone.color}22;border-color:${zone.color}44"></div>`).join('');
-    return `<div class="vp-row"><span class="vp-label">${alpha[r]}</span><div class="vp-seats-wrap">${seats}</div></div>`;
+    const wm=zone.walkway_mode||'none';
+    const ww=zone.walkway_width||1;
+    const positions=getWalkwayPositions(cols,wm);
+    const seats=[];
+    for(let c=0;c<cols;c++){
+      if(positions.includes(c)){
+        for(let g=0;g<ww;g++) seats.push('<div class="vp-walkway"></div>');
+      }
+      seats.push('<div class="vp-seat" style="background:'+zone.color+'22;border-color:'+zone.color+'44"></div>');
+    }
+    return '<div class="vp-row"><span class="vp-label">'+alpha[r]+'</span><div class="vp-seats-wrap">'+seats.join('')+'</div></div>';
   }).join('');
   const legend=document.getElementById('vp-legend');
   legend.innerHTML=zones.map(z=>`<div class="vp-leg-item"><div class="vp-leg-dot" style="background:${z.color}44;border:1px solid ${z.color}88"></div>${z.name} · $${z.price}</div>`).join('');
@@ -820,6 +860,18 @@ function getSeatId(row,col,zones,cols,zoneMap){
   const zone=zoneMap[row]||zones[zones.length-1]||{};
   const prefix=zone.seat_prefix||'A';
   const start=zone.seat_start||1;
+  const wm=zone.walkway_mode||'none';
+  const wn=zone.walkway_numbering||'flow';
+  const ww=zone.walkway_width||1;
+  const positions=getWalkwayPositions(cols,wm);
+  if(wm!=='none' && wn==='restart'){
+    let section=0;
+    for(const p of positions){ if(col>=p) section++; else break; }
+    const sectionStarts=[0, ...positions];
+    const sectionLetter=String.fromCharCode(65+section);
+    const alpha='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    return prefix+alpha[row]+sectionLetter+(start+col-sectionStarts[section]);
+  }
   let rowsBefore=0;
   for(const z of zones){
     if(z===zone) break;
@@ -840,11 +892,18 @@ function renderHeldGrid(){
   const grid=document.getElementById('held-grid');
   grid.innerHTML=Array.from({length:rows},(_,r)=>{
     const zone=zoneMap[r]||zones[zones.length-1]||{color:'#444'};
-    const seats=Array.from({length:cols},(_,c)=>{
+    const wm=zone.walkway_mode||'none';
+    const ww=zone.walkway_width||1;
+    const positions=getWalkwayPositions(cols,wm);
+    const seats=[];
+    for(let c=0;c<cols;c++){
+      if(positions.includes(c)){
+        for(let g=0;g<ww;g++) seats.push('<div class="held-walkway"></div>');
+      }
       const sid=getSeatId(r,c,zones,cols,zoneMap);
       const held=heldSeats.includes(sid);
-      return `<div class="held-seat${held?' is-held':''}" style="background:${zone.color}22;border-color:${zone.color}44" onclick="toggleHeldSeat('${sid}')" title="${sid}${held?' — Held':''}"></div>`;
-    }).join('');
+      seats.push('<div class="held-seat'+(held?' is-held':'')+'" style="background:'+zone.color+'22;border-color:'+zone.color+'44" onclick="toggleHeldSeat(\''+sid+'\')" title="'+sid+(held?' — Held':'')+'"></div>');
+    }
     return `<div class="held-row"><span class="held-label">${alpha[r]}</span><div class="held-seats-wrap">${seats}</div></div>`;
   }).join('');
   const legend=document.getElementById('held-legend');
@@ -1025,6 +1084,7 @@ function editEvent(id){
   document.getElementById('f-rows').value=e.rows;
   document.getElementById('f-cols').value=e.cols;
   zones=JSON.parse(JSON.stringify(e.zones));
+  zones.forEach((z,i)=>{ if(z.walkway_mode===undefined){z.walkway_mode='none';z.walkway_width=1;z.walkway_numbering='flow';} });
   heldSeats=JSON.parse(JSON.stringify(e.held_seats||[]));
   canvasSeats=JSON.parse(JSON.stringify(e.seat_layout||[]));
   addons=JSON.parse(JSON.stringify(e.addons||[]));
@@ -1191,6 +1251,21 @@ function renderZonesManual(){
             <b>📋 Max/Book</b>
             <input type="number" min="1" value="${z.max_seats||8}" oninput="zones[${i}].max_seats=+this.value;renderCanvas()" title="Max seats per booking">
           </div>
+          <div class="zp-row">
+            <b>⊞ Walkway</b>
+            <select onchange="zoneSetWalkwayMode(${i},this.value)">
+              <option value="none"${(z.walkway_mode||'none')==='none'?' selected':''}>None</option>
+              <option value="single"${z.walkway_mode==='single'?' selected':''}>Single</option>
+              <option value="dual"${z.walkway_mode==='dual'?' selected':''}>Dual</option>
+            </select>
+            <span>Gap</span>
+            <input type="number" min="1" max="4" value="${z.walkway_width||1}" oninput="zoneSetWalkwayWidth(${i},this.value)" style="width:40px">
+            <span>#</span>
+            <select onchange="zoneSetWalkwayNumbering(${i},this.value)">
+              <option value="flow"${(z.walkway_numbering||'flow')==='flow'?' selected':''}>Flow</option>
+              <option value="restart"${z.walkway_numbering==='restart'?' selected':''}>Restart</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>`;
@@ -1200,7 +1275,7 @@ function renderZonesManual(){
 function addZoneManual(){
   const used=new Set(zones.map(z=>z.color));const free=ZONE_COLORS.find(c=>!used.has(c));
   const prefix=String.fromCharCode(65+zones.length);
-  zones.push({name:'Zone '+(zones.length+1),rows:0,price:60,color:free||ZONE_COLORS[zones.length%ZONE_COLORS.length],seat_prefix:prefix,seat_start:1,max_seats:8});
+  zones.push({name:'Zone '+(zones.length+1),rows:0,price:60,color:free||ZONE_COLORS[zones.length%ZONE_COLORS.length],seat_prefix:prefix,seat_start:1,max_seats:8,walkway_mode:'none',walkway_width:1,walkway_numbering:'flow'});
   renderZonesManual();
 }
 function updateScZoneSelect(){
@@ -1223,6 +1298,23 @@ function renderCanvas(){
       <button class="sc-del" onmousedown="event.stopPropagation();canvasSeatRemove('${s.id}')">✕</button>
     </div>`;
   }).join('');
+  canvas.querySelectorAll('.sc-walkway').forEach(el=>el.remove());
+  const sel=document.getElementById('sc-zone-select');
+  if(sel){
+    const zi=sel.value;
+    const curZone=zones[zi];
+    if(curZone && (curZone.walkway_mode||'none')!=='none'){
+      const zoneSeats=canvasSeats.filter(s=>s.zone===curZone.name);
+      if(zoneSeats.length>1){
+        const xs=zoneSeats.map(s=>s.x).sort((a,b)=>a-b);
+        const minX=xs[0], maxX=xs[xs.length-1], range=maxX-minX;
+        const wm=curZone.walkway_mode;
+        const addWalkway=x=>{const line=document.createElement('div');line.className='sc-walkway';line.style.left=x+'px';canvas.appendChild(line);};
+        if(wm==='single') addWalkway(minX+range/2);
+        else if(wm==='dual'){addWalkway(minX+range/3);addWalkway(minX+2*range/3);}
+      }
+    }
+  }
   if(canvasSeats.length){
     const maxY=Math.max(...canvasSeats.map(s=>s.y));
     canvas.style.height=Math.max(250,parseInt(canvas.style.height)||300,maxY+60)+'px';
