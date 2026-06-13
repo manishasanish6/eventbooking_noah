@@ -95,8 +95,8 @@ body{
 }
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--logo-purple);box-shadow:0 0 0 2px rgba(139,68,255,0.15)}
 .field textarea{resize:vertical;min-height:72px}
-.field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23777'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
-.field select option{background:var(--dark3)}
+.field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b44ff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer}
+.field select option{background:var(--dark3);color:var(--white);padding:6px 10px}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .field input[type="date"],.field input[type="time"]{color-scheme:light}
 
@@ -159,9 +159,9 @@ body{
 
 /* ── ZONE BUILDER ── */
 .zone-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
-.zone-row{display:grid;grid-template-columns:24px 1fr 48px 60px 48px 60px 20px;gap:8px;align-items:center;background:var(--dark3);border:1px solid rgba(255,78,54,0.12);padding:10px 12px;transition:border-color .2s}
+.zone-row{display:grid;grid-template-columns:24px 1fr 48px 48px 60px 60px 20px;gap:8px;align-items:center;background:var(--dark3);border:1px solid rgba(255,78,54,0.12);padding:10px 12px;transition:border-color .2s}
 .zone-row:hover{border-color:rgba(255,78,54,0.25)}
-.zone-header{display:grid;grid-template-columns:24px 1fr 48px 60px 48px 60px 20px;gap:8px;padding:0 12px 4px;font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.15em;opacity:.6;pointer-events:none}
+.zone-header{display:grid;grid-template-columns:24px 1fr 48px 48px 60px 60px 20px;gap:8px;padding:0 12px 4px;font-size:10px;color:var(--white);text-transform:uppercase;letter-spacing:.1em;opacity:.85;pointer-events:none;font-weight:500}
 .zone-color{width:20px;height:20px;border-radius:0;cursor:pointer;transition:transform .15s}
 .zone-color:hover{transform:scale(1.15)}
 .zone-name-input{background:transparent;border:none;outline:none;color:var(--white);font-family:var(--font-b);font-size:13px;width:100%;font-weight:500}
@@ -269,7 +269,7 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
   .ei-body{flex-wrap:wrap;gap:8px}
   .ei-stats{width:100%}
   .ei-actions{opacity:1;width:100%;justify-content:flex-start}
-  .zone-row{grid-template-columns:20px 1fr 40px 48px 40px 48px 18px;padding:6px 8px}
+  .zone-row{grid-template-columns:20px 1fr 40px 40px 48px 48px 18px;padding:6px 8px}
   .zone-header{display:none}
 }
 </style>
@@ -437,9 +437,9 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
           <span></span>
           <span>Zone Name</span>
           <span>Rows</span>
-          <span>Price</span>
           <span>Prefix</span>
           <span>Start</span>
+          <span>Price</span>
           <span></span>
         </div>
         <div class="zone-list" id="zone-list"></div>
@@ -485,9 +485,9 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
           <span></span>
           <span>Category</span>
           <span></span>
-          <span>Price</span>
           <span>Prefix</span>
           <span>Start</span>
+          <span>Price</span>
           <span></span>
         </div>
         <div class="zone-list" id="zone-list-manual"></div>
