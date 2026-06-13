@@ -711,7 +711,7 @@ function renderZones(){
             </select>
             <span>Gap</span>
             <input type="number" min="1" max="4" value="${z.walkway_width||1}" oninput="zoneSetWalkwayWidth(${i},this.value)" style="width:40px">
-            <span>#</span>
+            <span>Seat Numbering</span>
             <select onchange="zoneSetWalkwayNumbering(${i},this.value)">
               <option value="flow"${(z.walkway_numbering||'flow')==='flow'?' selected':''}>Flow</option>
               <option value="restart"${z.walkway_numbering==='restart'?' selected':''}>Restart</option>
@@ -1260,7 +1260,7 @@ function renderZonesManual(){
             </select>
             <span>Gap</span>
             <input type="number" min="1" max="4" value="${z.walkway_width||1}" oninput="zoneSetWalkwayWidth(${i},this.value)" style="width:40px">
-            <span>#</span>
+            <span>Seat Numbering</span>
             <select onchange="zoneSetWalkwayNumbering(${i},this.value)">
               <option value="flow"${(z.walkway_numbering||'flow')==='flow'?' selected':''}>Flow</option>
               <option value="restart"${z.walkway_numbering==='restart'?' selected':''}>Restart</option>
