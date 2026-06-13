@@ -432,18 +432,6 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
 
         <hr class="div">
 
-        <!-- AUDITORIUM PRESET -->
-        <div style="margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-          <span style="font-size:9px;text-transform:uppercase;letter-spacing:.15em;color:var(--gray)">Auditorium Preset</span>
-          <select id="hall-preset-select" style="background:var(--dark3);border:1px solid rgba(0,0,0,0.12);padding:6px 10px;color:var(--white);font-family:var(--font-b);font-size:13px;outline:none">
-            <option value="">— Select —</option>
-            <option value="small">Small Cinema (8×10 · 80 seats)</option>
-            <option value="medium">Medium Cinema (12×20 · 240 seats)</option>
-            <option value="large">Large Cinema (16×25 · 400 seats)</option>
-          </select>
-          <button class="add-zone-btn" style="width:auto;padding:6px 16px" onclick="applyHallPreset()">Apply</button>
-        </div>
-
         <!-- ZONE PRICING BUILDER -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <div>
@@ -512,6 +500,18 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
         <button class="add-zone-btn" onclick="addZoneManual()">＋ Add Category</button>
 
         <hr class="div">
+
+        <!-- AUDITORIUM PRESET (manual) -->
+        <div style="margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <span style="font-size:9px;text-transform:uppercase;letter-spacing:.15em;color:var(--gray)">Auditorium Preset</span>
+          <select id="hall-preset-select" style="background:var(--dark3);border:1px solid rgba(0,0,0,0.12);padding:6px 10px;color:var(--white);font-family:var(--font-b);font-size:13px;outline:none">
+            <option value="">— Select —</option>
+            <option value="small">Small Cinema (8×10 · 80 seats)</option>
+            <option value="medium">Medium Cinema (12×20 · 240 seats)</option>
+            <option value="large">Large Cinema (16×25 · 400 seats)</option>
+          </select>
+          <button class="add-zone-btn" style="width:auto;padding:6px 16px" onclick="applyHallPreset()">Apply</button>
+        </div>
 
         <!-- SEAT CANVAS -->
         <div style="margin-bottom:8px">
@@ -1355,12 +1355,35 @@ function applyHallPreset(){
   const p=HALL_PRESETS[key];
   document.getElementById('f-rows').value=p.rows;
   document.getElementById('f-cols').value=p.cols;
-  setLayoutMode(p.layout_mode);
+  setLayoutMode('manual');
   zones=p.zones.map(z=>JSON.parse(JSON.stringify(z)));
-  renderZones();previewVenue();renderHeldGrid();
-  renderZonesManual();renderCanvas();
+  renderZonesManual();
+  const gs=+document.getElementById('f-grid-size')?.value||40;
+  const pad=4;
+  const canvas=document.getElementById('seat-canvas');
+  const w=canvas.offsetWidth-pad*2;
+  canvasSeats=[];
+  let totalRow=0;
+  p.zones.forEach(zone=>{
+    const prefix=zone.seat_prefix||'S';
+    const start=zone.seat_start||1;
+    const cols=Math.max(1,Math.floor(w/gs));
+    let cnt=0;
+    for(let r=0;r<zone.rows;r++){
+      for(let c=0;c<cols;c++){
+        const x=pad+c*gs+gs/2;
+        const y=pad+totalRow*gs+gs/2;
+        canvasSeats.push({id:prefix+(start+cnt),x,y,zone:zone.name});
+        cnt++;
+      }
+      totalRow++;
+    }
+  });
+  renderCanvas();
+  updateScZoneSelect();
   sel.value='';
-  showToast('Applied: '+p.label,'success');
+  showToast('Loaded: '+p.label,'success');
+}
 }
 function autoGenerateSeats(){
   const canvas=document.getElementById('seat-canvas');
