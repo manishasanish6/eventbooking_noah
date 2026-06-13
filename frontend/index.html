@@ -31,8 +31,7 @@ body{
 }
 
 /* ── TEXT ON LIGHT CARDS ── */
-.form-card,.form-card-title,.form-card .field label,
-.event-item,.ei-name,.ei-meta,.ei-addr,.ei-stat,.ei-stat strong{color:var(--text-on-light)}
+.form-card,.form-card-title,.form-card .field label{color:var(--text-on-light)}
 .form-card-title{color:#444}
 .form-card .field label{color:var(--text-on-light)}
 .form-card .field input::placeholder{color:#999}
@@ -122,10 +121,7 @@ body{
 .sc-toolbar button{background:var(--dark2);border:1px solid rgba(0,0,0,0.1);padding:5px 10px;color:#000;font-size:11px;cursor:pointer;font-family:var(--font-b);transition:border-color .2s}
 .sc-toolbar button:hover{border-color:var(--logo-purple);color:var(--white)}
 .sc-walkway{position:absolute;top:0;bottom:0;width:2px;background:repeating-linear-gradient(180deg,transparent 0,transparent 4px,rgba(255,78,54,0.3) 4px,rgba(255,78,54,0.3) 8px);pointer-events:none;z-index:5}
-.sc-grid-line{position:absolute;pointer-events:none;opacity:0;transition:opacity .3s}
-.sc-grid-line.h{left:0;right:0;height:1px;border-top:1px dotted rgba(255,255,255,.06)}
-.sc-grid-line.v{top:0;bottom:0;width:1px;border-left:1px dotted rgba(255,255,255,.06)}
-.sc-grid-visible .sc-grid-line{opacity:1}
+
 .sc-info{font-size:11px;color:var(--gray);margin-top:6px;text-align:center}
 .field input[type="date"]::-webkit-calendar-picker-indicator,
 .field input[type="time"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.6}
@@ -179,24 +175,36 @@ body{
 .add-zone-btn:hover{border-color:var(--logo-purple);color:var(--logo-purple)}
 
 /* ── EVENT LIST (admin) ── */
-.event-item{background:var(--dark2);border:1px solid rgba(255,78,54,0.06);display:flex;align-items:stretch;margin-bottom:10px;transition:border-color .2s,box-shadow .2s;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.12)}
-.event-item:hover{border-color:rgba(139,68,255,0.2);box-shadow:0 4px 24px rgba(139,68,255,0.12)}
-.ei-color{width:4px;flex-shrink:0}
-.ei-body{flex:1;padding:14px 18px;display:flex;align-items:center;gap:16px}
-.ei-info{flex:1;min-width:0}
-.ei-name{font-family:var(--font-d);font-size:20px;letter-spacing:1.5px;line-height:1;color:var(--white)}
-.ei-meta{font-size:12px;color:var(--gray);margin-top:3px}
-.ei-addr{font-size:11px;color:var(--gray);margin-top:1px;line-height:1.5}
-.ei-stats{display:flex;gap:12px;margin-top:4px}
-.ei-stat{font-size:11px;color:var(--gray)}
-.ei-stat strong{color:var(--white);font-weight:500}
-.ei-badge{font-size:10px;padding:2px 8px;font-weight:500;flex-shrink:0;align-self:center}
-.badge-live{background:rgba(61,220,132,.12);color:var(--green);border:1px solid rgba(61,220,132,.2)}
-.badge-draft{background:rgba(255,255,255,.08);color:var(--gray);border:1px solid rgba(255,255,255,.1)}
-.badge-sold{background:rgba(255,77,77,.1);color:var(--red);border:1px solid rgba(255,77,77,.2)}
-.ei-actions{display:flex;gap:6px;flex-shrink:0;align-items:center;opacity:0;transition:opacity .2s}
-.event-item:hover .ei-actions{opacity:1}
-.ei-actions .btn{padding:5px 10px;font-size:10px;letter-spacing:.1em}
+/* ── ADMIN EVENTS GRID (matches Home.html style) ── */
+#view-events{background:var(--black);padding:40px}
+.admin-events-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5px;margin-top:8px}
+.admin-event-card{background:var(--dark3);border:1px solid rgba(255,78,54,0.1);overflow:hidden;position:relative;transition:border-color .3s,transform .3s;cursor:pointer}
+.admin-event-card:hover{border-color:rgba(255,78,54,0.5);transform:translateY(-4px)}
+.admin-event-img{width:100%;aspect-ratio:16/10;background:var(--dark);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.admin-event-img::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(10,10,10,0.9))}
+.admin-event-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.admin-event-icon{font-size:3rem;color:rgba(255,78,54,0.2)}
+.admin-event-badge{position:absolute;top:1rem;left:1rem;font-size:.6rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.3rem .7rem;z-index:2}
+.admin-event-badge.live{background:rgba(61,220,132,.85);color:#fff}
+.admin-event-badge.draft{background:rgba(255,255,255,.15);color:var(--gray)}
+.admin-event-badge.sold{background:rgba(255,77,77,.85);color:#fff}
+.admin-event-date{position:absolute;top:1rem;right:1rem;background:rgba(10,10,10,0.85);border:1px solid rgba(255,78,54,0.3);color:var(--white);text-align:center;padding:.5rem .7rem;z-index:2}
+.admin-event-date .day{font-family:var(--font-d);font-size:1.8rem;line-height:1;display:block;color:var(--logo-red)}
+.admin-event-date .month{font-size:.6rem;letter-spacing:.2em;color:var(--gray);text-transform:uppercase}
+.admin-event-body{padding:1rem 1.2rem}
+.admin-event-body .cat{font-size:.62rem;letter-spacing:.2em;color:var(--logo-red);text-transform:uppercase;font-weight:600;margin-bottom:.4rem}
+.admin-event-body .name{font-family:var(--font-d);font-size:1.3rem;letter-spacing:.05em;color:var(--white);margin-bottom:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.admin-event-body .meta{font-size:.72rem;color:rgba(245,241,235,0.5);display:flex;gap:.8rem;align-items:center;margin-bottom:.6rem;flex-wrap:wrap}
+.admin-event-body .meta span{display:flex;align-items:center;gap:.3rem}
+.admin-event-body .stats{font-size:.7rem;color:var(--gray);margin-bottom:.8rem;line-height:1.6}
+.admin-event-body .stats strong{color:var(--white);font-weight:500}
+.admin-event-body .footer{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(245,241,235,0.08);padding-top:.8rem}
+.admin-event-body .price{font-family:var(--font-d);font-size:1.4rem;color:var(--white)}
+.admin-event-body .price span{font-size:.7rem;color:var(--gray);font-family:var(--font-b)}
+.admin-event-actions{display:flex;gap:4px;opacity:0;transition:opacity .2s}
+.admin-event-card:hover .admin-event-actions{opacity:1}
+.admin-event-actions button{background:none;border:1px solid rgba(255,255,255,0.15);color:var(--gray);padding:4px 8px;cursor:pointer;font-size:10px;letter-spacing:.08em;transition:all .2s}
+.admin-event-actions button:hover{border-color:var(--logo-purple);color:var(--logo-purple);background:rgba(139,68,255,0.08)}
 .empty-state{text-align:center;padding:60px 20px;color:var(--gray)}
 
 /* ── VENUE PREVIEW ── */
@@ -272,9 +280,8 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
   .nav-tabs{margin-left:0;width:100%}
   .admin-view{padding:20px}
   .form-card{padding:16px}
-  .ei-body{flex-wrap:wrap;gap:8px}
-  .ei-stats{width:100%}
-  .ei-actions{opacity:1;width:100%;justify-content:flex-start}
+  .admin-events-grid{grid-template-columns:1fr}
+  .admin-event-actions{opacity:1}
   .zone-row{grid-template-columns:20px 1fr 40px 40px 48px 48px 18px;padding:6px 8px}
   .zone-header{display:none}
 }
@@ -501,18 +508,6 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
 
         <hr class="div">
 
-        <!-- AUDITORIUM PRESET (manual) -->
-        <div style="margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-          <span style="font-size:9px;text-transform:uppercase;letter-spacing:.15em;color:var(--gray)">Auditorium Preset</span>
-          <select id="hall-preset-select" style="background:var(--dark3);border:1px solid rgba(0,0,0,0.12);padding:6px 10px;color:var(--white);font-family:var(--font-b);font-size:13px;outline:none">
-            <option value="">— Select —</option>
-            <option value="small">Small Cinema (8×10 · 80 seats)</option>
-            <option value="medium">Medium Cinema (12×20 · 240 seats)</option>
-            <option value="large">Large Cinema (16×25 · 400 seats)</option>
-          </select>
-          <button class="add-zone-btn" style="width:auto;padding:6px 16px" onclick="applyHallPreset()">Apply</button>
-        </div>
-
         <!-- SEAT CANVAS -->
         <div style="margin-bottom:8px">
           <div style="font-family:var(--font-d);font-size:16px;letter-spacing:2px;margin-bottom:2px">SEAT CANVAS</div>
@@ -522,11 +517,6 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
           <div class="sc-toolbar">
             <label>Zone:</label>
             <select id="sc-zone-select"></select>
-            <label style="font-size:11px">Grid</label>
-            <input type="number" id="f-grid-size" value="40" min="20" max="60" style="width:50px;background:var(--dark3);border:1px solid rgba(0,0,0,0.1);padding:4px 6px;color:var(--white);font-family:var(--font-b);font-size:11px;outline:none" onchange="renderCanvas()" title="Grid spacing (px)">
-            <label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:2px">
-              <input type="checkbox" id="f-show-grid" onchange="renderCanvas()" checked> ⊞
-            </label>
             <button onclick="autoGenerateSeats()">Auto Fill</button>
             <button onclick="clearCanvasSeats()">✕ Clear All</button>
           </div>
@@ -545,6 +535,40 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
         <div class="held-legend" id="held-legend-manual"></div>
       </div>
 
+    </div>
+
+    <!-- CARD: Organiser Details -->
+    <div class="form-card" id="organiser-card">
+      <div class="form-card-title">📋 Organiser Details</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Organiser Name</label>
+          <input type="text" id="f-organiser-name" placeholder="e.g. Live Nation">
+        </div>
+        <div class="field">
+          <label>Contact</label>
+          <input type="text" id="f-organiser-contact" placeholder="e.g. +44 20 1234 5678">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="f-organiser-email" placeholder="e.g. info@livenation.com">
+        </div>
+        <div class="field">
+          <label>Address</label>
+          <input type="text" id="f-organiser-address" placeholder="e.g. 123 High Street, London">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:8px">
+        <label>Logo</label>
+        <input type="file" id="f-organiser-logo" accept="image/*" onchange="handleOrganiserLogoUpload(event)">
+        <div id="organiser-logo-preview" style="margin-top:6px;max-width:120px"></div>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Organiser Summary <span style="font-weight:300;color:#666">(optional)</span></label>
+        <textarea id="f-organiser-summary" rows="3" placeholder="Brief description of the organiser..."></textarea>
+      </div>
     </div>
 
     <!-- CARD: Access -->
@@ -584,14 +608,14 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
 
   <!-- EVENTS VIEW -->
   <div class="admin-view" id="view-events">
-    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:24px">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px">
       <div>
-        <div class="s-title">EVENTS</div>
-        <div class="s-sub" id="events-count-label">No events yet</div>
+        <div style="font-size:9px;letter-spacing:.2em;color:var(--logo-red);text-transform:uppercase;font-weight:600;margin-bottom:4px">Events</div>
+        <h2 style="font-family:var(--font-d);font-size:28px;letter-spacing:2px;color:var(--white)">All Events <span id="events-count-label" style="font-size:14px;color:var(--gray);font-family:var(--font-b);letter-spacing:0">(0)</span></h2>
       </div>
       <button class="btn btn-outline btn-sm" onclick="clearAll()">Clear All</button>
     </div>
-    <div id="admin-event-list"></div>
+    <div class="admin-events-grid" id="admin-event-list"></div>
   </div>
 </div>
 
@@ -603,28 +627,6 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
 <script>
 // ─────────────────── STATE ───────────────────
 const ZONE_COLORS = ['#8b44ff','#ff3e37','#3ddc84','#5b9cf6','#c97bff','#ff9f43','#00cec9','#fd79a8'];
-const HALL_PRESETS={
-  small:{label:'Small Cinema (8×10 · 80 seats)',rows:8,cols:10,layout_mode:'auto',
-    zones:[
-      {name:'Premium',rows:2,price:80,color:'#8b44ff',seat_prefix:'A',seat_start:1,max_seats:8,walkway_mode:'none',walkway_width:1,walkway_numbering:'flow'},
-      {name:'Standard',rows:3,price:60,color:'#ff3e37',seat_prefix:'B',seat_start:1,max_seats:8,walkway_mode:'none',walkway_width:1,walkway_numbering:'flow'},
-      {name:'Budget',rows:3,price:40,color:'#ff9f43',seat_prefix:'C',seat_start:1,max_seats:8,walkway_mode:'none',walkway_width:1,walkway_numbering:'flow'}
-    ]},
-  medium:{label:'Medium Cinema (12×20 · 240 seats)',rows:12,cols:20,layout_mode:'auto',
-    zones:[
-      {name:'VIP',rows:2,price:120,color:'#8b44ff',seat_prefix:'A',seat_start:1,max_seats:8,walkway_mode:'single',walkway_width:1,walkway_numbering:'flow'},
-      {name:'Premium',rows:3,price:90,color:'#6c5ce7',seat_prefix:'B',seat_start:1,max_seats:8,walkway_mode:'single',walkway_width:1,walkway_numbering:'flow'},
-      {name:'Standard',rows:4,price:60,color:'#ff3e37',seat_prefix:'C',seat_start:1,max_seats:8,walkway_mode:'single',walkway_width:1,walkway_numbering:'flow'},
-      {name:'Budget',rows:3,price:40,color:'#ff9f43',seat_prefix:'D',seat_start:1,max_seats:8,walkway_mode:'single',walkway_width:1,walkway_numbering:'flow'}
-    ]},
-  large:{label:'Large Cinema (16×25 · 400 seats)',rows:16,cols:25,layout_mode:'auto',
-    zones:[
-      {name:'VIP',rows:2,price:150,color:'#8b44ff',seat_prefix:'A',seat_start:1,max_seats:8,walkway_mode:'dual',walkway_width:1,walkway_numbering:'flow'},
-      {name:'Premium',rows:4,price:100,color:'#6c5ce7',seat_prefix:'B',seat_start:1,max_seats:8,walkway_mode:'dual',walkway_width:1,walkway_numbering:'flow'},
-      {name:'Standard',rows:5,price:70,color:'#ff3e37',seat_prefix:'C',seat_start:1,max_seats:8,walkway_mode:'dual',walkway_width:1,walkway_numbering:'flow'},
-      {name:'Budget',rows:5,price:40,color:'#ff9f43',seat_prefix:'D',seat_start:1,max_seats:8,walkway_mode:'dual',walkway_width:1,walkway_numbering:'flow'}
-    ]}
-};
 let events = [];
 let zones = [{name:'VIP',rows:2,price:198,color:'#8b44ff'},{name:'Standard',rows:6,price:98,color:'#5b9cf6'}];
 let editingId = null;
@@ -633,6 +635,7 @@ let addons = [];
 let editors = [];
 let currentUser = '';
 let _artistPhotoData = '';
+let _organiserLogoData = '';
 
 function normalizeEvent(event){
   return {
@@ -869,16 +872,18 @@ function editorInputKeydown(ev){
 // global zones array
 
 function previewVenue(){
-  const rows=Math.max(1,Math.min(26,+document.getElementById('f-rows').value||8));
-  const cols=Math.max(1,Math.min(50,+document.getElementById('f-cols').value||12));
-  const alpha='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const rows=Math.max(1,+document.getElementById('f-rows').value||8);
+  const cols=Math.max(1,+document.getElementById('f-cols').value||12);
   const zoneMap=buildZoneMap(rows);
   const grid=document.getElementById('vp-grid');
   grid.innerHTML=Array.from({length:rows},(_,r)=>{
-    const zone=zoneMap[r]||zones[zones.length-1]||{color:'#444'};
+    const zone=zoneMap[r]||zones[zones.length-1]||{color:'#444',seat_prefix:'A',seat_start:1};
     const wm=zone.walkway_mode||'none';
     const ww=zone.walkway_width||1;
     const positions=getWalkwayPositions(cols,wm);
+    let rowsBefore=0;
+    for(const z of zones){if(z===zone)break;rowsBefore+=Math.max(1,z.rows||1);}
+    const label=(zone.seat_prefix||'A')+((zone.seat_start||1)+(r-rowsBefore));
     const seats=[];
     for(let c=0;c<cols;c++){
       if(positions.includes(c)){
@@ -886,7 +891,7 @@ function previewVenue(){
       }
       seats.push('<div class="vp-seat" style="background:'+zone.color+'22;border-color:'+zone.color+'44"></div>');
     }
-    return '<div class="vp-row"><span class="vp-label">'+alpha[r]+'</span><div class="vp-seats-wrap">'+seats.join('')+'</div></div>';
+    return '<div class="vp-row"><span class="vp-label">'+label+'</span><div class="vp-seats-wrap">'+seats.join('')+'</div></div>';
   }).join('');
   const legend=document.getElementById('vp-legend');
   legend.innerHTML=zones.map(z=>`<div class="vp-leg-item"><div class="vp-leg-dot" style="background:${z.color}44;border:1px solid ${z.color}88"></div>${z.name} · $${z.price}</div>`).join('');
@@ -929,9 +934,8 @@ let heldSeats = [];
 let canvasSeats = [];
 
 function renderHeldGrid(){
-  const rows=Math.max(1,Math.min(26,+document.getElementById('f-rows').value||8));
-  const cols=Math.max(1,Math.min(50,+document.getElementById('f-cols').value||12));
-  const alpha='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const rows=Math.max(1,+document.getElementById('f-rows').value||8);
+  const cols=Math.max(1,+document.getElementById('f-cols').value||12);
   const zoneMap=buildZoneMap(rows);
   const grid=document.getElementById('held-grid');
   grid.innerHTML=Array.from({length:rows},(_,r)=>{
@@ -939,6 +943,9 @@ function renderHeldGrid(){
     const wm=zone.walkway_mode||'none';
     const ww=zone.walkway_width||1;
     const positions=getWalkwayPositions(cols,wm);
+    let rowsBefore=0;
+    for(const z of zones){if(z===zone)break;rowsBefore+=Math.max(1,z.rows||1);}
+    const label=(zone.seat_prefix||'A')+((zone.seat_start||1)+(r-rowsBefore));
     const seats=[];
     for(let c=0;c<cols;c++){
       if(positions.includes(c)){
@@ -948,7 +955,7 @@ function renderHeldGrid(){
       const held=heldSeats.includes(sid);
       seats.push('<div class="held-seat'+(held?' is-held':'')+'" style="background:'+zone.color+'22;border-color:'+zone.color+'44" onclick="toggleHeldSeat(\''+sid+'\')" title="'+sid+(held?' — Held':'')+'"></div>');
     }
-    return `<div class="held-row"><span class="held-label">${alpha[r]}</span><div class="held-seats-wrap">${seats}</div></div>`;
+    return `<div class="held-row"><span class="held-label">${label}</span><div class="held-seats-wrap">${seats}</div></div>`;
   }).join('');
   const legend=document.getElementById('held-legend');
   const total=heldSeats.length;
@@ -994,6 +1001,18 @@ function handleArtistPhotoUpload(ev) {
     _artistPhotoData = e.target.result;
     document.getElementById('artist-photo-preview').innerHTML =
       `<img src="${_artistPhotoData}" style="width:100%;border:1px solid rgba(255,78,54,0.15);display:block">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleOrganiserLogoUpload(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    _organiserLogoData = e.target.result;
+    document.getElementById('organiser-logo-preview').innerHTML =
+      `<img src="${_organiserLogoData}" style="width:100%;border:1px solid rgba(255,78,54,0.15);display:block">`;
   };
   reader.readAsDataURL(file);
 }
@@ -1056,7 +1075,13 @@ async function saveEvent(){
     artist_instagram: document.getElementById('f-artist-instagram').value,
     artist_facebook: document.getElementById('f-artist-facebook').value,
     artist_website: document.getElementById('f-artist-website').value,
-    artist_details: document.getElementById('f-artist-details').value
+    artist_details: document.getElementById('f-artist-details').value,
+    organiser_name: document.getElementById('f-organiser-name').value,
+    organiser_contact: document.getElementById('f-organiser-contact').value,
+    organiser_email: document.getElementById('f-organiser-email').value,
+    organiser_logo: _organiserLogoData,
+    organiser_address: document.getElementById('f-organiser-address').value,
+    organiser_summary: document.getElementById('f-organiser-summary').value
   };
 
   const btn=document.getElementById('save-btn-text');
@@ -1121,13 +1146,23 @@ function editEvent(id){
   document.getElementById('f-artist-facebook').value=e.artist_facebook||'';
   document.getElementById('f-artist-website').value=e.artist_website||'';
   document.getElementById('f-artist-details').value=e.artist_details||'';
+  document.getElementById('f-organiser-name').value=e.organiser_name||'';
+  document.getElementById('f-organiser-contact').value=e.organiser_contact||'';
+  document.getElementById('f-organiser-email').value=e.organiser_email||'';
+  _organiserLogoData = e.organiser_logo||'';
+  if (_organiserLogoData) {
+    document.getElementById('organiser-logo-preview').innerHTML =
+      `<img src="${_organiserLogoData}" style="width:100%;border:1px solid rgba(255,78,54,0.15);display:block">`;
+  }
+  document.getElementById('f-organiser-address').value=e.organiser_address||'';
+  document.getElementById('f-organiser-summary').value=e.organiser_summary||'';
   if (e.artist_bio || e.artist_photo || e.artist_instagram || e.artist_facebook || e.artist_website || e.artist_details) {
     document.getElementById('artistCollapse').style.display = 'block';
     document.getElementById('toggleArtistBtn').textContent = '− Artist Info';
   }
   document.getElementById('f-rows').value=e.rows;
   document.getElementById('f-cols').value=e.cols;
-  zones=JSON.parse(JSON.stringify(e.zones));
+  zones=JSON.parse(JSON.stringify(e.zones||[]));
   zones.forEach((z,i)=>{ if(z.walkway_mode===undefined){z.walkway_mode='none';z.walkway_width=1;z.walkway_numbering='flow';} });
   heldSeats=JSON.parse(JSON.stringify(e.held_seats||[]));
   canvasSeats=JSON.parse(JSON.stringify(e.seat_layout||[]));
@@ -1176,6 +1211,14 @@ function cancelEdit(){
   document.getElementById('f-artist-facebook').value='';
   document.getElementById('f-artist-website').value='';
   document.getElementById('f-artist-details').value='';
+  _organiserLogoData = '';
+  document.getElementById('organiser-logo-preview').innerHTML = '';
+  document.getElementById('f-organiser-logo').value = '';
+  document.getElementById('f-organiser-name').value='';
+  document.getElementById('f-organiser-contact').value='';
+  document.getElementById('f-organiser-email').value='';
+  document.getElementById('f-organiser-address').value='';
+  document.getElementById('f-organiser-summary').value='';
   document.getElementById('artistCollapse').style.display='none';
   document.getElementById('toggleArtistBtn').textContent='＋ Artist Info';
   document.getElementById('f-venue').value='';
@@ -1327,75 +1370,16 @@ function updateScZoneSelect(){
   if(!sel) return;
   sel.innerHTML=zones.map((z,i)=>`<option value="${i}">${z.name} ($${z.price})</option>`).join('');
 }
-function snapToGrid(v,gs){return Math.round(v/gs)*gs;}
-function getGridKey(x,y){return x+','+y;}
-function renderCanvasGrid(){
-  const canvas=document.getElementById('seat-canvas');
-  if(!canvas) return;
-  canvas.querySelectorAll('.sc-grid-line').forEach(el=>el.remove());
-  const show=document.getElementById('f-show-grid')?.checked;
-  if(!show) return;
-  const gs=+document.getElementById('f-grid-size')?.value||40;
-  const w=canvas.offsetWidth||400, h=canvas.scrollHeight||250;
-  for(let x=gs;x<w;x+=gs){
-    const l=document.createElement('div');
-    l.className='sc-grid-line v';l.style.left=x+'px';
-    canvas.appendChild(l);
-  }
-  for(let y=gs;y<h;y+=gs){
-    const l=document.createElement('div');
-    l.className='sc-grid-line h';l.style.top=y+'px';
-    canvas.appendChild(l);
-  }
-}
-function applyHallPreset(){
-  const sel=document.getElementById('hall-preset-select');
-  const key=sel.value;
-  if(!key||!HALL_PRESETS[key]){showToast('Select a preset','error');return;}
-  const p=HALL_PRESETS[key];
-  document.getElementById('f-rows').value=p.rows;
-  document.getElementById('f-cols').value=p.cols;
-  setLayoutMode('manual');
-  zones=p.zones.map(z=>JSON.parse(JSON.stringify(z)));
-  renderZonesManual();
-  const gs=+document.getElementById('f-grid-size')?.value||40;
-  const pad=4;
-  const canvas=document.getElementById('seat-canvas');
-  const w=canvas.offsetWidth-pad*2;
-  canvasSeats=[];
-  let totalRow=0;
-  p.zones.forEach(zone=>{
-    const prefix=zone.seat_prefix||'S';
-    const start=zone.seat_start||1;
-    const cols=Math.max(1,Math.floor(w/gs));
-    let cnt=0;
-    for(let r=0;r<zone.rows;r++){
-      for(let c=0;c<cols;c++){
-        const x=pad+c*gs+gs/2;
-        const y=pad+totalRow*gs+gs/2;
-        canvasSeats.push({id:prefix+(start+cnt),x,y,zone:zone.name});
-        cnt++;
-      }
-      totalRow++;
-    }
-  });
-  renderCanvas();
-  updateScZoneSelect();
-  sel.value='';
-  showToast('Loaded: '+p.label,'success');
-}
-}
 function autoGenerateSeats(){
   const canvas=document.getElementById('seat-canvas');
   if(!canvas) return;
-  const gs=+document.getElementById('f-grid-size')?.value||40;
   const sel=document.getElementById('sc-zone-select');
   const zi=parseInt(sel?.value||'0');
   const zone=zones[zi]||zones[0]||{name:'General',seat_prefix:'S',seat_start:1};
   const zoneName=zone.name;
   const prefix=zone.seat_prefix||'S';
   const start=zone.seat_start||1;
-  const pad=4;
+  const pad=4, gs=40;
   const w=canvas.offsetWidth-pad*2, h=canvas.scrollHeight-pad*2;
   const cols=Math.max(1,Math.floor(w/gs));
   const rows=Math.max(1,Math.floor(h/gs));
@@ -1404,12 +1388,8 @@ function autoGenerateSeats(){
     for(let c=0;c<cols;c++){
       const x=pad+c*gs+gs/2;
       const y=pad+r*gs+gs/2;
-      const id=prefix+(start+count);
-      const key=getGridKey(x,y);
-      if(!canvasSeats.some(s=>getGridKey(s.x,s.y)===key)){
-        canvasSeats.push({id,x,y,zone:zoneName});
-        count++;
-      }
+      canvasSeats.push({id:prefix+(start+count),x,y,zone:zoneName});
+      count++;
     }
   }
   renderCanvas();
@@ -1451,7 +1431,6 @@ function renderCanvas(){
     const maxY=Math.max(...canvasSeats.map(s=>s.y));
     canvas.style.height=Math.max(250,parseInt(canvas.style.height)||300,maxY+60)+'px';
   }
-  renderCanvasGrid();
   updateScInfo();
 }
 let canvasDragId=null, canvasDragOffX=0, canvasDragOffY=0, canvasWasDragged=false;
@@ -1477,13 +1456,8 @@ function canvasMouseMove(e){
   x=Math.max(11,Math.min(canvas.offsetWidth-11,x));
   y=Math.max(11,Math.min(canvas.scrollHeight-11,y));
   const seat=canvasSeats.find(s=>s.id===canvasDragId);
-  if(seat){
-    const gs=+document.getElementById('f-grid-size')?.value||40;
-    const sx=snapToGrid(x,gs), sy=snapToGrid(y,gs);
-    const key=getGridKey(sx,sy);
-    if(!canvasSeats.some(s=>s.id!==canvasDragId&&getGridKey(s.x,s.y)===key)){
-      seat.x=sx; seat.y=sy;
-    }
+  if(seat && !canvasSeats.some(s=>s.id!==canvasDragId&&Math.abs(s.x-x)<20&&Math.abs(s.y-y)<20)){
+    seat.x=x; seat.y=y;
   }
   const el=canvas.querySelector(`.sc-seat[data-id="${canvasDragId}"]`);
   if(el&&seat){ el.style.left=seat.x+'px'; el.style.top=seat.y+'px'; }
@@ -1519,10 +1493,7 @@ document.addEventListener('click',function(e){
   const r=canvas.getBoundingClientRect();
   const x=e.clientX-r.left, y=e.clientY-r.top+canvas.scrollTop;
   if(x<0||y<0||x>canvas.offsetWidth||y>canvas.scrollHeight) return;
-  const gs=+document.getElementById('f-grid-size')?.value||40;
-  const sx=snapToGrid(x,gs), sy=snapToGrid(y,gs);
-  if(sx<0||sy<0||sx>=canvas.offsetWidth||sy>=canvas.scrollHeight) return;
-  if(canvasSeats.some(s=>getGridKey(s.x,s.y)===getGridKey(sx,sy))){showToast('Seat already here','error');return;}
+  if(canvasSeats.some(s=>Math.abs(s.x-x)<20&&Math.abs(s.y-y)<20)){showToast('Seat already here','error');return;}
   const sel=document.getElementById('sc-zone-select');
   const zi=parseInt(sel?.value||'0');
   const zone=zones[zi]||zones[0]||{name:'General'};
@@ -1530,7 +1501,7 @@ document.addEventListener('click',function(e){
   const start=zone.seat_start||1;
   const zoneSeats=canvasSeats.filter(s=>s.zone===zone.name);
   const id=prefix+(start+zoneSeats.length);
-  canvasSeats.push({id,x:sx,y:sy,zone:zone.name});
+  canvasSeats.push({id,x,y,zone:zone.name});
   renderCanvas();
 });
 document.getElementById('seat-canvas')?.addEventListener('wheel',function(e){
@@ -1586,58 +1557,49 @@ function renderAdminList(){
   const label=document.getElementById('events-count-label');
   if(!events.length){
     el.innerHTML='<div class="empty-state"><p style="font-size:18px;font-family:var(--font-d);letter-spacing:2px">No events yet</p><p style="color:var(--gray);font-size:13px">Create your first one on the left!</p></div>';
-    label.textContent='No events yet';return;
+    label.textContent='(0)';return;
   }
-  label.textContent=events.length+' event'+(events.length!==1?'s':'');
+  label.textContent='('+events.length+')';
   const minPrice=e=>e.zones.length?Math.min(...e.zones.map(z=>z.price)):0;
+  const icons=['🎵','🎤','🎭','🎪','🎸','🎹'];
   let html='';
-  let errs=[];
   for(let i=0;i<events.length;i++){
     try {
       const e=events[i];
-      if(!e||typeof e!=='object'){ errs.push('item'+i+'=null'); continue; }
+      if(!e||typeof e!=='object') continue;
       const total=e.totalSeats||(e.rows*e.cols)||0;
       const soldPct=total>0?Math.round((e.booked.length/total)*100):0;
-      const badgeCls=e.status==='live'?'badge-live':(soldPct>=100?'badge-sold':'badge-draft');
+      const badgeCls=e.status==='live'?'live':(soldPct>=100?'sold':'draft');
       const badgeTxt=soldPct>=100?'Sold Out':(e.status==='live'?'Live':'Draft');
-      const dateStr=e.date?new Date(e.date+'T12:00').toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'}):'No date';
-      const addr=e.venue_address||{};
-      const addrParts=[addr.address1,addr.address2,addr.address3].filter(Boolean);
-      const addrLine=addrParts.length?addrParts.join(', ')+(addr.postal_code?' \u2014 '+addr.postal_code:''):'';
-      const mapQ=[e.venue,...addrParts,addr.postal_code].filter(Boolean).join('+').replace(/ /g,'+');
-      const addrHtml=addrLine?'<div class="ei-addr">'+addrLine+'</div>':'';
-      const mapHtml=mapQ?'<div class="ei-addr"><a href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(mapQ)+'" target="_blank" style="color:var(--logo-purple);text-decoration:none">\uD83D\uDCCD Show Map</a></div>':'';
-      const statusTitle=e.status==='live'?'Set Draft':'Publish';
-      const statusText=e.status==='live'?'\u23F8 Draft':'\u25B6 Publish';
+      const dateObj=e.date?new Date(e.date+'T12:00'):null;
+      const day=dateObj?dateObj.getDate():'';
+      const month=dateObj?dateObj.toLocaleDateString('en-SG',{month:'short',year:'numeric'}):'';
+      const imgs=e.images&&Array.isArray(e.images)&&e.images.length?e.images:null;
+      const imgHtml=imgs?`<img src="${imgs[0]}" alt="${escHtml(e.name)}">`:`<div class="admin-event-icon">${icons[e.id%icons.length]||'🎵'}</div>`;
       const isCreator=e.created_by===currentUser;
-      const creatorLabel=e.created_by?' \u00B7 '+escHtml(e.created_by):'';
-      html+='<div class="event-item">'
-        +'<div class="ei-color" style="background:'+(e.zones[0]?.color||'#444')+'"></div>'
-        +'<div class="ei-body">'
-        +'<div class="ei-info">'
-        +'<div class="ei-name">'+escHtml(e.name||'?')+'</div>'
-        +'<div class="ei-meta">'+escHtml(e.genre||'')+' \u00B7 '+dateStr+' \u00B7 '+escHtml(e.venue||'')+creatorLabel+'</div>'
-        +addrHtml+mapHtml
-        +'<div class="ei-stats">'
-        +'<span class="ei-stat"><strong>'+total+'</strong> seats</span>'
-        +'<span class="ei-stat">from <strong>$'+minPrice(e)+'</strong></span>'
-        +'<span class="ei-stat"><strong>'+e.booked.length+'/'+total+'</strong> booked (<strong>'+soldPct+'%</strong>)</span>'
-        +'</div></div>'
-        +'<span class="ei-badge '+badgeCls+'">'+badgeTxt+'</span>'
-        +'<div class="ei-actions">'
-        +'<button class="btn btn-outline btn-sm" onclick="toggleStatus(\''+e.id+'\')" title="'+statusTitle+'">'+statusText+'</button>'
-        +'<button class="btn btn-outline btn-sm" onclick="editEvent(\''+e.id+'\')">\u270F Edit</button>'
-        +(isCreator?'<button class="btn btn-danger btn-sm" onclick="deleteEvent(\''+e.id+'\')">\u2715</button>':'')
-        +'</div></div></div>';
+      const statusText=e.status==='live'?'⏸ Draft':'▶ Publish';
+      html+='<div class="admin-event-card" onclick="editEvent(\''+e.id+'\')">'
+        +'<div class="admin-event-img">'+imgHtml
+        +'<div class="admin-event-badge '+badgeCls+'">'+badgeTxt+'</div>'
+        +(dateObj?'<div class="admin-event-date"><span class="day">'+day+'</span><span class="month">'+month+'</span></div>':'')
+        +'</div>'
+        +'<div class="admin-event-body">'
+        +'<div class="cat">'+escHtml(e.genre||'Event')+'</div>'
+        +'<div class="name">'+escHtml(e.name||'?')+'</div>'
+        +'<div class="meta"><span>📍 '+escHtml(e.venue||'')+'</span><span>🕗 '+(e.time||'20:00')+'</span>'+(e.organiser_name?'<span style="font-size:11px;color:var(--gray);display:block;margin-top:2px">🎤 '+escHtml(e.organiser_name)+'</span>':'')+'</div>'
+        +'<div class="stats"><strong>'+total+'</strong> seats · from <strong>$'+minPrice(e)+'</strong> · <strong>'+e.booked.length+'/'+total+'</strong> booked (<strong>'+soldPct+'%</strong>)</div>'
+        +'<div class="footer">'
+        +'<div class="price">$'+minPrice(e)+' <span>from</span></div>'
+        +'<div class="admin-event-actions">'
+        +'<button onclick="event.stopPropagation();toggleStatus(\''+e.id+'\')" title="Toggle status">'+statusText+'</button>'
+        +'<button onclick="event.stopPropagation();editEvent(\''+e.id+'\')">✎ Edit</button>'
+        +(isCreator?'<button onclick="event.stopPropagation();deleteEvent(\''+e.id+'\')">✕</button>':'')
+        +'</div></div></div></div>';
     } catch(err){
       console.error('renderAdminList: error event',events[i]?.id||i,err);
     }
   }
-  if(html.length===0){
-    el.innerHTML='<div class="empty-state"><p style="color:var(--red)">All events failed to render</p></div>';
-    return;
-  }
-  el.innerHTML=html;
+  el.innerHTML=html||'<div class="empty-state"><p style="color:var(--red)">All events failed to render</p></div>';
 }
 function escHtml(s){ return String(s).replace(/[&<>"']/g,function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; }); }
 

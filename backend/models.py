@@ -41,6 +41,12 @@ class Event(Base):
     artist_facebook = Column(String, default="")
     artist_website = Column(String, default="")
     artist_details = Column(String, default="")
+    organiser_name = Column(String, default="")
+    organiser_contact = Column(String, default="")
+    organiser_email = Column(String, default="")
+    organiser_logo = Column(String, default="")
+    organiser_address = Column(String, default="")
+    organiser_summary = Column(String, default="")
 
 class Booking(Base):
     __tablename__ = "bookings"

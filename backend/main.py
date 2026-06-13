@@ -28,6 +28,12 @@ SQL_MIGRATIONS = {
         ("artist_facebook", "VARCHAR DEFAULT ''"),
         ("artist_website", "VARCHAR DEFAULT ''"),
         ("artist_details", "VARCHAR DEFAULT ''"),
+        ("organiser_name", "VARCHAR DEFAULT ''"),
+        ("organiser_contact", "VARCHAR DEFAULT ''"),
+        ("organiser_email", "VARCHAR DEFAULT ''"),
+        ("organiser_logo", "VARCHAR DEFAULT ''"),
+        ("organiser_address", "VARCHAR DEFAULT ''"),
+        ("organiser_summary", "VARCHAR DEFAULT ''"),
     ],
     "bookings": [
         ("email", "VARCHAR"),

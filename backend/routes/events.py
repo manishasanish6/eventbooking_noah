@@ -24,6 +24,9 @@ class ZoneSchema(BaseModel):
     seat_prefix: Optional[str] = None
     seat_start: Optional[int] = None
     max_seats: Optional[int] = None
+    walkway_mode: Optional[str] = "none"
+    walkway_width: Optional[int] = 1
+    walkway_numbering: Optional[str] = "flow"
 
 class EventCreate(BaseModel):
     name: str
@@ -51,6 +54,12 @@ class EventCreate(BaseModel):
     artist_facebook: Optional[str] = ""
     artist_website: Optional[str] = ""
     artist_details: Optional[str] = ""
+    organiser_name: Optional[str] = ""
+    organiser_contact: Optional[str] = ""
+    organiser_email: Optional[str] = ""
+    organiser_logo: Optional[str] = ""
+    organiser_address: Optional[str] = ""
+    organiser_summary: Optional[str] = ""
 
 @router.get("/")
 def list_events(accessible_by: Optional[str] = None, db: Session = Depends(get_db)):
@@ -93,7 +102,13 @@ def create_event(data: EventCreate, db: Session = Depends(get_db)):
         artist_instagram=data.artist_instagram or "",
         artist_facebook=data.artist_facebook or "",
         artist_website=data.artist_website or "",
-        artist_details=data.artist_details or ""
+        artist_details=data.artist_details or "",
+        organiser_name=data.organiser_name or "",
+        organiser_contact=data.organiser_contact or "",
+        organiser_email=data.organiser_email or "",
+        organiser_logo=data.organiser_logo or "",
+        organiser_address=data.organiser_address or "",
+        organiser_summary=data.organiser_summary or ""
     )
     db.add(ev); db.commit(); db.refresh(ev)
     return jsonable_encoder(ev)

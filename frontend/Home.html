@@ -833,9 +833,9 @@
   }
 
   /* ── BOOKING MODAL ── */
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(4px)}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(4px)}
   .overlay.open{opacity:1;pointer-events:all}
-  .bmodal{background:var(--dark2);border:1px solid rgba(255,78,54,0.2);width:92%;max-width:920px;max-height:92vh;overflow-y:auto;transform:translateY(20px);transition:transform .25s}
+  .bmodal{background:var(--dark2);width:100%;max-width:none;height:100vh;overflow-y:auto;transform:translateY(20px);transition:transform .25s}
   .overlay.open .bmodal{transform:translateY(0)}
   .bm-header{padding:28px 32px 22px;border-bottom:1px solid rgba(255,78,54,0.15);display:flex;justify-content:space-between;align-items:flex-start;position:sticky;top:0;background:var(--dark2);z-index:2}
   .bm-genre{font-size:0.68rem;font-weight:600;letter-spacing:0.3em;text-transform:uppercase;color:var(--logo-purple);margin-bottom:4px}
@@ -843,8 +843,8 @@
   .bm-sub{color:var(--gray);font-size:13px;margin-top:6px}
   .close-x{background:none;border:none;color:var(--gray);width:34px;height:34px;cursor:pointer;font-size:1.5rem;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:color .2s}
   .close-x:hover{color:var(--white)}
-  .bm-body{padding:28px 32px;display:grid;grid-template-columns:1fr 280px;gap:32px}
-  .left-col{display:flex;flex-direction:column;gap:16px}
+.bm-body{padding:28px 32px;display:grid;grid-template-columns:1fr 280px;gap:32px;align-items:start}
+.left-col{display:flex;flex-direction:column;gap:16px;overflow-y:auto;max-height:calc(100vh - 150px)}
   .seat-area h3{font-family:var(--font-d);font-size:18px;letter-spacing:2px;color:var(--gray);margin-bottom:12px}
   .seat-legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:16px}
   .sl-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gray)}
@@ -869,7 +869,8 @@
   .pub-canvas .pc-seat.chosen{outline:2px solid #fff;outline-offset:1px;z-index:3}
 
   /* ── SUMMARY PANEL ── */
-  .sum-box{background:var(--dark3);border:1px solid rgba(255,78,54,0.1);padding:18px;margin-bottom:16px}
+  .sum-panel{position:sticky;top:0;align-self:start}
+.sum-box{background:var(--dark3);border:1px solid rgba(255,78,54,0.1);padding:18px;margin-bottom:16px}
   .sum-title{font-family:var(--font-d);font-size:14px;letter-spacing:2px;color:var(--gray);margin-bottom:12px}
   .sum-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:var(--gray)}
   .sum-row span:last-child{color:var(--white)}
@@ -903,6 +904,8 @@
 
   @media(max-width:700px){
     .bm-body{grid-template-columns:1fr}
+    .left-col{max-height:calc(100vh - 150px);overflow-y:auto}
+    .sum-panel{position:static}
   }
 </style>
 </head>
@@ -1266,6 +1269,7 @@
         <div class="bm-name" id="bm-name"></div>
         <div class="bm-sub" id="bm-sub"></div>
         <div id="bm-artist-details" style="margin-top:12px;display:flex;gap:14px;align-items:flex-start"></div>
+        <div id="bm-organiser" style="margin-top:10px;display:none;padding:10px 14px;background:rgba(139,68,255,0.08);border-left:3px solid var(--logo-purple)"></div>
       </div>
       <button class="close-x" onclick="closeBooking()">✕</button>
     </div>
@@ -1462,6 +1466,7 @@
           <div class="event-meta">
             <span>📍 ${[e.venue,addrStr].filter(Boolean).join(', ')}</span>
             <span>🕗 ${e.time || ''}</span>
+            ${e.organiser_name ? '<span style="font-size:11px;color:var(--gray);margin-top:2px;display:block">🎤 Organised by '+e.organiser_name+'</span>' : ''}
             ${mapLink?'<br>'+mapLink:''}
           </div>
           <div class="event-footer">
@@ -1548,7 +1553,7 @@
 
   function showAllEvents() {
     document.getElementById('eventsGrid').innerHTML = renderEventCards(allEvents);
-
+    document.getElementById('showAllWrap').style.display = 'none';
   }
   document.getElementById('showAllBtn').addEventListener('click', showAllEvents);
   document.getElementById('viewAllBtn').addEventListener('click', showAllEvents);
@@ -1609,6 +1614,29 @@
       artistHtml += `</div>`;
     }
     artistDetails.innerHTML = artistHtml || '';
+
+    // Organiser details
+    const orgEl = document.getElementById('bm-organiser');
+    const hasOrg = e.organiser_name || e.organiser_logo || e.organiser_summary;
+    if (hasOrg) {
+      let orgHtml = '<div style="display:flex;gap:12px;align-items:flex-start">';
+      if (e.organiser_logo) {
+        orgHtml += `<div style="flex-shrink:0;width:48px;height:48px;overflow:hidden;border:1px solid rgba(255,78,54,0.15);border-radius:4px"><img src="${e.organiser_logo}" style="width:100%;height:100%;object-fit:cover;display:block"></div>`;
+      }
+      orgHtml += '<div style="flex:1;min-width:0">';
+      if (e.organiser_name) orgHtml += `<strong style="font-size:13px;color:var(--white)">${e.organiser_name}</strong>`;
+      let orgMeta = [];
+      if (e.organiser_contact) orgMeta.push(`📞 ${e.organiser_contact}`);
+      if (e.organiser_email) orgMeta.push(`✉️ ${e.organiser_email}`);
+      if (e.organiser_address) orgMeta.push(`📍 ${e.organiser_address}`);
+      if (orgMeta.length) orgHtml += `<div style="font-size:11px;color:var(--gray);margin-top:3px">${orgMeta.join(' · ')}</div>`;
+      if (e.organiser_summary) orgHtml += `<p style="font-size:12px;color:var(--gray);margin:6px 0 0 0;line-height:1.5">${e.organiser_summary}</p>`;
+      orgHtml += '</div></div>';
+      orgEl.innerHTML = orgHtml;
+      orgEl.style.display = 'block';
+    } else {
+      orgEl.style.display = 'none';
+    }
 
     document.getElementById('sum-event').textContent = e.name;
     document.getElementById('sum-date').textContent = dateStr;

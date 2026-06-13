@@ -1,8 +1,6 @@
 import os, io, base64, logging
 from dotenv import load_dotenv
 import qrcode
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
 
 logger = logging.getLogger("noah.email")
 
@@ -28,6 +26,13 @@ body{{font-family:Arial,sans-serif;background:#111;color:#F5F1EB;padding:40px 20
 </div>
 </body>
 </html>"""
+
+    try:
+        from sendgrid import SendGridAPIClient
+        from sendgrid.helpers.mail import Mail
+    except ImportError:
+        logger.warning("sendgrid package not installed — skipping OTP email to %s", to_email)
+        return
 
     api_key = os.getenv("SENDGRID_API_KEY")
     from_addr = os.getenv("EMAIL_FROM", "noreply@noahevents.com")
@@ -131,6 +136,13 @@ h1{{font-family:'Bebas Neue',sans-serif;font-size:32px;color:#fff;margin:0 0 4px
 </div>
 </body>
 </html>"""
+
+    try:
+        from sendgrid import SendGridAPIClient
+        from sendgrid.helpers.mail import Mail
+    except ImportError:
+        logger.warning("sendgrid package not installed — skipping booking email to %s", to_email)
+        return
 
     api_key = os.getenv("SENDGRID_API_KEY")
     from_addr = os.getenv("EMAIL_FROM", "noreply@noahevents.com")
