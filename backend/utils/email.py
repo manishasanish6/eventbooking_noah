@@ -112,7 +112,7 @@ def send_booking_confirmation(to_email, event_name, seats, total, venue, venue_a
         qr_rows += (
             f'<tr><td style="padding:10px 0;border-bottom:1px solid rgba(255,78,54,0.08)">'
             f'<div style="font-weight:600;font-size:15px;margin-bottom:4px">{s}</div>'
-            f'<div style="font-size:10px;color:#aaa;letter-spacing:1px">{code}</div></td>'
+            f'<div style="font-size:10px;color:#555;letter-spacing:1px">{code}</div></td>'
             f'<td style="text-align:right;padding:10px 0">'
             f'<img src="cid:{cid}" width="80" height="80" style="display:block"></td></tr>'
         )
@@ -141,7 +141,7 @@ def send_booking_confirmation(to_email, event_name, seats, total, venue, venue_a
 
     venue_html = f"<div>{venue}</div>"
     if addr_line:
-        venue_html += f"<div style='font-size:12px;color:#aaa;margin-top:2px'>{addr_line}</div>"
+        venue_html += f"<div style='font-size:12px;color:#555;margin-top:2px'>{addr_line}</div>"
     if map_link:
         venue_html += f'<div style="margin-top:4px"><a href="{map_link}" target="_blank" style="color:#8b44ff;font-size:11px;text-decoration:none;letter-spacing:1px">View on Map</a></div>'
 
@@ -149,14 +149,14 @@ def send_booking_confirmation(to_email, event_name, seats, total, venue, venue_a
 <!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><style>
-body{{font-family:Arial,sans-serif;background:#111;color:#F5F1EB;padding:40px 20px}}
-.container{{max-width:560px;margin:0 auto;background:#1A1A1A;border:1px solid rgba(255,78,54,0.2);padding:32px}}
-h1{{font-family:'Bebas Neue',sans-serif;font-size:32px;color:#fff;margin:0 0 4px;letter-spacing:2px}}
+body{{font-family:Arial,sans-serif;background:#fff;color:#000;padding:40px 20px}}
+.container{{max-width:560px;margin:0 auto;background:#fff;border:1px solid #ddd;padding:32px}}
+h1{{font-family:'Bebas Neue',sans-serif;font-size:32px;color:#000;margin:0 0 4px;letter-spacing:2px}}
 .tag{{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#8b44ff;margin-bottom:16px}}
-.detail{{padding:8px 0;border-bottom:1px solid rgba(255,78,54,0.1);font-size:14px}}
-.detail span{{color:#aaa}}
+.detail{{padding:8px 0;border-bottom:1px solid #eee;font-size:14px}}
+.detail span{{color:#555}}
 .total{{margin-top:16px;font-size:18px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:#ff3e37}}
-.footer{{margin-top:24px;font-size:11px;color:#aaa;text-align:center}}
+.footer{{margin-top:24px;font-size:11px;color:#666;text-align:center}}
 .tkt-table{{width:100%;border-collapse:collapse;margin:12px 0}}
 .ref{{font-size:12px;color:#8b44ff;letter-spacing:2px;margin-bottom:16px}}
 </style></head>
