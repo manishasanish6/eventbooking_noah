@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from backend.database import engine, Base
-from backend.routes import events, bookings, auth
+from backend.routes import events, bookings, auth, contact
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s %(message)s")
 
@@ -78,5 +78,6 @@ app.add_middleware(
 app.include_router(auth.router,     prefix="/auth",     tags=["Auth"])
 app.include_router(events.router,   prefix="/events",   tags=["Events"])
 app.include_router(bookings.router, prefix="/bookings", tags=["Bookings"])
+app.include_router(contact.router,  prefix="/contact",  tags=["Contact"])
 
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

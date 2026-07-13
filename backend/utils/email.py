@@ -1,4 +1,5 @@
-import os, io, base64, logging
+import os, io, base64, logging, smtplib
+from email.message import EmailMessage
 from dotenv import load_dotenv
 import qrcode
 
@@ -52,6 +53,55 @@ body{{font-family:Arial,sans-serif;background:#111;color:#F5F1EB;padding:40px 20
     sg = SendGridAPIClient(api_key)
     response = sg.send(msg)
     logger.info("OTP sent to %s (status %s)", to_email, response.status_code)
+
+
+def send_enquiry_email(user_email, first_name, last_name, enquiry_type, enquiry_message):
+    load_dotenv()
+    smtp_host = os.getenv("SMTP_HOST")
+    smtp_port = int(os.getenv("SMTP_PORT", "587") or "587")
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_pass = os.getenv("SMTP_PASS")
+    smtp_use_ssl = os.getenv("SMTP_USE_SSL", "false").lower() in ("1", "true", "yes")
+    smtp_use_tls = os.getenv("SMTP_USE_TLS", "false").lower() in ("1", "true", "yes")
+    from_addr = os.getenv("EMAIL_FROM") or smtp_user or "noreply@noahevents.com"
+    to_addr = os.getenv("EMAIL_TO") or "hello@noahevents.com"
+
+    subject = f"New enquiry from {first_name} {last_name}"
+    body_text = f"Name: {first_name} {last_name}\nEmail: {user_email}\nType: {enquiry_type}\n\nMessage:\n{enquiry_message}\n"
+    body_html = f"""<!DOCTYPE html><html><body><h2>New enquiry from {first_name} {last_name}</h2><p><strong>Email:</strong> {user_email}</p><p><strong>Type:</strong> {enquiry_type}</p><p><strong>Message:</strong></p><p style=\"white-space:pre-wrap;line-height:1.5;\">{enquiry_message}</p></body></html>"""
+
+    if not smtp_host or not smtp_user or not smtp_pass:
+        logger.warning("SMTP not configured — skipping enquiry email from %s", user_email)
+        return
+
+    msg = EmailMessage()
+    msg["From"] = from_addr
+    msg["To"] = to_addr
+    msg["Subject"] = subject
+    msg["Reply-To"] = user_email
+    msg.set_content(body_text)
+    msg.add_alternative(body_html, subtype="html")
+
+    server = None
+    try:
+        if smtp_use_ssl:
+            server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=20)
+        else:
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=20)
+            if smtp_use_tls:
+                server.starttls()
+        if smtp_user and smtp_pass:
+            server.login(smtp_user, smtp_pass)
+        server.send_message(msg)
+        logger.info("Enquiry email sent from %s to %s", user_email, to_addr)
+    except Exception:
+        logger.exception("Failed to send enquiry email from %s to %s", user_email, to_addr)
+    finally:
+        if server:
+            try:
+                server.quit()
+            except Exception:
+                pass
 
 
 def send_booking_confirmation(to_email, event_name, seats, total, venue, venue_address, date, time, booking_id, ticket_codes=None, addon_items=None):

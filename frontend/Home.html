@@ -1159,7 +1159,14 @@
         <label class="form-label">Your Message</label>
         <textarea class="form-textarea" placeholder="Tell us about your enquiry..."></textarea>
       </div>
-      <button class="btn-primary" style="align-self: flex-start;">Send Enquiry →</button>
+      <div style="display:flex;gap:10px;align-items:center">
+  <button class="btn-primary" onclick="submitContactEnquiry()">Send Enquiry →</button>
+  <a href="https://wa.me/6583384364" target="_blank" rel="noopener"
+     style="display:inline-flex;align-items:center;gap:6px;padding:0.85rem 1.5rem;background:#25D366;color:#fff;text-decoration:none;font-family:'Montserrat',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.05em;border:none;cursor:pointer;transition:opacity .2s;border-radius:0"
+     onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+    💬 WhatsApp
+  </a>
+</div>
     </form>
   </div>
   <div class="contact-info">
@@ -1947,16 +1954,44 @@
 
   loadEvents();
 
-  document.querySelector('.contact-form button').addEventListener('click', function() {
-    const inputs = document.querySelectorAll('.form-input, .form-select, .form-textarea');
-    let filled = true;
-    inputs.forEach(i => { if (!i.value.trim()) filled = false; });
-    if (filled) {
-      alert('Thank you! Your enquiry has been received. Our team will be in touch within 24 hours.');
-    } else {
+  async function submitContactEnquiry() {
+    const form = document.querySelector('.contact-form');
+    const firstName = form.querySelector('input[type="text"]').value.trim();
+    const lastName = form.querySelectorAll('input[type="text"]')[1].value.trim();
+    const email = form.querySelector('input[type="email"]').value.trim();
+    const enquiryType = form.querySelector('.form-select').value.trim();
+    const message = form.querySelector('.form-textarea').value.trim();
+
+    if (!firstName || !lastName || !email || !enquiryType || !message) {
       alert('Please fill in all fields before submitting.');
+      return;
     }
-  });
+
+    try {
+      const res = await fetch(API_BASE + '/contact/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          enquiry_type: enquiryType,
+          message
+        })
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || 'Unable to send enquiry.');
+      }
+
+      alert('Thank you! Your enquiry has been received. Our team will be in touch within 24 hours.');
+      form.reset();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Unable to send enquiry.');
+    }
+  }
 
   function logout() {
     localStorage.removeItem('noah_user');
