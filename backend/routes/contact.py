@@ -6,10 +6,13 @@ from backend.utils.email import send_enquiry_email
 logger = logging.getLogger("noah.contact")
 router = APIRouter()
 
+from typing import Optional
+
 class EnquiryCreate(BaseModel):
     first_name: str
     last_name: str
     email: str
+    contact_number: Optional[str] = ""
     enquiry_type: str
     message: str
 
@@ -20,9 +23,10 @@ def send_enquiry(data: EnquiryCreate, bg: BackgroundTasks):
 
     bg.add_task(
         send_enquiry_email,
-        user_email=data.email,
+        user_email=data.email.strip(),
         first_name=data.first_name.strip(),
         last_name=data.last_name.strip(),
+        contact_number=data.contact_number.strip() if data.contact_number else "",
         enquiry_type=data.enquiry_type.strip(),
         enquiry_message=data.message.strip()
     )

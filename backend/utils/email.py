@@ -50,12 +50,14 @@ def _send_smtp(to_email, subject, body_html, body_text=None):
             except Exception:
                 pass
 
-def send_enquiry_email(user_email, first_name, last_name, enquiry_type, enquiry_message):
+def send_enquiry_email(user_email, first_name, last_name, contact_number, enquiry_type, enquiry_message):
     cfg = _get_smtp_config()
     to_addr = os.getenv("EMAIL_TO") or "hello@noahevents.com"
     subject = f"New enquiry from {first_name} {last_name}"
-    body_text = f"Name: {first_name} {last_name}\nEmail: {user_email}\nType: {enquiry_type}\n\nMessage:\n{enquiry_message}\n"
-    body_html = f"""<!DOCTYPE html><html><body><h2>New enquiry from {first_name} {last_name}</h2><p><strong>Email:</strong> {user_email}</p><p><strong>Type:</strong> {enquiry_type}</p><p><strong>Message:</strong></p><p style="white-space:pre-wrap;line-height:1.5;">{enquiry_message}</p></body></html>"""
+    contact_line = f"\nContact: {contact_number}" if contact_number else ""
+    body_text = f"Name: {first_name} {last_name}\nEmail: {user_email}{contact_line}\nType: {enquiry_type}\n\nMessage:\n{enquiry_message}\n"
+    contact_html = f"<p><strong>Contact:</strong> {contact_number}</p>" if contact_number else ""
+    body_html = f"""<!DOCTYPE html><html><body><h2>New enquiry from {first_name} {last_name}</h2><p><strong>Email:</strong> {user_email}</p>{contact_html}<p><strong>Type:</strong> {enquiry_type}</p><p><strong>Message:</strong></p><p style="white-space:pre-wrap;line-height:1.5;">{enquiry_message}</p></body></html>"""
     if not cfg["host"] or not cfg["user"] or not cfg["pass"]:
         logger.warning("SMTP not configured — skipping enquiry email from %s", user_email)
         return

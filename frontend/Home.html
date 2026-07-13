@@ -1140,9 +1140,15 @@
           <input class="form-input" type="text" placeholder="Doe">
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Email Address</label>
-        <input class="form-input" type="email" placeholder="john@example.com">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" type="email" placeholder="john@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact Number</label>
+          <input class="form-input" type="tel" placeholder="+65 9123 4567">
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">Enquiry Type</label>
@@ -1958,7 +1964,8 @@
     const form = document.querySelector('.contact-form');
     const firstName = form.querySelector('input[type="text"]').value.trim();
     const lastName = form.querySelectorAll('input[type="text"]')[1].value.trim();
-    const email = form.querySelector('input[type="email"]').value.trim();
+    const email = form.querySelectorAll('input[type="email"], input[type="tel"]')[0].value.trim();
+    const contactNumber = form.querySelectorAll('input[type="email"], input[type="tel"]')[1].value.trim();
     const enquiryType = form.querySelector('.form-select').value.trim();
     const message = form.querySelector('.form-textarea').value.trim();
 
@@ -1975,6 +1982,7 @@
           first_name: firstName,
           last_name: lastName,
           email,
+          contact_number: contactNumber,
           enquiry_type: enquiryType,
           message
         })
