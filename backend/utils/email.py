@@ -5,93 +5,77 @@ import qrcode
 
 logger = logging.getLogger("noah.email")
 
-def send_otp_email(to_email, otp_code):
+def _get_smtp_config():
     load_dotenv()
-    subject = f"Your Noah Events OTP — {otp_code}"
-    body = f"""\
-<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><style>
-body{{font-family:Arial,sans-serif;background:#111;color:#F5F1EB;padding:40px 20px}}
-.container{{max-width:440px;margin:0 auto;background:#1A1A1A;border:1px solid rgba(255,78,54,0.2);padding:32px;text-align:center}}
-.code{{font-size:42px;font-weight:700;letter-spacing:6px;color:#8b44ff;margin:24px 0;font-family:monospace}}
-.footer{{margin-top:20px;font-size:11px;color:#aaa}}
-</style></head>
-<body>
-<div class="container">
-<div style="font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#8b44ff;margin-bottom:16px">Noah Events</div>
-<div style="font-size:15px;margin-bottom:8px">Your one-time login code</div>
-<div class="code">{otp_code}</div>
-<div style="font-size:13px;color:#aaa">This code expires in 5 minutes.</div>
-<div class="footer">If you did not request this, please ignore this email.</div>
-</div>
-</body>
-</html>"""
+    return {
+        "host": os.getenv("SMTP_HOST"),
+        "port": int(os.getenv("SMTP_PORT", "587") or "587"),
+        "user": os.getenv("SMTP_USER"),
+        "pass": os.getenv("SMTP_PASS"),
+        "use_ssl": os.getenv("SMTP_USE_SSL", "false").lower() in ("1", "true", "yes"),
+        "use_tls": os.getenv("SMTP_USE_TLS", "false").lower() in ("1", "true", "yes"),
+        "from_addr": os.getenv("EMAIL_FROM") or os.getenv("SMTP_USER") or "noreply@noahevents.com",
+    }
 
+def _send_smtp(to_email, subject, body_html, body_text=None):
+    cfg = _get_smtp_config()
+    if not cfg["host"] or not cfg["user"] or not cfg["pass"]:
+        logger.warning("SMTP not configured — skipping email to %s", to_email)
+        return
+    msg = EmailMessage()
+    msg["From"] = cfg["from_addr"]
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    if body_text:
+        msg.set_content(body_text)
+    msg.add_alternative(body_html, subtype="html")
+    server = None
     try:
-        from sendgrid import SendGridAPIClient
-        from sendgrid.helpers.mail import Mail
-    except ImportError:
-        logger.warning("sendgrid package not installed — skipping OTP email to %s", to_email)
-        return
-
-    api_key = os.getenv("SENDGRID_API_KEY")
-    from_addr = os.getenv("EMAIL_FROM", "noreply@noahevents.com")
-
-    if not api_key:
-        logger.warning("SENDGRID_API_KEY not set — skipping OTP email to %s", to_email)
-        return
-
-    msg = Mail(
-        from_email=from_addr,
-        to_emails=to_email,
-        subject=subject,
-        html_content=body
-    )
-
-    logger.info("Sending OTP to %s", to_email)
-    sg = SendGridAPIClient(api_key)
-    response = sg.send(msg)
-    logger.info("OTP sent to %s (status %s)", to_email, response.status_code)
-
+        if cfg["use_ssl"]:
+            server = smtplib.SMTP_SSL(cfg["host"], cfg["port"], timeout=20)
+        else:
+            server = smtplib.SMTP(cfg["host"], cfg["port"], timeout=20)
+            if cfg["use_tls"]:
+                server.starttls()
+        if cfg["user"] and cfg["pass"]:
+            server.login(cfg["user"], cfg["pass"])
+        server.send_message(msg)
+        logger.info("Email sent to %s", to_email)
+    except Exception:
+        logger.exception("Failed to send email to %s", to_email)
+    finally:
+        if server:
+            try:
+                server.quit()
+            except Exception:
+                pass
 
 def send_enquiry_email(user_email, first_name, last_name, enquiry_type, enquiry_message):
-    load_dotenv()
-    smtp_host = os.getenv("SMTP_HOST")
-    smtp_port = int(os.getenv("SMTP_PORT", "587") or "587")
-    smtp_user = os.getenv("SMTP_USER")
-    smtp_pass = os.getenv("SMTP_PASS")
-    smtp_use_ssl = os.getenv("SMTP_USE_SSL", "false").lower() in ("1", "true", "yes")
-    smtp_use_tls = os.getenv("SMTP_USE_TLS", "false").lower() in ("1", "true", "yes")
-    from_addr = os.getenv("EMAIL_FROM") or smtp_user or "noreply@noahevents.com"
+    cfg = _get_smtp_config()
     to_addr = os.getenv("EMAIL_TO") or "hello@noahevents.com"
-
     subject = f"New enquiry from {first_name} {last_name}"
     body_text = f"Name: {first_name} {last_name}\nEmail: {user_email}\nType: {enquiry_type}\n\nMessage:\n{enquiry_message}\n"
-    body_html = f"""<!DOCTYPE html><html><body><h2>New enquiry from {first_name} {last_name}</h2><p><strong>Email:</strong> {user_email}</p><p><strong>Type:</strong> {enquiry_type}</p><p><strong>Message:</strong></p><p style=\"white-space:pre-wrap;line-height:1.5;\">{enquiry_message}</p></body></html>"""
-
-    if not smtp_host or not smtp_user or not smtp_pass:
+    body_html = f"""<!DOCTYPE html><html><body><h2>New enquiry from {first_name} {last_name}</h2><p><strong>Email:</strong> {user_email}</p><p><strong>Type:</strong> {enquiry_type}</p><p><strong>Message:</strong></p><p style="white-space:pre-wrap;line-height:1.5;">{enquiry_message}</p></body></html>"""
+    if not cfg["host"] or not cfg["user"] or not cfg["pass"]:
         logger.warning("SMTP not configured — skipping enquiry email from %s", user_email)
         return
-
     msg = EmailMessage()
-    msg["From"] = from_addr
+    msg["From"] = cfg["from_addr"]
     msg["To"] = to_addr
     msg["Subject"] = subject
     msg["Reply-To"] = user_email
     msg.set_content(body_text)
     msg.add_alternative(body_html, subtype="html")
-
     server = None
     try:
-        if smtp_use_ssl:
-            server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=20)
+        if cfg["use_ssl"]:
+            server = smtplib.SMTP_SSL(cfg["host"], cfg["port"], timeout=20)
         else:
-            server = smtplib.SMTP(smtp_host, smtp_port, timeout=20)
-            if smtp_use_tls:
+            server = smtplib.SMTP(cfg["host"], cfg["port"], timeout=20)
+            if cfg["use_tls"]:
                 server.starttls()
-        if smtp_user and smtp_pass:
-            server.login(smtp_user, smtp_pass)
+        if cfg["user"] and cfg["pass"]:
+            server.login(cfg["user"], cfg["pass"])
         server.send_message(msg)
         logger.info("Enquiry email sent from %s to %s", user_email, to_addr)
     except Exception:
@@ -103,9 +87,7 @@ def send_enquiry_email(user_email, first_name, last_name, enquiry_type, enquiry_
             except Exception:
                 pass
 
-
 def send_booking_confirmation(to_email, event_name, seats, total, venue, venue_address, date, time, booking_id, ticket_codes=None, addon_items=None):
-    load_dotenv()
     subject = f"Booking Confirmed — {event_name}"
     time_str = f" at {time}" if time else ""
     seats_str = ", ".join(seats)
@@ -156,7 +138,7 @@ def send_booking_confirmation(to_email, event_name, seats, total, venue, venue_a
     if map_link:
         venue_html += f'<div style="margin-top:4px"><a href="{map_link}" target="_blank" style="color:#8b44ff;font-size:11px;text-decoration:none;letter-spacing:1px">View on Map</a></div>'
 
-    body = f"""\
+    body_html = f"""\
 <!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><style>
@@ -187,28 +169,4 @@ h1{{font-family:'Bebas Neue',sans-serif;font-size:32px;color:#fff;margin:0 0 4px
 </body>
 </html>"""
 
-    try:
-        from sendgrid import SendGridAPIClient
-        from sendgrid.helpers.mail import Mail
-    except ImportError:
-        logger.warning("sendgrid package not installed — skipping booking email to %s", to_email)
-        return
-
-    api_key = os.getenv("SENDGRID_API_KEY")
-    from_addr = os.getenv("EMAIL_FROM", "noreply@noahevents.com")
-
-    if not api_key:
-        logger.warning("SENDGRID_API_KEY not set — skipping booking email to %s", to_email)
-        return
-
-    msg = Mail(
-        from_email=from_addr,
-        to_emails=to_email,
-        subject=subject,
-        html_content=body
-    )
-
-    logger.info("Sending booking confirmation to %s for %s", to_email, event_name)
-    sg = SendGridAPIClient(api_key)
-    response = sg.send(msg)
-    logger.info("Email sent to %s (status %s)", to_email, response.status_code)
+    _send_smtp(to_email, subject, body_html)
