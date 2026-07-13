@@ -88,6 +88,10 @@ def send_enquiry_email(user_email, first_name, last_name, enquiry_type, enquiry_
                 pass
 
 def send_booking_confirmation(to_email, event_name, seats, total, venue, venue_address, date, time, booking_id, ticket_codes=None, addon_items=None):
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    from email.mime.image import MIMEImage
+
     subject = f"Booking Confirmed — {event_name}"
     time_str = f" at {time}" if time else ""
     seats_str = ", ".join(seats)
@@ -95,19 +99,20 @@ def send_booking_confirmation(to_email, event_name, seats, total, venue, venue_a
     if not ticket_codes:
         ticket_codes = {s: f"NOAH-{booking_id}-{s}" for s in seats}
 
+    attachments = []
     qr_rows = ""
     for s in seats:
         code = ticket_codes.get(s, f"NOAH-{booking_id}-{s}")
         buf = io.BytesIO()
         qrcode.make(code).save(buf, format="PNG")
-        b64 = base64.b64encode(buf.getvalue()).decode()
-        src = f"data:image/png;base64,{b64}"
+        cid = f"qr_{s}"
+        attachments.append((cid, buf.getvalue()))
         qr_rows += (
             f'<tr><td style="padding:10px 0;border-bottom:1px solid rgba(255,78,54,0.08)">'
             f'<div style="font-weight:600;font-size:15px;margin-bottom:4px">{s}</div>'
             f'<div style="font-size:10px;color:#aaa;letter-spacing:1px">{code}</div></td>'
             f'<td style="text-align:right;padding:10px 0">'
-            f'<img src="{src}" width="80" height="80" style="display:block"></td></tr>'
+            f'<img src="cid:{cid}" width="80" height="80" style="display:block"></td></tr>'
         )
 
     addr_parts = []
@@ -169,4 +174,41 @@ h1{{font-family:'Bebas Neue',sans-serif;font-size:32px;color:#fff;margin:0 0 4px
 </body>
 </html>"""
 
-    _send_smtp(to_email, subject, body_html)
+    cfg = _get_smtp_config()
+    if not cfg["host"] or not cfg["user"] or not cfg["pass"]:
+        logger.warning("SMTP not configured — skipping booking email to %s", to_email)
+        return
+
+    msg = MIMEMultipart('related')
+    msg["From"] = cfg["from_addr"]
+    msg["To"] = to_email
+    msg["Subject"] = subject
+
+    msg.attach(MIMEText(body_html, 'html'))
+
+    for cid, data in attachments:
+        img = MIMEImage(data, _subtype='png')
+        img.add_header('Content-ID', f'<{cid}>')
+        img.add_header('Content-Disposition', 'inline', filename=f'{cid}.png')
+        msg.attach(img)
+
+    server = None
+    try:
+        if cfg["use_ssl"]:
+            server = smtplib.SMTP_SSL(cfg["host"], cfg["port"], timeout=20)
+        else:
+            server = smtplib.SMTP(cfg["host"], cfg["port"], timeout=20)
+            if cfg["use_tls"]:
+                server.starttls()
+        if cfg["user"] and cfg["pass"]:
+            server.login(cfg["user"], cfg["pass"])
+        server.send_message(msg)
+        logger.info("Booking confirmation sent to %s for %s", to_email, event_name)
+    except Exception:
+        logger.exception("Failed to send booking confirmation to %s", to_email)
+    finally:
+        if server:
+            try:
+                server.quit()
+            except Exception:
+                pass
