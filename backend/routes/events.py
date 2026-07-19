@@ -68,7 +68,7 @@ def list_events(accessible_by: Optional[str] = None, db: Session = Depends(get_d
         result = []
         for ev in all_events:
             editors = ev.editors or []
-            if ev.created_by == accessible_by or accessible_by in editors or not ev.created_by:
+            if ev.created_by == accessible_by or accessible_by in editors:
                 result.append(ev)
         return jsonable_encoder(result)
     return jsonable_encoder(all_events)
