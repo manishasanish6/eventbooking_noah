@@ -1231,23 +1231,31 @@
   <div class="modal-box">
     <button class="modal-close" id="modalClose">&times;</button>
     <div class="modal-title">Admin Login</div>
-    <div class="modal-sub" id="modalSub">Sign in to manage events &amp; bookings</div>
+    <div class="modal-sub" id="modalSub">Enter your email to receive an OTP</div>
 
-    <div id="loginStep">
+    <div class="modal-step active" id="stepEmail">
       <div class="form-group">
-        <label class="form-label">Username</label>
-        <input class="form-input" type="text" id="loginUsername" placeholder="e.g. admin1" autocomplete="off">
+        <label class="form-label">Email Address</label>
+        <input class="form-input" type="email" id="loginEmail" placeholder="you@example.com" autocomplete="off">
       </div>
+      <div class="modal-error" id="emailError">Please enter a valid email.</div>
+      <button class="btn-primary" id="sendOtpBtn">Send OTP</button>
+    </div>
+
+    <div class="modal-step" id="stepOtp">
       <div class="form-group">
-        <label class="form-label">Password</label>
-        <input class="form-input" type="password" id="loginPassword" placeholder="&bull;&bull;&bull;&bull;&bull;" autocomplete="off">
+        <label class="form-label" id="otpLabel">Enter the code sent to you@example.com</label>
+        <input class="form-input modal-code-input" type="text" id="loginOtp" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="off">
       </div>
-      <div class="modal-error" id="loginError">Invalid credentials.</div>
-      <button class="btn-primary" id="loginBtn">Sign In</button>
+      <div class="modal-error" id="otpError">Invalid OTP.</div>
+      <button class="btn-primary" id="verifyOtpBtn">Verify</button>
+      <div style="text-align:center;margin-top:12px">
+        <a href="#" id="resendOtpLink" style="color:var(--gray);font-size:13px;text-decoration:none">← Resend OTP</a>
+      </div>
     </div>
 
     <div class="modal-step" id="stepLoading">
-      <div class="modal-loading">Signing in...</div>
+      <div class="modal-loading">Loading...</div>
     </div>
   </div>
 </div>
@@ -1340,31 +1348,44 @@
   const adminModal = document.getElementById('adminModal');
   const modalClose = document.getElementById('modalClose');
   const modalSub = document.getElementById('modalSub');
-  const loginStep = document.getElementById('loginStep');
+  const stepEmail = document.getElementById('stepEmail');
+  const stepOtp = document.getElementById('stepOtp');
   const stepLoading = document.getElementById('stepLoading');
-  const loginUsername = document.getElementById('loginUsername');
-  const loginPassword = document.getElementById('loginPassword');
-  const loginError = document.getElementById('loginError');
-  const loginBtn = document.getElementById('loginBtn');
+  const loginEmail = document.getElementById('loginEmail');
+  const loginOtp = document.getElementById('loginOtp');
+  const emailError = document.getElementById('emailError');
+  const otpError = document.getElementById('otpError');
+  const sendOtpBtn = document.getElementById('sendOtpBtn');
+  const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+  const resendOtpLink = document.getElementById('resendOtpLink');
+  const otpLabel = document.getElementById('otpLabel');
+
+  let currentEmail = '';
 
   const loggedIn = localStorage.getItem('noah_user');
   document.getElementById('adminLink').style.display = loggedIn ? 'flex' : 'none';
   document.getElementById('logoutBtn').style.display = loggedIn ? 'flex' : 'none';
   document.getElementById('adminBtn').style.display = loggedIn ? 'none' : 'flex';
 
+  function showStep(step) {
+    [stepEmail, stepOtp, stepLoading].forEach(s => s.classList.remove('active'));
+    step.classList.add('active');
+  }
+
   function resetLogin() {
-    loginStep.style.display = 'block';
-    stepLoading.classList.remove('active');
-    loginUsername.value = '';
-    loginPassword.value = '';
-    loginError.classList.remove('show');
-    modalSub.textContent = 'Sign in to manage events & bookings';
+    showStep(stepEmail);
+    loginEmail.value = '';
+    loginOtp.value = '';
+    emailError.classList.remove('show');
+    otpError.classList.remove('show');
+    modalSub.textContent = 'Enter your email to receive an OTP';
+    currentEmail = '';
   }
 
   adminBtn.addEventListener('click', () => {
     resetLogin();
     adminModal.classList.add('active');
-    setTimeout(() => loginUsername.focus(), 200);
+    setTimeout(() => loginEmail.focus(), 200);
   });
 
   function closeModal() {
@@ -1375,55 +1396,92 @@
   modalClose.addEventListener('click', closeModal);
   adminModal.addEventListener('click', (e) => { if (e.target === adminModal) closeModal(); });
 
-  loginBtn.addEventListener('click', async () => {
-    const username = loginUsername.value.trim();
-    const password = loginPassword.value;
-
-    if (!username || !password) {
-      loginError.textContent = 'Please enter username and password.';
-      loginError.classList.add('show');
+  sendOtpBtn.addEventListener('click', async () => {
+    const email = loginEmail.value.trim();
+    if (!email || !email.includes('@')) {
+      emailError.textContent = 'Please enter a valid email.';
+      emailError.classList.add('show');
       return;
     }
-
-    loginError.classList.remove('show');
-    loginStep.style.display = 'none';
-    stepLoading.classList.add('active');
-    modalSub.textContent = 'Signing in...';
-
+    emailError.classList.remove('show');
+    showStep(stepLoading);
+    modalSub.textContent = 'Sending OTP...';
     try {
-      const res = await fetch(API + '/login', {
+      const res = await fetch(API + '/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ email })
       });
-
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        loginError.textContent = data.detail || 'Invalid credentials.';
-        loginStep.style.display = 'block';
-        stepLoading.classList.remove('active');
-        loginError.classList.add('show');
-        modalSub.textContent = 'Sign in to manage events & bookings';
+        emailError.textContent = data.detail || 'Unable to send OTP.';
+        showStep(stepEmail);
+        emailError.classList.add('show');
+        modalSub.textContent = 'Enter your email to receive an OTP';
         return;
       }
+      currentEmail = email;
+      otpLabel.textContent = `Enter the code sent to ${email}`;
+      loginOtp.value = '';
+      otpError.classList.remove('show');
+      showStep(stepOtp);
+      modalSub.textContent = 'Check your email for the OTP';
+      setTimeout(() => loginOtp.focus(), 200);
+    } catch (err) {
+      emailError.textContent = 'Connection error. Try again.';
+      showStep(stepEmail);
+      emailError.classList.add('show');
+      modalSub.textContent = 'Enter your email to receive an OTP';
+    }
+  });
 
+  verifyOtpBtn.addEventListener('click', async () => {
+    const otp = loginOtp.value.trim();
+    if (!otp || otp.length < 4) {
+      otpError.textContent = 'Please enter the full OTP.';
+      otpError.classList.add('show');
+      return;
+    }
+    otpError.classList.remove('show');
+    showStep(stepLoading);
+    modalSub.textContent = 'Verifying...';
+    try {
+      const res = await fetch(API + '/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: currentEmail, otp })
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        otpError.textContent = data.detail || 'Invalid OTP.';
+        showStep(stepOtp);
+        otpError.classList.add('show');
+        modalSub.textContent = 'Check your email for the OTP';
+        return;
+      }
       const data = await res.json();
       localStorage.setItem('noah_token', data.access_token);
       localStorage.setItem('noah_user', data.username);
       closeModal();
       window.location.href = 'index.html';
-
     } catch (err) {
-      loginError.textContent = 'Connection error. Try again.';
-      loginStep.style.display = 'block';
-      stepLoading.classList.remove('active');
-      loginError.classList.add('show');
-      modalSub.textContent = 'Sign in to manage events & bookings';
+      otpError.textContent = 'Connection error. Try again.';
+      showStep(stepOtp);
+      otpError.classList.add('show');
+      modalSub.textContent = 'Check your email for the OTP';
     }
   });
 
-  loginPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginBtn.click(); });
-  loginUsername.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginPassword.focus(); });
+  resendOtpLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (currentEmail) {
+      loginEmail.value = currentEmail;
+      sendOtpBtn.click();
+    }
+  });
+
+  loginEmail.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendOtpBtn.click(); });
+  loginOtp.addEventListener('keydown', (e) => { if (e.key === 'Enter') verifyOtpBtn.click(); });
 
   API_BASE = (window.location.protocol === 'file:' ? 'http://localhost:8000' : window.location.origin);
 

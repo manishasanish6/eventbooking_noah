@@ -40,14 +40,14 @@ class EventCreate(BaseModel):
     rows: int
     cols: int
     zones: List[ZoneSchema]
-    held_seats: Optional[list] = []
+    held_seats: Optional[list] = None
     layout_mode: Optional[str] = "auto"
-    seat_layout: Optional[list] = []
+    seat_layout: Optional[list] = None
     venue_address: Optional[dict] = None
-    addons: Optional[list] = []
+    addons: Optional[list] = None
     created_by: Optional[str] = ""
-    editors: Optional[list] = []
-    images: Optional[list] = []
+    editors: Optional[list] = None
+    images: Optional[list] = None
     artist_bio: Optional[str] = ""
     artist_photo: Optional[str] = ""
     artist_instagram: Optional[str] = ""

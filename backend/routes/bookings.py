@@ -16,7 +16,7 @@ class BookingCreate(BaseModel):
     seats: List[str]
     user_id: Optional[int] = None
     email: str
-    addons: Optional[list] = []
+    addons: Optional[list] = None
 
 def _calc_addon_total(ev, addon_ids, seat_count):
     """Return (addon_total, addon_items) for selected addons."""
@@ -236,6 +236,10 @@ def create_booking(data: BookingCreate, bg: BackgroundTasks, db: Session = Depen
     )
 
     return {"booking_id": booking.id, "seats": data.seats, "total": total, "status": "confirmed", "addon_total": addon_total}
+
+@router.get("/")
+def list_bookings(db: Session = Depends(get_db)):
+    return db.query(Booking).all()
 
 @router.get("/event/{event_id}")
 def event_bookings(event_id: int, db: Session = Depends(get_db)):

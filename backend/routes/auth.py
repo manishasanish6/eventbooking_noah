@@ -1,42 +1,74 @@
-import logging
+import logging, random
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models import User
-from pydantic import BaseModel
+from backend.utils.email import send_otp_email
+from pydantic import BaseModel, EmailStr
 from jose import jwt
 import os
 
 logger = logging.getLogger("noah.auth")
 router = APIRouter()
 SECRET = os.getenv("SECRET_KEY", "change-me")
+OTP_EXPIRE_MINUTES = 5
 
-VALID_USERS = {"admin1", "admin2", "admin3", "admin4"}
-COMMON_PASSWORD = "admin"
+class SendOtpBody(BaseModel):
+    email: str
 
+class VerifyOtpBody(BaseModel):
+    email: str
+    otp: str
 
-class LoginBody(BaseModel):
-    username: str
-    password: str
+@router.post("/send-otp")
+def send_otp(body: SendOtpBody, db: Session = Depends(get_db)):
+    email = body.email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Valid email required")
 
+    otp = str(random.randint(100000, 999999))
+    expires_at = (datetime.utcnow() + timedelta(minutes=OTP_EXPIRE_MINUTES)).isoformat()
 
-@router.post("/login")
-def login(body: LoginBody, db: Session = Depends(get_db)):
-    name = body.username.strip().lower()
-    if name not in VALID_USERS or body.password != COMMON_PASSWORD:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    user = db.query(User).filter(User.email == name).first()
+    user = db.query(User).filter(User.email == email).first()
     if not user:
-        user = User(
-            email=name,
-            hashed_password="admin_fixed",
-            otp_code=None,
-            otp_expires_at=None,
-        )
+        user = User(email=email, hashed_password="otp_only")
         db.add(user)
-        db.commit()
-        db.refresh(user)
+
+    user.otp_code = otp
+    user.otp_expires_at = expires_at
+    db.commit()
+
+    send_otp_email(email, otp)
+    logger.info("OTP sent to %s", email)
+    return {"message": "OTP sent"}
+
+@router.post("/verify-otp")
+def verify_otp(body: VerifyOtpBody, db: Session = Depends(get_db)):
+    email = body.email.strip().lower()
+    otp = body.otp.strip()
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid OTP")
+
+    if not user.otp_code or not user.otp_expires_at:
+        raise HTTPException(status_code=401, detail="No OTP requested")
+
+    if user.otp_code != otp:
+        raise HTTPException(status_code=401, detail="Invalid OTP")
+
+    try:
+        expires = datetime.fromisoformat(user.otp_expires_at)
+        if datetime.utcnow() > expires:
+            raise HTTPException(status_code=401, detail="OTP expired")
+    except Exception:
+        raise HTTPException(status_code=401, detail="OTP expired")
+
+    user.otp_code = None
+    user.otp_expires_at = None
+    db.commit()
 
     token = jwt.encode({"sub": str(user.id)}, SECRET, algorithm="HS256")
-    return {"access_token": token, "user_id": user.id, "username": name}
+    logger.info("User %s verified successfully", email)
+    return {"access_token": token, "user_id": user.id, "username": email}

@@ -50,6 +50,28 @@ def _send_smtp(to_email, subject, body_html, body_text=None):
             except Exception:
                 pass
 
+def send_otp_email(to_email, otp_code):
+    subject = f"Your Noah Events OTP — {otp_code}"
+    body_html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><style>
+body{{font-family:Arial,sans-serif;background:#fff;color:#000;padding:40px 20px}}
+.container{{max-width:440px;margin:0 auto;background:#fff;border:1px solid #ddd;padding:32px;text-align:center}}
+.code{{font-size:42px;font-weight:700;letter-spacing:6px;color:#8b44ff;margin:24px 0;font-family:monospace}}
+.footer{{margin-top:20px;font-size:11px;color:#666}}
+</style></head>
+<body>
+<div class="container">
+<div style="font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#8b44ff;margin-bottom:16px">Noah Events</div>
+<div style="font-size:15px;margin-bottom:8px">Your one-time login code</div>
+<div class="code">{otp_code}</div>
+<div style="font-size:13px;color:#555">This code expires in 5 minutes.</div>
+<div class="footer">If you did not request this, please ignore this email.</div>
+</div>
+</body>
+</html>"""
+    _send_smtp(to_email, subject, body_html)
+
 def send_enquiry_email(user_email, first_name, last_name, contact_number, enquiry_type, enquiry_message):
     cfg = _get_smtp_config()
     to_addr = os.getenv("EMAIL_TO") or "hello@noahevents.com"
