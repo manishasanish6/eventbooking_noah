@@ -1556,7 +1556,7 @@ function renderAdminList(){
   const el=document.getElementById('admin-event-list');
   const label=document.getElementById('events-count-label');
   if(!events.length){
-    el.innerHTML='<div class="empty-state"><p style="font-size:18px;font-family:var(--font-d);letter-spacing:2px">No events yet</p><p style="color:var(--gray);font-size:13px">Create your first one on the left!</p></div>';
+    el.innerHTML='<div class="empty-state"><p style="font-size:18px;font-family:var(--font-d);letter-spacing:2px">No events found</p><p style="color:var(--gray);font-size:13px">Events appear here if you created them or were added as an editor. Check that your login email is correct.</p></div>';
     label.textContent='(0)';return;
   }
   label.textContent='('+events.length+')';

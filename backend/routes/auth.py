@@ -1,4 +1,4 @@
-import logging, random
+import logging, random, re
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -14,6 +14,26 @@ router = APIRouter()
 SECRET = os.getenv("SECRET_KEY", "change-me")
 OTP_EXPIRE_MINUTES = 5
 
+KNOWN_DOMAINS = {
+    "gmail.com", "yahoo.com", "hotmail.com", "outlook.com",
+    "live.com", "icloud.com", "protonmail.com", "aol.com",
+    "mail.com", "yandex.com", "zoho.com", "rediffmail.com"
+}
+
+COMMON_TYPOS = {
+    "gamil.com": "gmail.com",
+    "gmial.com": "gmail.com",
+    "gnail.com": "gmail.com",
+    "gmil.com": "gmail.com",
+    "gmal.com": "gmail.com",
+    "gmai.com": "gmail.com",
+    "hotmai.com": "hotmail.com",
+    "hotmal.com": "hotmail.com",
+    "yaho.com": "yahoo.com",
+    "outloo.com": "outlook.com",
+    "outlok.com": "outlook.com",
+}
+
 class SendOtpBody(BaseModel):
     email: str
 
@@ -26,6 +46,17 @@ def send_otp(body: SendOtpBody, db: Session = Depends(get_db)):
     email = body.email.strip().lower()
     if not email or "@" not in email:
         raise HTTPException(status_code=400, detail="Valid email required")
+
+    # Check for common domain typos
+    parts = email.split("@", 1)
+    if len(parts) == 2:
+        domain = parts[1].strip()
+        if domain in COMMON_TYPOS:
+            suggestion = COMMON_TYPOS[domain]
+            raise HTTPException(
+                status_code=400,
+                detail=f"Did you mean @{suggestion}? You typed @{domain}"
+            )
 
     otp = str(random.randint(100000, 999999))
     expires_at = (datetime.utcnow() + timedelta(minutes=OTP_EXPIRE_MINUTES)).isoformat()

@@ -64,6 +64,12 @@ with engine.connect() as conn:
                     text(f"ALTER TABLE {table} ADD COLUMN {col_name} {col_type}")
                 )
                 logging.info("Added column %s.%s", table, col_name)
+    # Fix common email typos in created_by
+    fix_count = conn.execute(
+        text("UPDATE events SET created_by = 'manisha61090@gmail.com' WHERE created_by = 'manisha61090@gamil.com'")
+    ).rowcount
+    if fix_count:
+        logging.info("Fixed %s event(s) with typo gamil.com -> gmail.com", fix_count)
     conn.commit()
 
 app = FastAPI(title="STAGEFRONT API", version="1.0")
