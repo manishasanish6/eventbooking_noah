@@ -47,6 +47,9 @@ def send_otp(body: SendOtpBody, db: Session = Depends(get_db)):
     if not email or "@" not in email:
         raise HTTPException(status_code=400, detail="Valid email required")
 
+    if email != "info@noahevents.com":
+        raise HTTPException(status_code=403, detail="Sorry, you are not authorized to login")
+
     # Check for common domain typos
     parts = email.split("@", 1)
     if len(parts) == 2:

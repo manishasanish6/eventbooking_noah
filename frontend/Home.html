@@ -182,33 +182,7 @@
     50% { opacity: 1; }
   }
 
-  /* STATS BAR */
-  .stats-bar {
-    background: var(--dark2);
-    border-top: 1px solid rgba(255,62,55,0.18);
-    border-bottom: 1px solid rgba(255,62,55,0.18);
-    padding: 2rem 4rem;
-    display: flex; justify-content: center; align-items: center;
-    flex-wrap: wrap; gap: 2rem;
-    max-width: 1120px; margin: 0 auto;
-  }
 
-  .stat-item {
-    text-align: center;
-    flex: 1 1 200px;
-    min-width: 180px;
-  }
-
-  .stat-num {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.8rem; color: var(--logo-purple);
-    line-height: 1; display: block;
-  }
-
-  .stat-label {
-    font-size: 0.68rem; letter-spacing: 0.2em; color: var(--gray);
-    text-transform: uppercase; margin-top: 0.3rem;
-  }
 
   /* SECTION SHARED */
   section { padding: 6rem 4rem; }
@@ -825,7 +799,7 @@
     .steps-grid::before { display: none; }
     .testimonials-grid { grid-template-columns: 1fr; }
     #contact { grid-template-columns: 1fr; }
-    .stats-bar { padding: 2rem 1.5rem; }
+
     footer { padding: 2rem 1.5rem; flex-direction: column; text-align: center; }
     .footer-links { justify-content: center; }
     .hero { padding: 9rem 1.5rem 4rem; }
@@ -958,25 +932,7 @@
   </div>
 </section>
 
-<!-- STATS BAR -->
-<div class="stats-bar">
-  <div class="stat-item">
-    <span class="stat-num">250+</span>
-    <span class="stat-label">Events Organized</span>
-  </div>
-  <div class="stat-item">
-    <span class="stat-num">80+</span>
-    <span class="stat-label">Celebrity Appearances</span>
-  </div>
-  <div class="stat-item">
-    <span class="stat-num">500K+</span>
-    <span class="stat-label">Happy Attendees</span>
-  </div>
-  <div class="stat-item">
-    <span class="stat-num">100%</span>
-    <span class="stat-label">Satisfaction Rate</span>
-  </div>
-</div>
+
 
 <!-- ABOUT -->
 <section id="about">
@@ -1032,12 +988,12 @@
     <div class="celeb-card">
       <div class="celeb-avatar"><div class="celeb-avatar-icon">🎬</div></div>
       <div class="celeb-overlay"></div>
-      <div class="celeb-info"><span class="celeb-name">Film Star</span><span class="celeb-genre">Hollywood Actor</span></div>
+      <div class="celeb-info"><span class="celeb-name">Film Star</span><span class="celeb-genre">World Cinema Actor</span></div>
     </div>
     <div class="celeb-card">
       <div class="celeb-avatar"><div class="celeb-avatar-icon">⚽</div></div>
       <div class="celeb-overlay"></div>
-      <div class="celeb-info"><span class="celeb-name">Sports Legend</span><span class="celeb-genre">Football Champion</span></div>
+      <div class="celeb-info"><span class="celeb-name">Sports Legend</span><span class="celeb-genre">World Champion</span></div>
     </div>
     <div class="celeb-card">
       <div class="celeb-avatar"><div class="celeb-avatar-icon">🎤</div></div>
@@ -1080,46 +1036,12 @@
   </div>
 </section>
 
-<!-- TESTIMONIALS -->
+<!-- REVIEWS -->
 <section id="testimonials">
   <div class="testimonials-header">
     <span class="section-tag">What Fans Say</span>
     <h2 class="section-title">Real Experiences,<br>Real Magic</h2>
-  </div>
-  <div class="testimonials-grid">
-    <div class="testimonial">
-      <div class="star-row">★★★★★</div>
-      <p class="testimonial-text">Noah Events made my dream come true. Getting to meet my favourite artist in person was surreal — every detail was perfectly handled.</p>
-      <div class="testimonial-author">
-        <div class="author-avatar">AR</div>
-        <div>
-          <span class="author-name">Aisha Rahman</span>
-          <span class="author-role">Attended: VIP Meet & Greet</span>
-        </div>
-      </div>
-    </div>
-    <div class="testimonial">
-      <div class="star-row">★★★★★</div>
-      <p class="testimonial-text">The event was flawlessly organized. From ticketing to the show itself, everything was world-class. Highly recommend for any celebrity event.</p>
-      <div class="testimonial-author">
-        <div class="author-avatar">KL</div>
-        <div>
-          <span class="author-name">Kevin Lim</span>
-          <span class="author-role">Attended: Grand Stage Night</span>
-        </div>
-      </div>
-    </div>
-    <div class="testimonial">
-      <div class="star-row">★★★★★</div>
-      <p class="testimonial-text">Spectacular from start to finish. The VIP lounge experience before the show was something I'll never forget. Worth every cent.</p>
-      <div class="testimonial-author">
-        <div class="author-avatar">PM</div>
-        <div>
-          <span class="author-name">Priya Menon</span>
-          <span class="author-role">Attended: Red Carpet Gala</span>
-        </div>
-      </div>
-    </div>
+    <p class="section-desc" style="margin: 1.5rem auto 0; text-align: center;">Reviews coming soon!</p>
   </div>
 </section>
 
@@ -1159,6 +1081,7 @@
           <option>Corporate Event</option>
           <option>Partnership / Sponsorship</option>
           <option>Media Enquiry</option>
+          <option>Others</option>
         </select>
       </div>
       <div class="form-group">
@@ -1167,7 +1090,7 @@
       </div>
       <div style="display:flex;gap:10px;align-items:center">
   <button class="btn-primary" onclick="submitContactEnquiry()">Send Enquiry →</button>
-  <a href="https://wa.me/6583384364" target="_blank" rel="noopener"
+  <a href="https://wa.me/6592300773" target="_blank" rel="noopener"
      style="display:inline-flex;align-items:center;gap:6px;padding:0.85rem 1.5rem;background:#25D366;color:#fff;text-decoration:none;font-family:'Montserrat',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.05em;border:none;cursor:pointer;transition:opacity .2s;border-radius:0"
      onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
     💬 WhatsApp
@@ -1182,28 +1105,28 @@
       <div class="contact-icon">📍</div>
       <div>
         <div class="contact-detail-label">Our Office</div>
-        <div class="contact-detail-value">1 Raffles Place, #25-00<br>Singapore 048616</div>
+        <div class="contact-detail-value">#15-01 Robinson Road,<br>18 Robinson,<br>Singapore 048547</div>
       </div>
     </div>
     <div class="contact-detail">
       <div class="contact-icon">📞</div>
       <div>
         <div class="contact-detail-label">Phone</div>
-        <div class="contact-detail-value">+65 6338 4364</div>
+        <div class="contact-detail-value">+65 92300773</div>
       </div>
     </div>
     <div class="contact-detail">
       <div class="contact-icon">✉️</div>
       <div>
         <div class="contact-detail-label">Email</div>
-        <div class="contact-detail-value">hello@noahevents.com</div>
+        <div class="contact-detail-value">info@noahevents.com</div>
       </div>
     </div>
     <div class="contact-detail">
       <div class="contact-icon">🕐</div>
       <div>
         <div class="contact-detail-label">Office Hours</div>
-        <div class="contact-detail-value">Monday – Friday: 9am – 7pm<br>Saturday: 10am – 4pm</div>
+        <div class="contact-detail-value">Monday – Friday: 9am – 6pm<br>Saturday: 9am – 12pm</div>
       </div>
     </div>
     <div class="social-row">
@@ -1223,7 +1146,7 @@
     <li><a href="#contact">Contact</a></li>
     <li><a href="javascript:void(0)" id="privacyLink">Privacy Policy</a></li>
   </ul>
-  <p class="footer-copy">© 2025 Noah Events. All rights reserved.</p>
+  <p class="footer-copy">© 2026 Noah Events. All rights reserved.</p>
 </footer>
 
 <!-- ADMIN LOGIN MODAL -->
@@ -1266,17 +1189,61 @@
     <button class="modal-close" id="privacyClose">&times;</button>
     <div class="modal-title">Privacy Policy</div>
     <div class="modal-sub" style="text-align:left;padding:1rem 0;max-height:60vh;overflow-y:auto">
-      <p style="font-size:0.8rem;color:var(--gray);margin-bottom:0.5rem">Last updated: June 2026</p>
+      <p style="font-size:0.8rem;color:var(--gray);margin-bottom:0.5rem">Last updated: July 2026</p>
+      <p style="font-size:0.85rem;line-height:1.7;margin-bottom:1rem">This Privacy Policy explains how Noah Events ("we," "us," "our") collects, uses, discloses, and protects your personal data in accordance with the Personal Data Protection Act 2012 (PDPA) of Singapore.</p>
+
       <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">1. Information We Collect</h3>
-      <p style="font-size:0.85rem;line-height:1.7">When you book tickets or use Noah Events, we collect your name, email address, phone number, and payment details. We also collect event preferences and booking history to improve your experience.</p>
-      <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">2. How We Use Your Information</h3>
-      <p style="font-size:0.85rem;line-height:1.7">We use your data to process bookings, send confirmations and event updates, provide customer support, and improve our services. We do not sell your personal information to third parties.</p>
-      <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">3. Data Security</h3>
-      <p style="font-size:0.85rem;line-height:1.7">We implement industry-standard security measures including encryption and secure servers to protect your personal data.</p>
-      <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">4. Cookies</h3>
-      <p style="font-size:0.85rem;line-height:1.7">Our website uses cookies to enhance functionality and analyze usage. You can control cookie preferences through your browser settings.</p>
-      <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">5. Contact</h3>
-      <p style="font-size:0.85rem;line-height:1.7">For questions about this policy, contact us at hello@noahevents.com.</p>
+      <p style="font-size:0.85rem;line-height:1.7">When you submit an enquiry through our website, we collect:</p>
+      <ul style="font-size:0.85rem;line-height:1.7;padding-left:1.2rem;margin:0.5rem 0">
+        <li>Your name</li>
+        <li>Email address</li>
+        <li>Phone number</li>
+        <li>Any details you include in your enquiry message (e.g., event type, date, requirements)</li>
+        <li>Technical data: IP address, browser type, and device information, collected automatically via cookies and similar technologies</li>
+      </ul>
+
+      <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">2. Purpose of Collection and Consent</h3>
+      <p style="font-size:0.85rem;line-height:1.7">By submitting an enquiry, you consent to us collecting, using, and disclosing your personal data for the following purposes:</p>
+      <ul style="font-size:0.85rem;line-height:1.7;padding-left:1.2rem;margin:0.5rem 0">
+        <li>Responding to your enquiry and providing information about our events and services</li>
+        <li>Following up with relevant updates, where you have agreed to this</li>
+        <li>Improving our website and services</li>
+        <li>Complying with legal or regulatory requirements</li>
+      </ul>
+      <p style="font-size:0.85rem;line-height:1.7;margin-top:0.5rem">You may withdraw your consent at any time by contacting us (see Section 8). Please note that withdrawing consent may affect our ability to respond to or follow up on your enquiry.</p>
+
+      <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">3. Disclosure of Personal Data</h3>
+      <p style="font-size:0.85rem;line-height:1.7">We do not sell your personal data. We only disclose it to:</p>
+      <ul style="font-size:0.85rem;line-height:1.7;padding-left:1.2rem;margin:0.5rem 0">
+        <li>Service providers who support our operations (e.g., email or website hosting providers), bound by confidentiality obligations</li>
+        <li>Where required or authorized by law</li>
+      </ul>
+
+      <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">4. Data Retention</h3>
+      <p style="font-size:0.85rem;line-height:1.7">We retain personal data only for as long as necessary to fulfil the purpose for which it was collected, or as required by law, after which it is securely deleted or anonymized.</p>
+
+      <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">5. Data Security</h3>
+      <p style="font-size:0.85rem;line-height:1.7">We take reasonable technical and administrative measures, including encryption and secure servers, to protect your personal data against unauthorized access, collection, use, disclosure, or similar risks, in accordance with our obligations under the PDPA.</p>
+
+      <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">6. Your Rights</h3>
+      <p style="font-size:0.85rem;line-height:1.7">Under the PDPA, you have the right to:</p>
+      <ul style="font-size:0.85rem;line-height:1.7;padding-left:1.2rem;margin:0.5rem 0">
+        <li>Access the personal data we hold about you</li>
+        <li>Request correction of inaccurate or incomplete personal data</li>
+        <li>Withdraw consent for the collection, use, or disclosure of your personal data</li>
+        <li>Request information on how your personal data has been used or disclosed within the past year</li>
+      </ul>
+      <p style="font-size:0.85rem;line-height:1.7;margin-top:0.5rem">To exercise these rights, contact our Data Protection Officer (see Section 8). We will respond within a reasonable timeframe, as required by the PDPA.</p>
+
+      <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">7. Cookies</h3>
+      <p style="font-size:0.85rem;line-height:1.7">Our website uses cookies to enhance functionality and analyze usage. You can control or disable cookies through your browser settings; note that some site features may not function properly without them.</p>
+
+      <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">8. Data Protection Officer / Contact Us</h3>
+      <p style="font-size:0.85rem;line-height:1.7">If you have questions, concerns, or requests regarding this Privacy Policy or your personal data, please contact:</p>
+      <p style="font-size:0.85rem;line-height:1.7"><strong>Data Protection Officer</strong><br>Noah Events<br>Email: info@noahevents.com</p>
+
+      <h3 style="margin:1.2rem 0 0.3rem;font-size:0.9rem">9. Changes to This Policy</h3>
+      <p style="font-size:0.85rem;line-height:1.7">We may update this Privacy Policy from time to time to reflect changes in our practices or legal requirements. Updates will be posted on this page with a revised "last updated" date.</p>
     </div>
   </div>
 </div>

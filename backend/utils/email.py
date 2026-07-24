@@ -1,12 +1,15 @@
 import os, io, base64, logging, smtplib
 from email.message import EmailMessage
+from pathlib import Path
 from dotenv import load_dotenv
 import qrcode
 
 logger = logging.getLogger("noah.email")
+ROOT_ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
 
 def _get_smtp_config():
-    load_dotenv()
+    dotenv_path = ROOT_ENV_PATH if ROOT_ENV_PATH.exists() else Path.cwd() / ".env"
+    load_dotenv(dotenv_path=dotenv_path, override=True)
     return {
         "host": os.getenv("SMTP_HOST"),
         "port": int(os.getenv("SMTP_PORT", "587") or "587"),
@@ -15,6 +18,7 @@ def _get_smtp_config():
         "use_ssl": os.getenv("SMTP_USE_SSL", "false").lower() in ("1", "true", "yes"),
         "use_tls": os.getenv("SMTP_USE_TLS", "false").lower() in ("1", "true", "yes"),
         "from_addr": os.getenv("EMAIL_FROM") or os.getenv("SMTP_USER") or "noreply@noahevents.com",
+        "to_addr": os.getenv("EMAIL_TO") or "info@noahevents.com",
     }
 
 def _send_smtp(to_email, subject, body_html, body_text=None):
@@ -74,7 +78,7 @@ body{{font-family:Arial,sans-serif;background:#fff;color:#000;padding:40px 20px}
 
 def send_enquiry_email(user_email, first_name, last_name, contact_number, enquiry_type, enquiry_message):
     cfg = _get_smtp_config()
-    to_addr = os.getenv("EMAIL_TO") or "hello@noahevents.com"
+    to_addr = cfg.get("to_addr", "info@noahevents.com")
     subject = f"New enquiry from {first_name} {last_name}"
     contact_line = f"\nContact: {contact_number}" if contact_number else ""
     body_text = f"Name: {first_name} {last_name}\nEmail: {user_email}{contact_line}\nType: {enquiry_type}\n\nMessage:\n{enquiry_message}\n"
