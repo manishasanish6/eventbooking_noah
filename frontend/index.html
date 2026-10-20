@@ -297,6 +297,7 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
   <div class="nav-tabs">
     <button class="nav-tab active" data-view="create" onclick="switchView('create')">✦ Create</button>
     <button class="nav-tab" data-view="events" onclick="switchView('events')">Events <span class="nav-badge" id="admin-badge">0</span></button>
+    <button class="nav-tab" data-view="gallery" onclick="switchView('gallery')">🖼 Gallery</button>
   </div>
   <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
     <span id="nav-admin-email" style="font-size:11px;color:var(--gray);letter-spacing:.05em"></span>
@@ -617,6 +618,33 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
     </div>
     <div class="admin-events-grid" id="admin-event-list"></div>
   </div>
+
+  <!-- GALLERY VIEW -->
+  <div class="admin-view" id="view-gallery">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div style="font-size:9px;letter-spacing:.2em;color:var(--logo-red);text-transform:uppercase;font-weight:600;margin-bottom:4px">Gallery</div>
+        <h2 style="font-family:var(--font-d);font-size:28px;letter-spacing:2px;color:var(--white)">Past Event Photos <span id="gallery-count-label" style="font-size:14px;color:var(--gray);font-family:var(--font-b);letter-spacing:0">(0)</span></h2>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-card-title">✦ Upload Photos</div>
+      <div class="field">
+        <label>Event / Caption</label>
+        <input type="text" id="g-title" placeholder="e.g. Noah Onam Night 2026">
+      </div>
+      <div class="field">
+        <label>Photos</label>
+        <input type="file" id="g-files" accept="image/*" multiple onchange="handleGalleryUpload(event)">
+      </div>
+      <div id="g-preview" style="display:none;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
+      <button class="btn btn-accent btn-full" onclick="uploadGalleryPhotos()" style="margin-top:14px">Upload to Gallery</button>
+    </div>
+
+    <div class="admin-events-grid" id="gallery-admin-list" style="grid-template-columns:repeat(3,1fr)"></div>
+    <div id="g-admin-empty" style="display:none;text-align:center;padding:36px;color:var(--gray);font-size:13px">No photos in the gallery yet.</div>
+  </div>
 </div>
 
 
@@ -703,6 +731,7 @@ function switchView(v){
   document.getElementById('view-'+v).classList.add('active');
   const navEl=document.querySelector(`.nav-tab[data-view="${v}"]`);
   if(navEl) navEl.classList.add('active');
+  if(v==='gallery') loadGalleryAdmin();
 }
 
 // ─────────────────── ZONE BUILDER ───────────────────
@@ -1015,6 +1044,85 @@ function handleOrganiserLogoUpload(ev) {
       `<img src="${_organiserLogoData}" style="width:100%;border:1px solid rgba(255,78,54,0.15);display:block">`;
   };
   reader.readAsDataURL(file);
+}
+
+// ─────────────────── GALLERY ───────────────────
+let _galleryPending = [];
+
+function handleGalleryUpload(ev){
+  const files = Array.from(ev.target.files||[]);
+  if(!files.length) return;
+  let loaded = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = function(e){
+      _galleryPending.push(e.target.result);
+      loaded++;
+      if(loaded===files.length) renderGalleryPreview();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderGalleryPreview(){
+  const c = document.getElementById('g-preview');
+  if(!_galleryPending.length){ c.style.display='none'; c.innerHTML=''; return; }
+  c.style.display='flex';
+  c.innerHTML = _galleryPending.map((src,i)=>
+    `<div style="position:relative;width:90px;height:90px;overflow:hidden;border:1px solid rgba(0,0,0,.12)">
+      <img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block">
+      <button onclick="removeGalleryPending(${i})" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.65);color:#fff;border:none;width:20px;height:20px;cursor:pointer;line-height:1">×</button>
+    </div>`).join('');
+}
+
+function removeGalleryPending(i){ _galleryPending.splice(i,1); renderGalleryPreview(); }
+
+async function uploadGalleryPhotos(){
+  if(!_galleryPending.length){ showToast('Select photos first','error'); return; }
+  const title = document.getElementById('g-title').value.trim();
+  try{
+    for(const image of _galleryPending){
+      const res = await fetch('/gallery/', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,image})});
+      if(!res.ok) throw new Error('Upload failed ('+res.status+')');
+    }
+    showToast(_galleryPending.length+' photo(s) uploaded');
+    _galleryPending=[]; renderGalleryPreview();
+    document.getElementById('g-files').value='';
+    document.getElementById('g-title').value='';
+    loadGalleryAdmin();
+  }catch(err){ showToast(err.message||'Could not upload photos','error'); }
+}
+
+async function loadGalleryAdmin(){
+  const list = document.getElementById('gallery-admin-list');
+  const empty = document.getElementById('g-admin-empty');
+  const label = document.getElementById('gallery-count-label');
+  try{
+    const res = await fetch('/gallery/');
+    if(!res.ok) throw new Error('Server returned '+res.status);
+    const photos = await res.json();
+    label.textContent='('+photos.length+')';
+    if(!photos.length){ list.innerHTML=''; empty.style.display='block'; return; }
+    empty.style.display='none';
+    list.innerHTML = photos.map(p=>`
+      <div style="position:relative;border:1px solid rgba(0,0,0,.1);overflow:hidden;background:#000">
+        <img src="${p.image}" style="width:100%;height:180px;object-fit:cover;display:block">
+        <div style="padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--dark2)">
+          <span style="font-size:11px;color:var(--gray);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title||'Untitled'}</span>
+          <button class="btn btn-outline btn-sm" onclick="deleteGalleryPhoto(${p.id})">Delete</button>
+        </div>
+      </div>`).join('');
+  }catch(e){ label.textContent='(0)'; list.innerHTML=''; empty.style.display='block'; }
+}
+
+async function deleteGalleryPhoto(id){
+  if(!confirm('Delete this photo from the gallery?')) return;
+  try{
+    const res = await fetch('/gallery/'+id,{method:'DELETE'});
+    if(!res.ok) throw new Error('Could not delete');
+    showToast('Photo deleted');
+    loadGalleryAdmin();
+  }catch(err){ showToast(err.message||'Could not delete photo','error'); }
 }
 
 function renderImagePreviews() {

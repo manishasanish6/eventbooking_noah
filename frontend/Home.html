@@ -312,7 +312,7 @@
   }
 
   .event-card-img {
-    width: 100%; aspect-ratio: 16/10;
+    width: 100%;
     background: var(--dark3);
     display: flex; align-items: center; justify-content: center;
     position: relative; overflow: hidden;
@@ -329,8 +329,8 @@
   }
 
   .event-card-img img {
-    width: 100%; height: 100%;
-    object-fit: cover;
+    width: 100%; height: auto;
+    object-fit: contain;
     position: absolute; inset: 0;
     cursor: pointer;
   }
@@ -789,21 +789,45 @@
 
   /* MOBILE */
   @media (max-width: 900px) {
-    nav { padding: 1rem 1.5rem; }
+    nav { padding: 1rem 1.5rem; flex-wrap: wrap; gap: 0.5rem; }
     .nav-links { display: none; }
+    .admin-link { font-size: 0.6rem; padding: 0.5rem 0.7rem; letter-spacing: 0.1em; }
+    .admin-link svg { width: 14px; height: 14px; }
+    .admin-btn { padding: 0.5rem 0.7rem; }
+    .admin-btn svg { width: 16px; height: 16px; }
     section { padding: 4rem 1.5rem; }
     #about { grid-template-columns: 1fr; gap: 3rem; }
+    .about-features { grid-template-columns: 1fr; }
     .events-grid { grid-template-columns: 1fr; }
     .celebs-grid { grid-template-columns: repeat(2, 1fr); }
     .steps-grid { grid-template-columns: 1fr 1fr; }
     .steps-grid::before { display: none; }
     .testimonials-grid { grid-template-columns: 1fr; }
-    #contact { grid-template-columns: 1fr; }
+    #contact { grid-template-columns: 1fr; gap: 3rem; }
+    .form-row { grid-template-columns: 1fr; }
 
     footer { padding: 2rem 1.5rem; flex-direction: column; text-align: center; }
     .footer-links { justify-content: center; }
     .hero { padding: 9rem 1.5rem 4rem; }
     .events-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .hero-title { font-size: clamp(3.5rem, 12vw, 9rem); }
+    .hero-sub { font-size: 0.95rem; padding: 0 0.5rem; }
+    .hero-btns { flex-direction: column; align-items: center; }
+    .hero-btns .btn-primary, .hero-btns .btn-outline { width: 100%; max-width: 280px; text-align: center; }
+  }
+
+  @media (max-width: 480px) {
+    nav { padding: 0.8rem 1rem; }
+    .admin-link { font-size: 0.55rem; padding: 0.4rem 0.5rem; white-space: nowrap; }
+    .admin-btn { padding: 0.4rem; }
+    .hero { padding: 8rem 1rem 3rem; }
+    .hero-title { font-size: clamp(3rem, 14vw, 5rem); }
+    .celebs-grid { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+    .steps-grid { grid-template-columns: 1fr; }
+    .contact-detail { gap: 0.8rem; }
+    .modal-box { margin: 1rem; padding: 1.5rem; }
+    .bm-header { padding: 16px; }
+    .bm-body { padding: 16px; }
   }
 
   /* ── BOOKING MODAL ── */
@@ -824,7 +848,9 @@
   .sl-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gray)}
   .sl-dot{width:12px;height:11px;flex-shrink:0}
   .stage-bar{text-align:center;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gray);padding:8px;background:var(--dark3);border:1px solid rgba(255,78,54,0.1);margin-bottom:18px}
-  .pub-seat-grid{display:flex;flex-direction:column;gap:5px}
+  .seat-fit{width:fit-content;margin:0 auto;max-width:100%}
+  .seat-fit.wide{width:auto;margin:0}
+  .pub-seat-grid{display:flex;flex-direction:column;gap:5px;align-items:center}
   .pub-seat-row{display:flex;align-items:center;gap:3px}
   .pub-rl{font-size:10px;color:var(--gray);width:18px;text-align:center;flex-shrink:0}
   .pub-seat{width:26px;height:22px;cursor:pointer;border:none;transition:transform .1s,opacity .2s;position:relative}
@@ -881,6 +907,14 @@
     .left-col{max-height:calc(100vh - 150px);overflow-y:auto}
     .sum-panel{position:static}
   }
+  /* GALLERY */
+  .gallery-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; margin-top:28px; }
+  .gallery-item { position:relative; overflow:hidden; border:1px solid rgba(255,255,255,.08); aspect-ratio:4/3; cursor:pointer; background:#0d0b12; }
+  .gallery-item img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s ease, filter .4s ease; }
+  .gallery-item:hover img { transform:scale(1.06); filter:brightness(.7); }
+  .gallery-item-cap { position:absolute; left:0; right:0; bottom:0; padding:10px 12px; font-size:12px; letter-spacing:.08em; color:#fff; background:linear-gradient(transparent,rgba(5,4,8,.85)); opacity:0; transition:opacity .3s; }
+  .gallery-item:hover .gallery-item-cap { opacity:1; }
+  @media(max-width:640px){ .gallery-grid { grid-template-columns:1fr 1fr; gap:8px; } }
 </style>
 </head>
 <body>
@@ -894,7 +928,7 @@
   <ul class="nav-links">
     <li><a href="#about">About</a></li>
     <li><a href="#events">Events</a></li>
-    <li><a href="#celebrities">Artists</a></li>
+    <li><a href="#gallery">Gallery</a></li>
     <li><a href="#how">How It Works</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
@@ -972,41 +1006,24 @@
   </div>
 </section>
 
-<!-- CELEBRITIES -->
-<section id="celebrities">
+<!-- GALLERY -->
+<section id="gallery">
   <div class="celeb-intro">
-    <span class="section-tag">Our Artists</span>
-    <h2 class="section-title">Iconic Names, Live Stages</h2>
-    <p class="section-desc" style="margin: 0 auto;">We partner with the most celebrated talents from music, film, sports, and entertainment worldwide.</p>
+    <span class="section-tag">Gallery</span>
+    <h2 class="section-title">Memories in Frames</h2>
+    <p class="section-desc" style="margin: 0 auto;">Relive the magic — elegance is in the details, and we never miss one..</p>
   </div>
-  <div class="celebs-grid">
-    <div class="celeb-card">
-      <div class="celeb-avatar"><div class="celeb-avatar-icon">🎵</div></div>
-      <div class="celeb-overlay"></div>
-      <div class="celeb-info"><span class="celeb-name">Pop Icon</span><span class="celeb-genre">Music Artist</span></div>
-    </div>
-    <div class="celeb-card">
-      <div class="celeb-avatar"><div class="celeb-avatar-icon">🎬</div></div>
-      <div class="celeb-overlay"></div>
-      <div class="celeb-info"><span class="celeb-name">Film Star</span><span class="celeb-genre">World Cinema Actor</span></div>
-    </div>
-    <div class="celeb-card">
-      <div class="celeb-avatar"><div class="celeb-avatar-icon">⚽</div></div>
-      <div class="celeb-overlay"></div>
-      <div class="celeb-info"><span class="celeb-name">Sports Legend</span><span class="celeb-genre">World Champion</span></div>
-    </div>
-    <div class="celeb-card">
-      <div class="celeb-avatar"><div class="celeb-avatar-icon">🎤</div></div>
-      <div class="celeb-overlay"></div>
-      <div class="celeb-info"><span class="celeb-name">R&amp;B Sensation</span><span class="celeb-genre">Singer-Songwriter</span></div>
-    </div>
-    <div class="celeb-card">
-      <div class="celeb-avatar"><div class="celeb-avatar-icon">🎭</div></div>
-      <div class="celeb-overlay"></div>
-      <div class="celeb-info"><span class="celeb-name">Stage Performer</span><span class="celeb-genre">Theatre Artist</span></div>
-    </div>
+  <div class="gallery-grid" id="galleryGrid"></div>
+  <div id="galleryEmpty" style="display:none;text-align:center;padding:40px 20px;color:var(--gray)">
+    <p>No photos yet — check back soon!</p>
   </div>
 </section>
+
+<!-- GALLERY LIGHTBOX -->
+<div id="galleryLightbox" style="display:none;position:fixed;inset:0;background:rgba(5,4,8,.92);z-index:2000;align-items:center;justify-content:center;padding:24px" onclick="closeGalleryLightbox()">
+  <button style="position:absolute;top:18px;right:22px;background:none;border:none;color:#fff;font-size:34px;cursor:pointer;line-height:1" title="Close">&times;</button>
+  <img id="galleryLightboxImg" alt="Gallery photo" style="max-width:92vw;max-height:88vh;border:1px solid rgba(255,255,255,.15);box-shadow:0 0 60px rgba(139,68,255,.25)">
+</div>
 
 <!-- HOW IT WORKS -->
 <section id="how">
@@ -1105,7 +1122,7 @@
       <div class="contact-icon">📍</div>
       <div>
         <div class="contact-detail-label">Our Office</div>
-        <div class="contact-detail-value">#15-01 Robinson Road,<br>18 Robinson,<br>Singapore 048547</div>
+        <div class="contact-detail-value">#15-01 18 Robinson,<br>18 Robinson Road,<br>Singapore 048547</div>
       </div>
     </div>
     <div class="contact-detail">
@@ -1154,7 +1171,7 @@
   <div class="modal-box">
     <button class="modal-close" id="modalClose">&times;</button>
     <div class="modal-title">Admin Login</div>
-    <div class="modal-sub" id="modalSub">Enter your email to receive an OTP</div>
+    <div class="modal-sub" id="modalSub">Enter your email to continue</div>
 
     <div class="modal-step active" id="stepEmail">
       <div class="form-group">
@@ -1162,18 +1179,18 @@
         <input class="form-input" type="email" id="loginEmail" placeholder="you@example.com" autocomplete="off">
       </div>
       <div class="modal-error" id="emailError">Please enter a valid email.</div>
-      <button class="btn-primary" id="sendOtpBtn">Send OTP</button>
+      <button class="btn-primary" id="sendOtpBtn" style="margin-top:16px">Continue</button>
     </div>
 
     <div class="modal-step" id="stepOtp">
       <div class="form-group">
-        <label class="form-label" id="otpLabel">Enter the code sent to you@example.com</label>
+        <label class="form-label" id="otpLabel">Enter the 6-digit code from your email</label>
         <input class="form-input modal-code-input" type="text" id="loginOtp" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="off">
       </div>
-      <div class="modal-error" id="otpError">Invalid OTP.</div>
+      <div class="modal-error" id="otpError">Invalid code.</div>
       <button class="btn-primary" id="verifyOtpBtn">Verify</button>
       <div style="text-align:center;margin-top:12px">
-        <a href="#" id="resendOtpLink" style="color:var(--gray);font-size:13px;text-decoration:none">← Resend OTP</a>
+        <a href="#" id="resendOtpLink" style="color:var(--gray);font-size:13px;text-decoration:none">← Resend code</a>
       </div>
     </div>
 
@@ -1266,8 +1283,10 @@
         <div class="seat-area">
           <h3>SELECT YOUR SEATS</h3>
           <div class="seat-legend" id="bm-legend"></div>
-          <div class="stage-bar">◆ STAGE ◆</div>
-          <div class="pub-seat-grid" id="bm-seat-grid"></div>
+          <div class="seat-fit" id="bm-seat-fit">
+            <div class="stage-bar">◆ STAGE ◆</div>
+            <div class="pub-seat-grid" id="bm-seat-grid"></div>
+          </div>
           <div class="pub-canvas-wrap" id="bm-canvas-wrap" style="display:none">
             <div class="pub-canvas" id="bm-canvas"></div>
           </div>
@@ -1345,7 +1364,7 @@
     loginOtp.value = '';
     emailError.classList.remove('show');
     otpError.classList.remove('show');
-    modalSub.textContent = 'Enter your email to receive an OTP';
+    modalSub.textContent = 'Enter your email to continue';
     currentEmail = '';
   }
 
@@ -1372,7 +1391,7 @@
     }
     emailError.classList.remove('show');
     showStep(stepLoading);
-    modalSub.textContent = 'Sending OTP...';
+    modalSub.textContent = 'Checking access...';
     try {
       const res = await fetch(API + '/send-otp', {
         method: 'POST',
@@ -1381,24 +1400,25 @@
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        emailError.textContent = data.detail || 'Unable to send OTP.';
+        emailError.textContent = data.detail || 'Unable to send the login code. Please try again.';
         showStep(stepEmail);
         emailError.classList.add('show');
-        modalSub.textContent = 'Enter your email to receive an OTP';
+        modalSub.textContent = 'Enter your email to continue';
         return;
       }
+      const data = await res.json().catch(() => ({}));
       currentEmail = email;
-      otpLabel.textContent = `Enter the code sent to ${email}`;
+      otpLabel.textContent = 'Enter the 6-digit code from your email';
       loginOtp.value = '';
       otpError.classList.remove('show');
       showStep(stepOtp);
-      modalSub.textContent = 'Check your email for the OTP';
+      modalSub.textContent = data.message || 'Check your email for the code';
       setTimeout(() => loginOtp.focus(), 200);
     } catch (err) {
-      emailError.textContent = 'Connection error. Try again.';
+      emailError.textContent = err.message || 'Unable to send the login code. Please try again.';
       showStep(stepEmail);
       emailError.classList.add('show');
-      modalSub.textContent = 'Enter your email to receive an OTP';
+      modalSub.textContent = 'Enter your email to continue';
     }
   });
 
@@ -1420,10 +1440,10 @@
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        otpError.textContent = data.detail || 'Invalid OTP.';
+        otpError.textContent = data.detail || 'Invalid code.';
         showStep(stepOtp);
         otpError.classList.add('show');
-        modalSub.textContent = 'Check your email for the OTP';
+        modalSub.textContent = 'Check your email for the code';
         return;
       }
       const data = await res.json();
@@ -1435,7 +1455,7 @@
       otpError.textContent = 'Connection error. Try again.';
       showStep(stepOtp);
       otpError.classList.add('show');
-      modalSub.textContent = 'Check your email for the OTP';
+      modalSub.textContent = 'Check your email for the code';
     }
   });
 
@@ -1509,7 +1529,7 @@
           </div>
           <div class="event-footer">
             <div class="event-price">${minPrice !== '—' ? '$' + minPrice : '—'} <span>from</span></div>
-            <button class="btn-ticket">Book Now</button>
+            <button class="btn-ticket" onclick="openBooking('${e.id}')">Book Now</button>
           </div>
         </div>
       </div>`;
@@ -1566,18 +1586,6 @@
     }
   }
 
-  document.getElementById('eventsGrid').addEventListener('click', function(ev) {
-    const btn = ev.target.closest('.btn-ticket');
-    if (!btn) return;
-    const card = btn.closest('.event-card');
-    if (!card) return;
-    const id = card.dataset.id;
-    const evt = allEvents.find(e => String(e.id) === id);
-    if (!evt) return;
-    const pct = evt.total_seats > 0 ? Math.round((evt.booked_seats?.length || 0) / evt.total_seats * 100) : 0;
-    if (pct >= 100) { showToast('Sold out!', 'error'); return; }
-    openBooking(id);
-  });
 
   document.getElementById('privacyLink').addEventListener('click', () => {
     document.getElementById('privacyModal').classList.add('active');
@@ -1705,6 +1713,7 @@
     // Manual mode: render canvas
     if(e.layout_mode==='manual'){
       document.getElementById('bm-seat-grid').style.display='none';
+      document.getElementById('bm-seat-fit').classList.add('wide');
       const cw=document.getElementById('bm-canvas-wrap');
       cw.style.display='block';
       const canvas=document.getElementById('bm-canvas');
@@ -1730,6 +1739,7 @@
     }
     // Auto mode: render grid
     document.getElementById('bm-seat-grid').style.display='';
+    document.getElementById('bm-seat-fit').classList.remove('wide');
     document.getElementById('bm-canvas-wrap').style.display='none';
     const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const zoneMap = buildZoneMapFromEvent(e);
@@ -1984,6 +1994,45 @@
   }
 
   loadEvents();
+  loadGallery();
+
+  // ─────────────────── GALLERY ───────────────────
+  let _galleryPhotos = [];
+  const escHtml = s => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  async function loadGallery(){
+    const grid = document.getElementById('galleryGrid');
+    const empty = document.getElementById('galleryEmpty');
+    try {
+      const res = await fetch('/gallery/');
+      if (!res.ok) throw new Error('Server returned ' + res.status);
+      _galleryPhotos = await res.json();
+      if (!_galleryPhotos.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+      empty.style.display = 'none';
+      grid.innerHTML = _galleryPhotos.map((p, i) => `
+        <div class="gallery-item" data-gi="${i}">
+          <img src="${p.image}" alt="${escHtml(p.title) || 'Event photo'}" loading="lazy">
+          ${p.title ? `<div class="gallery-item-cap">${escHtml(p.title)}</div>` : ''}
+        </div>`).join('');
+      grid.querySelectorAll('.gallery-item').forEach(el => {
+        el.addEventListener('click', () => openGalleryLightbox(_galleryPhotos[+el.dataset.gi].image));
+      });
+    } catch (e) {
+      grid.innerHTML = '';
+      empty.style.display = 'block';
+    }
+  }
+
+  function openGalleryLightbox(src){
+    document.getElementById('galleryLightboxImg').src = src;
+    document.getElementById('galleryLightbox').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeGalleryLightbox(){
+    document.getElementById('galleryLightbox').style.display = 'none';
+    document.body.style.overflow = '';
+  }
 
   async function submitContactEnquiry() {
     const form = document.querySelector('.contact-form');
@@ -2018,7 +2067,7 @@
         throw new Error(data.detail || 'Unable to send enquiry.');
       }
 
-      alert('Thank you! Your enquiry has been received. Our team will be in touch within 24 hours.');
+      alert('Thank you! Your enquiry has been received.');
       form.reset();
     } catch (err) {
       console.error(err);

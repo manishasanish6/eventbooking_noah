@@ -1,0 +1,3 @@
+CNAME    noah-events-app-evdfc0h7fegjfcav.southeastasia-01.azurewebsites.net
+
+TXT   503408DFFC42AC49E7B9137072DBD841B343950B5CD1347F7CF0AEF5A30719C6

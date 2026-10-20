@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import date as dt_date
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -17,6 +18,98 @@ class BookingCreate(BaseModel):
     user_id: Optional[int] = None
     email: str
     addons: Optional[list] = None
+
+
+def event_code_for(name: str) -> str:
+    """Short uppercase code from an event name: 'NoahOnamNight' -> 'ONAM'."""
+    s = re.sub(r"[^A-Za-z0-9]", "", name or "")
+    if s[:4].upper() == "NOAH":
+        s = s[4:]
+    s = s.upper() or "EVT"
+    return s[:4]
+
+
+def next_booking_ref(db, event_id: int, event_name: str) -> str:
+    """Per-event booking reference: NOAH-<CODE>-<seq>.
+
+    The sequence restarts at 1 for every event and never reuses a number
+    (max existing seq + 1, so deletions can't cause collisions).
+    """
+    seq = 0
+    for (ref,) in db.query(Booking.booking_ref).filter(Booking.event_id == event_id):
+        try:
+            seq = max(seq, int(str(ref or "").rsplit("-", 1)[-1]))
+        except ValueError:
+            continue
+    return f"NOAH-{event_code_for(event_name)}-{seq + 1}"
+
+
+def _seat_zone_info(ev, seats):
+    """{seat_id: {"zone": name, "color": hex}} mirroring the public seat grid.
+
+    Auto mode replicates the frontend's row-block zones and seat numbering
+    (first/topmost row wins on ambiguity); manual mode reads seat_layout.
+    Seats still unmatched fall back to the longest-prefix rule used by pricing.
+    """
+    zones = list(ev.zones or [])
+    if not zones:
+        return {}
+
+    if getattr(ev, "layout_mode", "auto") == "manual":
+        layout_map = {s.get("id"): s for s in (ev.seat_layout or [])}
+        by_name = {z.get("name"): z for z in zones}
+        return {
+            sid: (lambda z: {"zone": z.get("name", ""), "color": z.get("color", "")})(
+                by_name.get((layout_map.get(sid) or {}).get("zone")) or zones[0]
+            )
+            for sid in seats
+        }
+
+    rows_total = int(ev.rows or 0) or sum(int(z.get("rows") or 1) for z in zones)
+    cols = int(ev.cols or 0) or 12
+
+    # Row -> zone: contiguous blocks, exactly like buildZoneMapFromEvent()
+    row_zone = {}
+    r = 0
+    for z in zones:
+        for _ in range(int(z.get("rows") or 1)):
+            if r >= rows_total:
+                break
+            row_zone[r] = z
+            r += 1
+    while r < rows_total:
+        row_zone[r] = zones[-1]
+        r += 1
+
+    # Seat id -> zone: replicate getSeatId(); setdefault keeps the topmost row
+    zone_first_row = {}
+    acc = 0
+    for i, z in enumerate(zones):
+        zone_first_row[i] = acc
+        acc += int(z.get("rows") or 1)
+    zone_index = {id(z): i for i, z in enumerate(zones)}
+    id_zone = {}
+    for rz, z in row_zone.items():
+        zi = zone_index[id(z)]
+        prefix = z.get("seat_prefix") or "A"
+        start = int(z.get("seat_start") or 1)
+        for c in range(cols):
+            sid = f"{prefix}{start + (rz - zone_first_row[zi]) * cols + c}"
+            id_zone.setdefault(sid, z)
+
+    prefixes = sorted([(z.get("seat_prefix") or "", z) for z in zones],
+                      key=lambda x: -len(x[0]))
+    out = {}
+    for sid in seats:
+        z = id_zone.get(sid)
+        if not z:
+            for pfx, zc in prefixes:
+                if pfx and sid.startswith(pfx):
+                    z = zc
+                    break
+        z = z or zones[-1]
+        out[sid] = {"zone": z.get("name", ""), "color": z.get("color", "")}
+    return out
 
 def _calc_addon_total(ev, addon_ids, seat_count):
     """Return (addon_total, addon_items) for selected addons."""
@@ -210,15 +303,16 @@ def create_booking(data: BookingCreate, bg: BackgroundTasks, db: Session = Depen
     ev.booked_seats = booked + data.seats
     db.add(ev)
 
+    booking_ref = next_booking_ref(db, data.event_id, ev.name)
     booking = Booking(
         event_id=data.event_id, seats=data.seats,
         total_paid=total, status="confirmed",
         user_id=data.user_id, email=data.email,
-        addons=data.addons or []
+        addons=data.addons or [], booking_ref=booking_ref
     )
     db.add(booking); db.commit(); db.refresh(booking)
 
-    ticket_codes = {s: f"NOAH-{booking.id}-{s}" for s in data.seats}
+    ticket_codes = {s: f"{booking_ref}-{s}" for s in data.seats}
 
     bg.add_task(
         send_booking_confirmation,
@@ -231,11 +325,14 @@ def create_booking(data: BookingCreate, bg: BackgroundTasks, db: Session = Depen
         date=ev.date or "N/A",
         time=ev.time or "",
         booking_id=booking.id,
+        booking_ref=booking_ref,
         ticket_codes=ticket_codes,
-        addon_items=addon_items
+        addon_items=addon_items,
+        seat_zones=_seat_zone_info(ev, data.seats),
+        event_image=(ev.images or [None])[0] if getattr(ev, "images", None) else None
     )
 
-    return {"booking_id": booking.id, "seats": data.seats, "total": total, "status": "confirmed", "addon_total": addon_total}
+    return {"booking_id": booking.id, "booking_ref": booking_ref, "seats": data.seats, "total": total, "status": "confirmed", "addon_total": addon_total}
 
 @router.get("/")
 def list_bookings(db: Session = Depends(get_db)):

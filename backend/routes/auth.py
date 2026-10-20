@@ -1,11 +1,13 @@
-import logging, random, re
-from datetime import datetime, timedelta
+import logging
+import secrets
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models import User
 from backend.utils.email import send_otp_email
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from jose import jwt
 import os
 
@@ -14,11 +16,14 @@ router = APIRouter()
 SECRET = os.getenv("SECRET_KEY", "change-me")
 OTP_EXPIRE_MINUTES = 5
 
-KNOWN_DOMAINS = {
-    "gmail.com", "yahoo.com", "hotmail.com", "outlook.com",
-    "live.com", "icloud.com", "protonmail.com", "aol.com",
-    "mail.com", "yandex.com", "zoho.com", "rediffmail.com"
-}
+
+def get_allowed_login_email() -> str:
+    return (os.getenv("ALLOWED_LOGIN_EMAIL", "info@noahevents.com") or "info@noahevents.com").strip().lower()
+
+
+def is_allowed_login_email(email: str) -> bool:
+    return email.strip().lower() == get_allowed_login_email()
+
 
 COMMON_TYPOS = {
     "gamil.com": "gmail.com",
@@ -34,6 +39,7 @@ COMMON_TYPOS = {
     "outlok.com": "outlook.com",
 }
 
+
 class SendOtpBody(BaseModel):
     email: str
 
@@ -41,41 +47,44 @@ class VerifyOtpBody(BaseModel):
     email: str
     otp: str
 
+
 @router.post("/send-otp")
 def send_otp(body: SendOtpBody, db: Session = Depends(get_db)):
     email = body.email.strip().lower()
+
     if not email or "@" not in email:
         raise HTTPException(status_code=400, detail="Valid email required")
 
-    if email != "info@noahevents.com":
-        raise HTTPException(status_code=403, detail="Sorry, you are not authorized to login")
+    if not is_allowed_login_email(email):
+        raise HTTPException(status_code=403, detail="Not authorized")
 
-    # Check for common domain typos
-    parts = email.split("@", 1)
-    if len(parts) == 2:
-        domain = parts[1].strip()
-        if domain in COMMON_TYPOS:
-            suggestion = COMMON_TYPOS[domain]
-            raise HTTPException(
-                status_code=400,
-                detail=f"Did you mean @{suggestion}? You typed @{domain}"
-            )
+    domain = email.split("@", 1)[1]
+    if domain in COMMON_TYPOS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Did you mean @{COMMON_TYPOS[domain]}? You typed @{domain}",
+        )
 
-    otp = str(random.randint(100000, 999999))
-    expires_at = (datetime.utcnow() + timedelta(minutes=OTP_EXPIRE_MINUTES)).isoformat()
+    otp = f"{secrets.randbelow(1_000_000):06d}"
+    expires_at = (datetime.now(timezone.utc) + timedelta(minutes=OTP_EXPIRE_MINUTES)).isoformat()
 
     user = db.query(User).filter(User.email == email).first()
     if not user:
         user = User(email=email, hashed_password="otp_only")
         db.add(user)
-
     user.otp_code = otp
     user.otp_expires_at = expires_at
     db.commit()
 
-    send_otp_email(email, otp)
-    logger.info("OTP sent to %s", email)
-    return {"message": "OTP sent"}
+    if not send_otp_email(email, otp):
+        raise HTTPException(
+            status_code=500,
+            detail="Could not send the login email. Please try again.",
+        )
+
+    logger.info("Login code sent to %s", email)
+    return {"message": f"Login code sent to {email}"}
+
 
 @router.post("/verify-otp")
 def verify_otp(body: VerifyOtpBody, db: Session = Depends(get_db)):
@@ -83,21 +92,24 @@ def verify_otp(body: VerifyOtpBody, db: Session = Depends(get_db)):
     otp = body.otp.strip()
 
     user = db.query(User).filter(User.email == email).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid OTP")
-
-    if not user.otp_code or not user.otp_expires_at:
-        raise HTTPException(status_code=401, detail="No OTP requested")
-
-    if user.otp_code != otp:
-        raise HTTPException(status_code=401, detail="Invalid OTP")
+    if not user or not user.otp_code or not user.otp_expires_at:
+        raise HTTPException(status_code=401, detail="Invalid or expired code")
 
     try:
         expires = datetime.fromisoformat(user.otp_expires_at)
-        if datetime.utcnow() > expires:
-            raise HTTPException(status_code=401, detail="OTP expired")
-    except Exception:
-        raise HTTPException(status_code=401, detail="OTP expired")
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid or expired code")
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+
+    if datetime.now(timezone.utc) > expires:
+        user.otp_code = None
+        user.otp_expires_at = None
+        db.commit()
+        raise HTTPException(status_code=401, detail="Code expired — request a new one")
+
+    if not secrets.compare_digest(user.otp_code, otp):
+        raise HTTPException(status_code=401, detail="Invalid code")
 
     user.otp_code = None
     user.otp_expires_at = None

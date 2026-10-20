@@ -58,3 +58,11 @@ class Booking(Base):
     total_paid = Column(Float)
     status = Column(String, default="confirmed")
     addons = Column(JSON, default=[])   # ["add_1", "add_3"]
+    booking_ref = Column(String, default="")  # per-event ref, e.g. "NOAH-ONAM-3"
+
+class GalleryPhoto(Base):
+    __tablename__ = "gallery_photos"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, default="")      # event name / caption
+    image = Column(String, default="")      # base64 data URL
+    created_at = Column(String, default="")

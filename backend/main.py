@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from backend.database import engine, Base
-from backend.routes import events, bookings, auth, contact
+from backend.routes import events, bookings, auth, contact, gallery
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s %(message)s")
 
@@ -38,6 +38,7 @@ SQL_MIGRATIONS = {
     "bookings": [
         ("email", "VARCHAR"),
         ("addons", "TEXT DEFAULT '[]'"),
+        ("booking_ref", "VARCHAR DEFAULT ''"),
     ],
     "users": [
         ("totp_secret", "VARCHAR"),
@@ -64,13 +65,51 @@ with engine.connect() as conn:
                     text(f"ALTER TABLE {table} ADD COLUMN {col_name} {col_type}")
                 )
                 logging.info("Added column %s.%s", table, col_name)
-    # Fix common email typos in created_by
-    fix_count = conn.execute(
-        text("UPDATE events SET created_by = 'manisha61090@gmail.com' WHERE created_by = 'manisha61090@gamil.com'")
-    ).rowcount
-    if fix_count:
-        logging.info("Fixed %s event(s) with typo gamil.com -> gmail.com", fix_count)
     conn.commit()
+
+
+def _backfill_booking_refs():
+    """Give pre-existing bookings their per-event reference (NOAH-CODE-n)."""
+    from collections import defaultdict
+
+    from backend.database import SessionLocal
+    from backend.models import Booking, Event
+    from backend.routes.bookings import event_code_for
+
+    db = SessionLocal()
+    try:
+        pending = (
+            db.query(Booking)
+            .filter((Booking.booking_ref.is_(None)) | (Booking.booking_ref == ""))
+            .order_by(Booking.id.asc())
+            .all()
+        )
+        if not pending:
+            return
+        names = {e.id: e.name for e in db.query(Event).all()}
+        by_event = defaultdict(list)
+        for b in pending:
+            by_event[b.event_id].append(b)
+        for event_id, rows in by_event.items():
+            code = event_code_for(names.get(event_id, ""))
+            seq = 0
+            for (ref,) in db.query(Booking.booking_ref).filter(Booking.event_id == event_id):
+                try:
+                    seq = max(seq, int(str(ref or "").rsplit("-", 1)[-1]))
+                except ValueError:
+                    continue
+            for b in rows:  # id order -> sequential numbers
+                seq += 1
+                b.booking_ref = f"NOAH-{code}-{seq}"
+        db.commit()
+        logging.info("Backfilled booking_ref for %d booking(s)", len(pending))
+    except Exception:
+        logging.exception("booking_ref backfill failed")
+    finally:
+        db.close()
+
+
+_backfill_booking_refs()
 
 app = FastAPI(title="STAGEFRONT API", version="1.0")
 
@@ -85,5 +124,6 @@ app.include_router(auth.router,     prefix="/auth",     tags=["Auth"])
 app.include_router(events.router,   prefix="/events",   tags=["Events"])
 app.include_router(bookings.router, prefix="/bookings", tags=["Bookings"])
 app.include_router(contact.router,  prefix="/contact",  tags=["Contact"])
+app.include_router(gallery.router,  prefix="/gallery",  tags=["Gallery"])
 
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
