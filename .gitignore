@@ -6,3 +6,4 @@ __pycache__/
 Noah_Events.db
 .vscode/
 .DS_Store
+*.zip
