@@ -77,6 +77,33 @@ body{
 .admin-view{display:none;padding:28px;max-width:720px;margin:0 auto;min-height:calc(100vh - 140px)}
 .admin-view.active{display:block}
 
+/* ── EVENT CREATION WIZARD ── */
+.wiz-steps{display:flex;gap:10px;margin-bottom:22px}
+.wiz-step{flex:1;display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;
+  background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-left:3px solid rgba(0,0,0,0.12);transition:all .2s}
+.wiz-step:hover{background:var(--dark3)}
+.wiz-step .ws-num{flex:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;background:rgba(0,0,0,0.08);color:#666;font-size:12px;font-weight:700}
+.wiz-step .ws-txt{min-width:0}
+.wiz-step .ws-label{font-family:var(--font-d);font-size:14px;letter-spacing:1.5px;color:#666;text-transform:uppercase;line-height:1.2}
+.wiz-step .ws-sub{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#999}
+.wiz-step.active{background:var(--dark2);border-left-color:var(--logo-purple);box-shadow:0 4px 24px rgba(139,68,255,0.12)}
+.wiz-step.active .ws-num{background:var(--logo-gradient);color:#fff}
+.wiz-step.active .ws-label{color:var(--text-on-light)}
+.wiz-step.done{border-left-color:var(--green)}
+.wiz-step.done .ws-num{background:var(--green);color:#08240f}
+.wiz-panel{display:none}
+.wiz-panel.active{display:block}
+.wiz-nav{display:flex;gap:10px;align-items:center;margin-top:20px}
+.wiz-nav .btn{flex:1;justify-content:center}
+.wiz-publish-box{background:var(--dark2);border:1px solid rgba(255,78,54,0.15);padding:24px 28px;margin-bottom:20px;color:var(--text-on-light)}
+.wiz-review{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.wiz-review-row{display:flex;justify-content:space-between;gap:14px;font-size:12px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.07)}
+.wiz-review-row:last-child{border-bottom:none}
+.wiz-review-row .wr-k{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#888;flex:none;padding-top:2px}
+.wiz-review-row .wr-v{text-align:right;color:var(--text-on-light);word-break:break-word}
+.wiz-hint{font-size:11px;color:#777;font-style:italic;margin-top:10px}
+
 /* ── SECTION TITLES ── */
 .s-title{font-family:var(--font-d);font-size:22px;letter-spacing:2px;margin-bottom:4px;color:var(--white)}
 .s-sub{color:var(--gray);font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:20px}
@@ -314,6 +341,25 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
     <div class="s-title" id="form-title">NEW EVENT</div>
     <div class="s-sub" id="form-sub">Fill in the details below</div>
 
+    <!-- WIZARD STEP TABS -->
+    <div class="wiz-steps" id="wiz-steps">
+      <div class="wiz-step active" data-step="1" onclick="goStep(1)">
+        <div class="ws-num">1</div>
+        <div class="ws-txt"><div class="ws-label">Build Event</div><div class="ws-sub">Details &amp; venue</div></div>
+      </div>
+      <div class="wiz-step" data-step="2" onclick="goStep(2)">
+        <div class="ws-num">2</div>
+        <div class="ws-txt"><div class="ws-label">Add Tickets</div><div class="ws-sub">Seating &amp; zones</div></div>
+      </div>
+      <div class="wiz-step" data-step="3" onclick="goStep(3)">
+        <div class="ws-num">3</div>
+        <div class="ws-txt"><div class="ws-label">Publish</div><div class="ws-sub">Review &amp; go live</div></div>
+      </div>
+    </div>
+
+    <!-- ════════ STEP 1 · BUILD EVENT ════════ -->
+    <div class="wiz-panel active" id="wiz-panel-1">
+
     <!-- CARD: Event Details -->
     <div class="form-card">
       <div class="form-card-title">✦ Event Details</div>
@@ -415,6 +461,14 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
         <a id="map-preview-link" href="#" target="_blank" style="display:none;color:var(--logo-purple);font-size:12px;text-decoration:none;margin-top:6px">📍 Show Map</a>
       </div>
     </div>
+
+    <div class="wiz-nav">
+      <button class="btn btn-accent" onclick="goStep(2)">NEXT · ADD TICKETS →</button>
+    </div>
+    </div><!-- /step 1 -->
+
+    <!-- ════════ STEP 2 · ADD TICKETS ════════ -->
+    <div class="wiz-panel" id="wiz-panel-2">
 
     <div class="form-card">
       <div class="form-card-title">■ Seating</div>
@@ -596,15 +650,32 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
       <button class="add-zone-btn" onclick="addAddon()">＋ Add Addon</button>
     </div>
 
-    <!-- Save / Cancel -->
-    <div style="margin-top:20px">
+    <div class="wiz-nav">
+      <button class="btn btn-outline" onclick="goStep(1)">← BACK</button>
+      <button class="btn btn-accent" onclick="goStep(3)">NEXT · PUBLISH →</button>
+    </div>
+    </div><!-- /step 2 -->
+
+    <!-- ════════ STEP 3 · PUBLISH ════════ -->
+    <div class="wiz-panel" id="wiz-panel-3">
+      <div class="wiz-publish-box">
+        <div class="form-card-title" style="margin-bottom:2px">🚀 Ready to publish?</div>
+        <div class="form-helper" style="color:#000;margin-top:0">Review the event below, then choose how to save it.</div>
+        <div class="wiz-review" id="wiz-review"></div>
+      </div>
+
       <input type="hidden" id="edit-id">
-      <button class="btn btn-accent btn-full" onclick="saveEvent()">
-        <span id="save-btn-text">✦ CREATE EVENT</span>
+      <button class="btn btn-accent btn-full" onclick="saveEvent('live')">
+        <span id="save-btn-text">✦ PUBLISH EVENT</span>
       </button>
       <div style="height:8px"></div>
+      <button class="btn btn-outline btn-full" onclick="saveEvent('draft')">💾 SAVE AS DRAFT</button>
+      <div style="height:8px"></div>
+      <button class="btn btn-outline btn-full" onclick="goStep(2)">← BACK TO TICKETS</button>
+      <div style="height:8px"></div>
       <button class="btn btn-outline btn-full" id="cancel-edit-btn" onclick="cancelEdit()" style="display:none">Cancel Edit</button>
-    </div>
+      <div class="wiz-hint" id="wiz-publish-hint">Published events appear immediately on the public site.</div>
+    </div><!-- /step 3 -->
   </div>
 
   <!-- EVENTS VIEW -->
@@ -732,6 +803,93 @@ function switchView(v){
   const navEl=document.querySelector(`.nav-tab[data-view="${v}"]`);
   if(navEl) navEl.classList.add('active');
   if(v==='gallery') loadGalleryAdmin();
+}
+
+// ─────────────────── CREATE-EVENT WIZARD ───────────────────
+// Step 1 Build Event · Step 2 Add Tickets · Step 3 Publish
+let currentStep = 1;
+
+function goStep(n){
+  // Going forward: validate the step we are leaving
+  if(n > currentStep){
+    for(let s=currentStep; s<n; s++){
+      if(!validateWizardStep(s)){ n=s; break; }
+    }
+  }
+  currentStep = n;
+  document.querySelectorAll('.wiz-panel').forEach(p=>p.classList.remove('active'));
+  const panel = document.getElementById('wiz-panel-'+n);
+  if(panel) panel.classList.add('active');
+  document.querySelectorAll('.wiz-step').forEach(el=>{
+    const s = +el.dataset.step;
+    el.classList.toggle('active', s===n);
+    el.classList.toggle('done', s<n);
+  });
+  if(n===3) renderReview();
+  const view = document.getElementById('view-create');
+  if(view) view.scrollTop = 0;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function validateWizardStep(step){
+  if(step===1){
+    if(!document.getElementById('f-name').value.trim()){ showToast('Event name required','error'); goStepPinned(1); return false; }
+    if(!document.getElementById('f-venue').value.trim()){ showToast('Venue name required','error'); goStepPinned(1); return false; }
+    if(!document.getElementById('f-date').value){ showToast('Date required','error'); goStepPinned(1); return false; }
+  }
+  if(step===2){
+    if(!zones.length){ showToast('Add at least one zone','error'); goStepPinned(2); return false; }
+  }
+  return true;
+}
+
+// Move to a step for showing an error without triggering validation
+function goStepPinned(n){
+  currentStep = n;
+  document.querySelectorAll('.wiz-panel').forEach(p=>p.classList.remove('active'));
+  const panel = document.getElementById('wiz-panel-'+n);
+  if(panel) panel.classList.add('active');
+  document.querySelectorAll('.wiz-step').forEach(el=>{
+    const s = +el.dataset.step;
+    el.classList.toggle('active', s===n);
+    el.classList.toggle('done', s<n);
+  });
+}
+
+function eventStatusLabel(status){
+  return status==='live' ? 'Live — visible on the public site' : 'Draft — hidden from the public site';
+}
+
+function renderReview(){
+  const box = document.getElementById('wiz-review');
+  if(!box) return;
+  const val = id => (document.getElementById(id).value||'').trim();
+  const name = val('f-name') || '(no name)';
+  const artist = val('f-artist');
+  const venue = val('f-venue') || '(no venue)';
+  const date = val('f-date');
+  const time = val('f-time');
+  const endTime = val('f-end-time');
+  const genre = val('f-genre');
+  const status = val('f-status');
+  const selling = zones.map(z=>`${z.name} — $${z.price} (${z.rows} row${z.rows===1?'':'s'})`).join('<br>') || '(none)';
+  const totalSeats = zones.reduce((a,z)=>a+(+z.rows||0),0) * (+document.getElementById('f-cols').value||0);
+  const row = (k,v)=>`<div class="wiz-review-row"><span class="wr-k">${k}</span><span class="wr-v">${v}</span></div>`;
+  box.innerHTML =
+    row('Event', name + (artist?`<br><span style="color:#777">${artist}</span>`:'')) +
+    row('When', `${date||'—'} · ${time||'—'}${endTime?'–'+endTime:''}`) +
+    row('Where', venue) +
+    row('Genre', genre) +
+    row('Ticket zones', selling) +
+    row('Seats', totalSeats ? `${totalSeats} seats across ${zones.length} zone(s)` : '—') +
+    row('Build mode', (document.querySelector('.lm-btn.active')?.dataset.mode==='manual' ? 'Manual seating' : 'Auto seating')) +
+    row('Status after saving', eventStatusLabel(status));
+  const hint = document.getElementById('wiz-publish-hint');
+  if(hint){
+    hint.textContent = status==='draft'
+      ? 'This event is set to Draft — it will be hidden from the public site until you switch it to Live.'
+      : 'Published events appear immediately on the public site.';
+  }
 }
 
 // ─────────────────── ZONE BUILDER ───────────────────
@@ -1142,7 +1300,7 @@ function renderImagePreviews() {
 }
 
 // ─────────────────── SAVE / EDIT / DELETE EVENT ───────────────────
-async function saveEvent(){
+async function saveEvent(publishAs){
   const name=document.getElementById('f-name').value.trim();
   const artist=document.getElementById('f-artist').value.trim();
   const activeLm=document.querySelector('.lm-btn.active');
@@ -1152,13 +1310,16 @@ async function saveEvent(){
   const time=document.getElementById('f-time').value;
   const end_time=document.getElementById('f-end-time').value;
   const genre=document.getElementById('f-genre').value;
-  const status=document.getElementById('f-status').value;
+  const statusSelect=document.getElementById('f-status');
+  // The Publish step's button sets the final status (live / draft)
+  if(publishAs==='live' || publishAs==='draft') statusSelect.value = publishAs;
+  const status=statusSelect.value;
   const rows=layoutMode==='auto'?+document.getElementById('f-rows').value||8:1;
   const cols=layoutMode==='auto'?+document.getElementById('f-cols').value||12:1;
-  if(!name){showToast('Event name required','error');return;}
-  if(!venue){showToast('Venue name required','error');return;}
-  if(!date){showToast('Date required','error');return;}
-  if(!zones.length){showToast('Add at least one zone','error');return;}
+  if(!name){showToast('Event name required','error');goStepPinned(1);return;}
+  if(!venue){showToast('Venue name required','error');goStepPinned(1);return;}
+  if(!date){showToast('Date required','error');goStepPinned(1);return;}
+  if(!zones.length){showToast('Add at least one zone','error');goStepPinned(2);return;}
 
   const a1=document.getElementById('f-addr1').value.trim();
   const a2=document.getElementById('f-addr2').value.trim();
@@ -1220,7 +1381,7 @@ async function saveEvent(){
     }
 
     save();
-    showToast(editingId?'Event updated!':'Event created!');
+    showToast(status==='live' ? (editingId?'Event updated & live!':'Event published!') : (editingId?'Draft saved!':'Event saved as draft!'));
     cancelEdit();
     renderAdminList();
     updateBadge();
@@ -1228,7 +1389,7 @@ async function saveEvent(){
     console.error(err);
     showToast(err.message || 'Could not save event','error');
   }
-  btn.textContent=editingId?'✦ UPDATE EVENT':'✦ CREATE EVENT';
+  btn.textContent=editingId?'✦ UPDATE EVENT':'✦ PUBLISH EVENT';
 }
 function editEvent(id){
   switchView('create');
@@ -1305,6 +1466,7 @@ function editEvent(id){
   document.getElementById('form-sub').textContent='Modify the event details below';
   document.getElementById('save-btn-text').textContent='✦ UPDATE EVENT';
   document.getElementById('cancel-edit-btn').style.display='block';
+  goStep(1);
   document.getElementById('view-create').scrollTop=0;
 }
 function cancelEdit(){
@@ -1340,8 +1502,9 @@ function cancelEdit(){
   document.getElementById('edit-id').value='';
   document.getElementById('form-title').textContent='NEW EVENT';
   document.getElementById('form-sub').textContent='Fill in the details below';
-  document.getElementById('save-btn-text').textContent='✦ CREATE EVENT';
+  document.getElementById('save-btn-text').textContent='✦ PUBLISH EVENT';
   document.getElementById('cancel-edit-btn').style.display='none';
+  goStep(1);
   zones=[{name:'VIP',rows:2,price:198,color:'#8b44ff',seat_prefix:'A',seat_start:1,max_seats:8},{name:'Standard',rows:6,price:98,color:'#5b9cf6',seat_prefix:'B',seat_start:1,max_seats:8}];
   heldSeats=[];
   canvasSeats=[];

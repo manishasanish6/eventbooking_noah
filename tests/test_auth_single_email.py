@@ -98,7 +98,7 @@ def test_send_otp_fails_loudly_when_email_cannot_be_sent(monkeypatch):
     with pytest.raises(HTTPException) as exc:
         auth.send_otp(_Body("info@noahevents.com"), db=db)
 
-    assert exc.value.status_code == 500
+    assert exc.value.status_code == 502
 
 
 def test_verify_otp_accepts_valid_code(monkeypatch):

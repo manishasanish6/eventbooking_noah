@@ -21,6 +21,23 @@ def get_allowed_login_email() -> str:
     return (os.getenv("ALLOWED_LOGIN_EMAIL", "info@noahevents.com") or "info@noahevents.com").strip().lower()
 
 
+def email_config_problem() -> str:
+    """Return a human-readable reason email cannot be sent, or '' if configured."""
+    tenant = os.getenv("AZURE_TENANT_ID", "").strip()
+    client = os.getenv("AZURE_CLIENT_ID", "").strip()
+    secret = os.getenv("AZURE_CLIENT_SECRET", "").strip()
+    missing = [
+        name for name, val in (
+            ("AZURE_TENANT_ID", tenant),
+            ("AZURE_CLIENT_ID", client),
+            ("AZURE_CLIENT_SECRET", secret),
+        ) if not val
+    ]
+    if missing:
+        return "Email is not configured on this server — missing App Setting(s): " + ", ".join(missing)
+    return ""
+
+
 def is_allowed_login_email(email: str) -> bool:
     return email.strip().lower() == get_allowed_login_email()
 
@@ -68,6 +85,11 @@ def send_otp(body: SendOtpBody, db: Session = Depends(get_db)):
     otp = f"{secrets.randbelow(1_000_000):06d}"
     expires_at = (datetime.now(timezone.utc) + timedelta(minutes=OTP_EXPIRE_MINUTES)).isoformat()
 
+    problem = email_config_problem()
+    if problem:
+        logger.error("Login code NOT sent: %s", problem)
+        raise HTTPException(status_code=503, detail=problem)
+
     user = db.query(User).filter(User.email == email).first()
     if not user:
         user = User(email=email, hashed_password="otp_only")
@@ -78,8 +100,8 @@ def send_otp(body: SendOtpBody, db: Session = Depends(get_db)):
 
     if not send_otp_email(email, otp):
         raise HTTPException(
-            status_code=500,
-            detail="Could not send the login email. Please try again.",
+            status_code=502,
+            detail="Email is configured but the send failed — check the AZURE_CLIENT_SECRET value and that the app has Mail.Send permission.",
         )
 
     logger.info("Login code sent to %s", email)
