@@ -2107,12 +2107,17 @@ function vdConfirmAdd(){
     const admit = (v('vd-s-admission')||{}).value || 'reserved';
     const label = ((v('vd-s-label')||{}).value || '').trim() || vdNextLabel('section');
     const rowStyle = ((v('vd-s-rowpre')||{}).value || '');
+    vdAvoidLabelCollision('s');   // nudge the seat start if both axes would collide
     const rowStartRaw = ((v('vd-s-rowstart')||{}).value || '').trim();
-    const rowStart = rowStyle === 'letters' ? rowStartRaw.toUpperCase() || 'A' : vdStyleNum(rowStartRaw);
+    const rowStart = rowStyle === 'letters'
+      ? (/^\d+$/.test(rowStartRaw) ? vdIndexToLetter(vdStyleNum(rowStartRaw)) : (rowStartRaw.toUpperCase() || 'A'))
+      : (/^[A-Za-z]{1,3}$/.test(rowStartRaw) ? vdLetterToIndex(rowStartRaw) : vdStyleNum(rowStartRaw));
     const rowDir   = ((v('vd-s-rowdir')||{}).value === 'up') ? 'up' : 'down';
     const seatStyle= ((v('vd-s-prefix')||{}).value || '');
     const seatStartRaw = ((v('vd-s-start')||{}).value || '').trim();
-    const seatStart= seatStyle === 'letters' ? seatStartRaw.toUpperCase() || 'A' : vdStyleNum(seatStartRaw);
+    const seatStart= seatStyle === 'letters'
+      ? (/^\d+$/.test(seatStartRaw) ? vdIndexToLetter(vdStyleNum(seatStartRaw)) : (seatStartRaw.toUpperCase() || 'A'))
+      : (/^[A-Za-z]{1,3}$/.test(seatStartRaw) ? vdLetterToIndex(seatStartRaw) : vdStyleNum(seatStartRaw));
     const seatDir  = ((v('vd-s-seatdir')||{}).value === 'rtl') ? 'rtl' : 'ltr';
     const colour= (v('vd-s-colour')||{}).value || ELEMENT_TOOLS.section.colour;
     const curve = +((v('vd-s-curve')||{}).value) || 0;
@@ -2203,7 +2208,7 @@ function renderVdSetupPanel(){
         <div><label>Section name</label><input id="vd-s-label" placeholder="e.g. Balcony 1"></div>
       </div>
       <div class="ei-row">
-        <div><label>Row prefix</label>
+        <div><label>Row</label>
           <select id="vd-s-rowpre" onchange="vdPrefixStyleChange('s','row')">
             <option value="" selected>None</option>
             <option value="letters">A,B,C</option>
@@ -2218,7 +2223,7 @@ function renderVdSetupPanel(){
           </div></div>
       </div>
       <div class="ei-row">
-        <div><label>Seat prefix</label>
+        <div><label>Seat</label>
           <select id="vd-s-prefix" onchange="vdPrefixStyleChange('s','seat')">
             <option value="" selected>None</option>
             <option value="letters">A,B,C</option>
@@ -2683,7 +2688,7 @@ function renderVdEditPanel(){
         <div><label>Section prefix</label><input id="vd-prefix" value="${escapeAttr(el.opts.prefix||'')}" placeholder="Balcony 1"></div>
       </div>
       <div class="ei-row">
-        <div><label>Row prefix</label>
+        <div><label>Row</label>
           <select id="vd-rowpre" onchange="vdPrefixStyleChange('e','row')">
             <option value="">None</option>
             <option value="letters"${el.opts.row_prefix==='letters'?' selected':''}>A,B,C</option>
@@ -2698,7 +2703,7 @@ function renderVdEditPanel(){
           </div></div>
       </div>
       <div class="ei-row">
-        <div><label>Seat prefix</label>
+        <div><label>Seat</label>
           <select id="vd-seatpre" onchange="vdPrefixStyleChange('e','seat')">
             <option value="">None</option>
             <option value="letters"${el.opts.seat_prefix==='letters'?' selected':''}>A,B,C</option>
@@ -2795,18 +2800,21 @@ function vdApply(){
   if(el.type==='section'){
     if(v('vd-admission')) el.opts.admission = v('vd-admission').value;
     if(v('vd-prefix'))    el.opts.prefix      = v('vd-prefix').value;
+    if(v('vd-rowpre') || v('vd-seatpre')) vdAvoidLabelCollision('e');
     if(v('vd-rowpre'))    el.opts.row_prefix  = v('vd-rowpre').value;
     if(v('vd-rowstart')){
-      const rs = el.opts.row_prefix === 'letters' ? v('vd-rowstart').value.trim().toUpperCase() || 'A'
-                                                  : vdStyleNum(v('vd-rowstart').value);
-      el.opts.row_start = rs;
+      const cur = v('vd-rowstart').value.trim();
+      el.opts.row_start = el.opts.row_prefix === 'letters'
+        ? (/^\d+$/.test(cur) ? vdIndexToLetter(vdStyleNum(cur)) : (cur.toUpperCase() || 'A'))
+        : (/^[A-Za-z]{1,3}$/.test(cur) ? vdLetterToIndex(cur) : vdStyleNum(cur));
     }
     if(v('vd-rowdir'))    el.opts.row_dir     = v('vd-rowdir').value === 'up' ? 'up' : 'down';
     if(v('vd-seatpre'))   el.opts.seat_prefix = v('vd-seatpre').value;
     if(v('vd-seatstart')){
-      const ss = el.opts.seat_prefix === 'letters' ? v('vd-seatstart').value.trim().toUpperCase() || 'A'
-                                                    : vdStyleNum(v('vd-seatstart').value);
-      el.opts.seat_start = ss;
+      const cur = v('vd-seatstart').value.trim();
+      el.opts.seat_start = el.opts.seat_prefix === 'letters'
+        ? (/^\d+$/.test(cur) ? vdIndexToLetter(vdStyleNum(cur)) : (cur.toUpperCase() || 'A'))
+        : (/^[A-Za-z]{1,3}$/.test(cur) ? vdLetterToIndex(cur) : vdStyleNum(cur));
     }
     if(v('vd-seatdir'))   el.opts.seat_dir    = v('vd-seatdir').value === 'rtl' ? 'rtl' : 'ltr';
     delete el.opts.prefix;   // superseded by seat_prefix (which is now a style)
@@ -2950,50 +2958,65 @@ function vdNextAcrossStyle(style, rowStart, rows){
 
 function vdStyleName(style){ return style === 'letters' ? 'A,B,C' : '1,2,3'; }
 
+// Shared element lookup for the two prefix forms. The create form uses
+// vd-s-<field>; the edit panel drops the form letter and spells the seat side
+// out in full (vd-rowpre/vd-rowstart, vd-seatpre/vd-seatstart, vd-rows…).
+function vdPrefixField(form, base){
+  if(form === 's') return document.getElementById('vd-s-' + base);
+  const alias = { prefix:'seatpre', start:'seatstart' };   // create name → edit name
+  return document.getElementById('vd-' + (alias[base] || base));
+}
+
+// When both axes use one style and would begin on the same value the labels
+// collide (AA, AB …). Nudge the seat side past the rows so they stay legible
+// (rows A,B,C → seats D,E,F). Only applies while the two really do collide, so
+// a deliberately different seat start is left alone.
+function vdAvoidLabelCollision(form){
+  const rowStyleEl = vdPrefixField(form,'rowpre'), rowStartEl = vdPrefixField(form,'rowstart');
+  const seatStyleEl= vdPrefixField(form,'prefix'), seatStartEl= vdPrefixField(form,'start');
+  if(!rowStyleEl || !seatStyleEl || !rowStartEl || !seatStartEl) return;
+  const rs = rowStyleEl.value, ss = seatStyleEl.value;
+  if(!rs || rs !== ss) return;
+  if(vdMakeLabelNum(rs, rowStartEl.value) !== vdMakeLabelNum(ss, seatStartEl.value)) return;
+  const rows = Math.max(1, +((vdPrefixField(form,'rows')||{}).value) || 1);
+  seatStartEl.value = vdNextAcrossStyle(ss, rowStartEl.value, rows);
+}
+
 // Switching a prefix style rewrites its "start with" box, and keeps the two
 // axes off each other's labels (rows A,B,C → seats start at D).
-// `form` is 's' for the create form, 'e' for the edit panel; real element ids
-// are vd-<form>-<field>.
+// `form` is 's' for the create form (ids vd-s-*) and 'e' for the edit panel,
+// whose ids drop the form letter (vd-rowstart, vd-seatstart, vd-rows…).
 function vdPrefixStyleChange(form, axis){
-  const v = field => document.getElementById('vd-' + form + '-' + field);
+  const v = base => vdPrefixField(form, base);
   const styleEl  = v(axis === 'row' ? 'rowpre' : 'prefix');
   const startEl  = v(axis === 'row' ? 'rowstart' : 'start');
   const style    = styleEl ? styleEl.value : '';
   if(!startEl) return;
 
+  // Re-shape the current value into whatever the new style needs. Anything
+  // that doesn't fit becomes the first value, so a flip never produces a
+  // mixed label like "11".
+  const cur = startEl.value.trim();
   if(style === 'letters'){
-    // Only convert when the box currently holds a plain number.
-    startEl.value = /^\d+$/.test(startEl.value.trim())
-      ? vdIndexToLetter(vdStyleNum(startEl.value))
-      : (startEl.value.trim().toUpperCase() || 'A');
+    startEl.value = /^\d+$/.test(cur) ? vdIndexToLetter(vdStyleNum(cur))
+                  : (/^[A-Za-z]{1,3}$/.test(cur) ? cur.toUpperCase() : 'A');
   } else if(style === 'numbers'){
-    startEl.value = /^[A-Za-z]{1,3}$/.test(startEl.value.trim())
-      ? String(vdLetterToIndex(startEl.value))
-      : String(vdStyleNum(startEl.value));
+    startEl.value = /^[A-Za-z]{1,3}$/.test(cur) ? String(vdLetterToIndex(cur))
+                  : String(vdStyleNum(cur));
   }
+  // style === '' (None): leave whatever is there; it isn't used.
 
-  // If both axes would start on the same value, push the seat side along.
-  const rowStyleEl = v('rowpre'), rowStartEl = v('rowstart');
-  const seatStyleEl = v('prefix'), seatStartEl = v('start');
-  if(rowStyleEl && seatStyleEl && rowStartEl && seatStartEl){
-    const rs = rowStyleEl.value, ss = seatStyleEl.value;
-    if(rs && rs === ss && rowStartEl.value.trim().toUpperCase() === seatStartEl.value.trim().toUpperCase()){
-      // Rows live at vd-s-rows in the create form and vd-rows in the edit panel.
-      const rowsEl = v('rows') || document.getElementById('vd-rows');
-      const rows = Math.max(1, +((rowsEl||{}).value) || 1);
-      seatStartEl.value = vdNextAcrossStyle(ss, rowStartEl.value, rows);
-    }
-  }
+  vdAvoidLabelCollision(form);
 }
 
 // Keep the typed start value valid for whatever style the prefix uses.
 function vdStartTyped(form, axis){
-  const v = field => document.getElementById('vd-' + form + '-' + field);
-  const styleEl = v(axis === 'row' ? 'rowpre' : 'prefix');
-  const startEl = v(axis === 'row' ? 'rowstart' : 'start');
+  const styleEl = vdPrefixField(form, axis === 'row' ? 'rowpre' : 'prefix');
+  const startEl = vdPrefixField(form, axis === 'row' ? 'rowstart' : 'start');
   if(!styleEl || !startEl) return;
   if(styleEl.value === 'letters') startEl.value = startEl.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,3);
   else if(styleEl.value === 'numbers') startEl.value = startEl.value.replace(/[^0-9]/g,'').slice(0,3);
+  vdAvoidLabelCollision(form);
 }
 
 // Remove individual seats from a reserved section, or put them back.
