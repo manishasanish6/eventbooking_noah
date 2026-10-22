@@ -295,6 +295,14 @@ body{
 .vd-canvas.vd-seat-edit .vd-el[data-vdkind="section"]{cursor:crosshair}
 .vd-seat.is-editable:hover{outline:2px solid var(--logo-red);outline-offset:1px;opacity:.75}
 
+/* Seat-pick mode: click seats to gather a selection for renumbering */
+.vd-canvas.vd-seat-pick .vd-seat.is-editable{pointer-events:auto;cursor:pointer}
+.vd-canvas.vd-seat-pick .vd-el[data-vdkind="section"]{cursor:pointer}
+.vd-seat.is-picked{background:var(--logo-purple) !important;border-color:#fff !important;
+  box-shadow:0 0 0 2px var(--logo-purple);z-index:5}
+.vd-seat.is-picked .vd-seat-no{color:#fff}
+.vd-pick-count{font-size:11px;font-weight:600;color:var(--gray);margin-left:8px;align-self:center}
+
 /* Seat picker: every seat position, click to remove / restore */
 .vd-seat-grid{display:flex;flex-wrap:wrap;gap:3px;align-items:center;margin-top:8px;
   max-height:150px;overflow-y:auto;padding:2px 0}
@@ -2055,6 +2063,9 @@ let vdSelectedId = null;        // currently selected element
 let vdDrag = null;              // drag state
 let vdResize = null;            // resize state
 let vdSeatEdit = false;         // seat-editing mode: delete individual seats
+let vdSeatPick = false;         // seat-picking mode: choose seats to renumber
+let vdPickedSeats = [];         // picked seats, in the order they were clicked
+let vdRenoScope = 'all';        // renumber target: all | row | pick
 
 function openVenueDesigner(){
   const ov = document.getElementById('vd-overlay');
@@ -2068,6 +2079,10 @@ function openVenueDesigner(){
 function closeVenueDesigner(){
   const ov = document.getElementById('vd-overlay');
   if(ov) ov.style.display = 'none';
+  // Leave any seat modes so reopening starts clean.
+  vdSeatEdit = false; vdSeatPick = false; vdPickedSeats = [];
+  const canvas = document.getElementById('vd-canvas');
+  if(canvas) canvas.classList.remove('vd-seat-edit','vd-seat-pick');
   // Mirror the designer map into the seat canvas so the existing seat/pricing
   // flow can still see what was drawn (elements are display-only for now).
   canvasElements = vdElements.slice();
@@ -2078,7 +2093,8 @@ function closeVenueDesigner(){
 function vdClearAll(){
   if(!vdElements.length){ showToast('Canvas is already empty','info'); return; }
   if(!confirm('Remove everything from the canvas?')) return;
-  vdElements = []; vdSelectedId = null;
+  vdElements = []; vdSelectedId = null; vdPickedSeats = [];
+  vdSeatPick = false; vdSeatEdit = false;
   renderVdCanvas(); renderVdEditPanel();
   showToast('Canvas cleared','success');
 }
@@ -2477,9 +2493,13 @@ function vdSectionSeatsHtml(el){
       const y = rowBaseY - arc;    // + curve raises, − curve lowers
       // Manual number if the organiser set one, otherwise the automatic label.
       const seatNo = vdSeatLabel(el, r, c);
-      // In seat-edit mode the seat itself is the click target.
-      const click = vdSeatEdit ? ` onclick="vdSeatToggle(event,'${el.id}',${r},${c})"` : '';
-      const cls = 'vd-seat' + (vdSeatEdit ? ' is-editable' : '');
+      // In seat-edit or seat-pick mode the seat itself is the click target.
+      const picked = vdSeatPick && vdIsSeatPicked(el.id, r, c);
+      const click = (vdSeatEdit || vdSeatPick)
+        ? (vdSeatPick ? ` onclick="vdSeatPickToggle(event,'${el.id}',${r},${c})"`
+                      : ` onclick="vdSeatToggle(event,'${el.id}',${r},${c})"`)
+        : '';
+      const cls = 'vd-seat' + (vdSeatEdit || vdSeatPick ? ' is-editable' : '') + (picked ? ' is-picked' : '');
       html += `<span class="${cls}" data-r="${r}" data-c="${c}" style="left:${Math.round(x)}px;top:${Math.round(y)}px;`
             + `width:${seatPx}px;height:${seatPx}px;background:${hexA(el.colour,.42)};`
             + `border:1px solid ${hexA(el.colour,.85)}"${click}>`
@@ -2515,8 +2535,12 @@ function vdMouseDown(e, id){
   const canvas = document.getElementById('vd-canvas');
   const el = vdElements.find(x=>x.id===id);
   if(!el) return;
-  // Seat-edit mode: clicking a seat removes it, so don't start a drag.
+  // Seat-edit / seat-pick mode: clicking a seat targets it, so don't drag.
   const seatNode = e.target.closest ? e.target.closest('.vd-seat') : null;
+  if(vdSeatPick && seatNode){
+    const r = +seatNode.dataset.r, c = +seatNode.dataset.c;
+    if(!isNaN(r) && !isNaN(c)){ vdSeatPickToggle(e, id, r, c); return; }
+  }
   if(vdSeatEdit && seatNode){
     const r = +seatNode.dataset.r, c = +seatNode.dataset.c;
     if(!isNaN(r) && !isNaN(c)){ vdSeatToggle(e, id, r, c); return; }
@@ -2663,13 +2687,23 @@ function renderVdEditPanel(){
         <div class="ei-row">
           <div><label>Step</label><input type="number" id="vd-reno-step" min="1" value="1"></div>
           <div><label>Apply to</label>
-            <select id="vd-reno-scope">
-              <option value="all">Whole section</option>
-              <option value="row">One row</option>
+            <select id="vd-reno-scope" onchange="vdRenumberScopeChange()">
+              <option value="all"${vdRenoScope==='all'?' selected':''}>Whole section</option>
+              <option value="row"${vdRenoScope==='row'?' selected':''}>One row</option>
+              <option value="pick"${vdRenoScope==='pick'?' selected':''}>Selection</option>
             </select></div>
         </div>
-        <div class="ei-row single">
+        <div class="ei-row single" id="vd-reno-row-wrap" style="display:${vdRenoScope==='row'?'':'none'}">
           <div><label>Row number (for "One row")</label><input type="number" id="vd-reno-row" min="1" max="${el.opts.rows||1}" value="1"></div>
+        </div>
+        <div class="ei-row single" id="vd-reno-pick-wrap" style="display:${vdRenoScope==='pick'?'':'none'}">
+          <div><label>Selected seats</label>
+            <div class="vd-dir">
+              <button type="button" class="vd-dir-btn${vdSeatPick?' on':''}" id="vd-reno-pick-btn"
+                      onclick="vdSetSeatPick()">${vdSeatPick ? '✓ Done selecting' : '⬚ Select seats'}</button>
+              <button type="button" class="vd-dir-btn" onclick="vdClearSeatPick()" title="Clear the selection">✕</button>
+              <span class="vd-pick-count">${vdPickedCount(el)} picked${vdSeatPick ? ' — click seats on the canvas' : ''}</span>
+            </div></div>
         </div>
         <div class="vd-edit-actions">
           <button class="primary" onclick="vdRenumberSeats()">🔢 Renumber seats</button>
@@ -3115,7 +3149,7 @@ function vdSeatToggle(e, elId, r, c){
   const v = id => document.getElementById(id);
   if(v('vd-capacity')) v('vd-capacity').value = el.opts.capacity;
   showToast(removed ? 'Seat removed' : 'Seat restored','info');
-  e.stopPropagation();
+  if(e && e.stopPropagation) e.stopPropagation();
 }
 
 // The whole block is clickable while deleting seats, so an empty spot
@@ -3124,14 +3158,63 @@ function vdSeatBlockClick(e, elId){
   if(!vdSeatEdit) return;
   vdSelectedId = elId;
   renderVdCanvas(); renderVdEditPanel();
-  e.stopPropagation();
+  if(e && e.stopPropagation) e.stopPropagation();
+}
+
+// ── Seat picking (for "Selection" renumbering) ────────────────
+// A separate mode from deleting seats: clicking a seat toggles it into
+// `vdPickedSeats`, which the renumber form then numbers in click order.
+
+function vdIsSeatPicked(elId, r, c){
+  const key = elId + ':' + vdSeatKey(r, c);
+  return vdPickedSeats.indexOf(key) !== -1;
+}
+
+function vdSeatPickToggle(e, elId, r, c){
+  if(!vdSeatPick) return;
+  const key = elId + ':' + vdSeatKey(r, c);
+  const i = vdPickedSeats.indexOf(key);
+  if(i === -1) vdPickedSeats.push(key);     // keep click order for numbering
+  else vdPickedSeats.splice(i,1);
+  vdSelectedId = elId;
+  renderVdCanvas(); renderVdEditPanel();
+  if(e && e.stopPropagation) e.stopPropagation();
+}
+
+// Turn picking on/off. Leaving pick mode keeps the chosen seats so the
+// numbers can still be applied.
+function vdSetSeatPick(on){
+  vdSeatPick = (typeof on === 'boolean') ? on : !vdSeatPick;
+  if(vdSeatPick) vdSeatEdit = false;        // the two modes are exclusive
+  const canvas = document.getElementById('vd-canvas');
+  if(canvas){
+    canvas.classList.toggle('vd-seat-pick', vdSeatPick);
+    canvas.classList.toggle('vd-seat-edit', vdSeatEdit);
+  }
+  renderVdCanvas(); renderVdEditPanel();
+  if(vdSeatPick) showToast('Click the seats you want to renumber','info');
+}
+
+function vdClearSeatPick(){
+  vdPickedSeats = [];
+  renderVdCanvas(); renderVdEditPanel();
+}
+
+// How many seats are picked inside one section.
+function vdPickedCount(el){
+  const pre = el.id + ':';
+  return vdPickedSeats.filter(k => k.indexOf(pre) === 0).length;
 }
 
 function vdToggleSeatEdit(on){
   const el = vdElements.find(x=>x.id===vdSelectedId);
   vdSeatEdit = (typeof on === 'boolean') ? on : !vdSeatEdit;
+  if(vdSeatEdit) vdSeatPick = false;        // the two modes are exclusive
   const canvas = document.getElementById('vd-canvas');
-  if(canvas) canvas.classList.toggle('vd-seat-edit', vdSeatEdit);
+  if(canvas){
+    canvas.classList.toggle('vd-seat-edit', vdSeatEdit);
+    canvas.classList.toggle('vd-seat-pick', vdSeatPick);
+  }
   renderVdCanvas(); renderVdEditPanel();
   if(!el || el.type!=='section') return;
   if(vdSeatEdit) showToast('Click seats to remove them','info');
@@ -3183,7 +3266,7 @@ function vdRenumberSeats(){
   const startRaw = ((v('vd-reno-start')||{}).value || '').trim();
   const start = pre === 'letters' ? (startRaw.toUpperCase() || 'A') : vdStyleNum(startRaw);
   const step  = Math.max(1, +((v('vd-reno-step')||{}).value) || 1);
-  const scope = (v('vd-reno-scope')||{}).value || 'all';
+  const scope = vdRenoScope;
 
   const rows = Math.max(0, el.opts.rows||0);
   const cols = Math.max(0, el.opts.cols||0);
@@ -3199,7 +3282,22 @@ function vdRenumberSeats(){
     }
   };
 
-  if(scope === 'row'){
+  if(scope === 'pick'){
+    // Number only the picked seats, in the order they were clicked.
+    const keys = vdPickedSeats.filter(k => k.indexOf(el.id + ':') === 0);
+    if(!keys.length){
+      showToast('No seats selected — click ⬚ Select seats first','info');
+      return;
+    }
+    keys.forEach((k, i) => {
+      const pos = k.split(':')[1];                     // "r,c"
+      const [rs, cs] = pos.split(',');
+      const r = +rs, c = +cs;
+      if(vdSeatRemoved(el, r, c)) return;              // gone; leave it alone
+      el.opts.seat_labels[vdSeatLabelKey(r, c)] = vdMakeLabel(pre, start, i * step);
+    });
+    showToast('Renumbered ' + keys.length + ' selected seat' + (keys.length===1?'':'s'),'success');
+  } else if(scope === 'row'){
     const r = Math.max(0, Math.min(rows-1, +((v('vd-reno-row')||{}).value) || 1)) - 1;
     applyRow(r);
     showToast('Renumbered row ' + (r+1),'success');
@@ -3209,6 +3307,17 @@ function vdRenumberSeats(){
   }
 
   renderVdCanvas(); renderVdEditPanel();
+}
+
+// Show only the fields the chosen scope actually uses. The choice is kept in
+// vdRenoScope so it survives the panel re-rendering after every click.
+function vdRenumberScopeChange(){
+  vdRenoScope = (document.getElementById('vd-reno-scope')||{}).value || 'all';
+  const rowWrap  = document.getElementById('vd-reno-row-wrap');
+  const pickWrap = document.getElementById('vd-reno-pick-wrap');
+  if(rowWrap)  rowWrap.style.display  = vdRenoScope === 'row'  ? '' : 'none';
+  if(pickWrap) pickWrap.style.display = vdRenoScope === 'pick' ? '' : 'none';
+  vdSetSeatPick(vdRenoScope === 'pick');    // picking starts straight away
 }
 
 // Prefix style in the renumber form: swap the "First" box between 1 and A.
