@@ -290,6 +290,28 @@ body{
 .vd-row-label{position:absolute;transform:translateY(-50%);font-size:9.5px;font-weight:700;
   color:var(--gray);letter-spacing:.04em;pointer-events:none;white-space:nowrap}
 
+/* Seat-edit mode: seats become clickable so any of them can be deleted */
+.vd-canvas.vd-seat-edit .vd-seat.is-editable{pointer-events:auto;cursor:crosshair}
+.vd-canvas.vd-seat-edit .vd-el[data-vdkind="section"]{cursor:crosshair}
+.vd-seat.is-editable:hover{outline:2px solid var(--logo-red);outline-offset:1px;opacity:.75}
+
+/* Seat picker: every seat position, click to remove / restore */
+.vd-seat-grid{display:flex;flex-wrap:wrap;gap:3px;align-items:center;margin-top:8px;
+  max-height:150px;overflow-y:auto;padding:2px 0}
+.vd-seat-grid-row{font-size:9px;font-weight:700;color:var(--gray);min-width:16px;
+  letter-spacing:.04em;padding-right:2px}
+.vd-seat-pick{font-family:var(--font-b);font-size:8.5px;line-height:1;padding:3px 4px;
+  min-width:22px;border:1px solid rgba(0,0,0,.18);background:#fff;color:var(--text-on-light);
+  cursor:pointer;border-radius:2px;transition:background .12s,border-color .12s}
+.vd-seat-pick:hover{border-color:var(--logo-red);color:var(--logo-red)}
+.vd-seat-pick.is-gone{background:rgba(255,62,55,.12);border-color:rgba(255,62,55,.45);
+  color:var(--logo-red);text-decoration:line-through;opacity:.75}
+.vd-seat-edit-btn{font-family:var(--font-b);font-size:9px;font-weight:600;letter-spacing:.06em;
+  padding:4px 8px;border:1px solid rgba(0,0,0,.18);background:#fff;color:var(--text-on-light);
+  cursor:pointer;border-radius:2px;text-transform:uppercase;transition:all .15s}
+.vd-seat-edit-btn:hover{border-color:var(--logo-red);color:var(--logo-red)}
+.vd-seat-edit-btn.on{background:var(--logo-red);border-color:var(--logo-red);color:#fff}
+
 /* Setup panel in the rail (asks for rows/seats before creating) */
 .vd-setup{display:none;border-top:1px solid var(--line);padding-top:14px}
 .vd-setup-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
@@ -2011,6 +2033,7 @@ let vdElements = [];            // [{id,type,x,y,w,h,label,colour,opts}]
 let vdSelectedId = null;        // currently selected element
 let vdDrag = null;              // drag state
 let vdResize = null;            // resize state
+let vdSeatEdit = false;         // seat-editing mode: delete individual seats
 
 function openVenueDesigner(){
   const ov = document.getElementById('vd-overlay');
@@ -2080,7 +2103,7 @@ function vdConfirmAdd(){
       opts:{ admission:admit, rows, cols, capacity:cap,
              prefix:seatPre, seat_prefix:seatPre, seat_start:seatStart,
              row_prefix:rowPre, row_start:rowStart,
-             curve, skew, align },
+             curve, skew, align, removedSeats:[] },
     });
   } else if(type === 'table'){
     const seats  = Math.max(0, Math.min(40, +((v('vd-t-seats')||{}).value) || 0));
@@ -2313,10 +2336,13 @@ function renderVdCanvas(){
       // shaped by the curve / skew / alignment settings.
       seats = vdSectionSeatsHtml(el);
     }
+    const live = vdLiveSeatCount(el);
+    const gone = (el.opts.removedSeats||[]).length;
     const sub = el.type==='table' ? `${el.opts.tableSeats||0} seats`
               : el.type==='section' ? (el.opts.admission==='ga'
                   ? `${el.opts.capacity||0} occupancy · GA`
-                  : `${el.opts.rows||0} × ${el.opts.cols||0} = ${el.opts.capacity||0} seats`)
+                  : `${el.opts.rows||0} × ${el.opts.cols||0} = ${live} seats`
+                    + (gone ? ` · ${gone} removed` : ''))
               : '';
     d.innerHTML = seats
       + `<span class="vd-el-label">${escapeHtml(el.label)}`
@@ -2326,6 +2352,7 @@ function renderVdCanvas(){
     d.addEventListener('mousedown', e=>vdMouseDown(e, el.id));
     d.addEventListener('click', e=>{
       if(vdDrag && vdDrag.moved) return;
+      if(vdSeatEdit && el.type==='section'){ vdSeatBlockClick(e, el.id); return; }
       vdSelectedId = el.id; renderVdCanvas(); renderVdEditPanel(); e.stopPropagation();
     });
     d.querySelector('.vd-el-handle').addEventListener('mousedown', e=>vdResizeDown(e, el.id));
@@ -2390,15 +2417,19 @@ function vdSectionSeatsHtml(el){
     }
 
     for(let c=0;c<cols;c++){
+      if(vdSeatRemoved(el, r, c)) continue;   // seat was deleted from this section
       const x = startX + c*(seatPx + baseGap);
       // Arc across the row: 0 at both ends, ±curveLift in the middle.
       const t = cols > 1 ? c/(cols-1) : 0.5;
       const arc = curveLift * Math.sin(Math.PI * t);
       const y = rowBaseY - arc;    // + curve raises, − curve lowers
       const seatNo = seatPre ? (seatPre + (seatStart + c)) : '';
-      html += `<span class="vd-seat" style="left:${Math.round(x)}px;top:${Math.round(y)}px;`
+      // In seat-edit mode the seat itself is the click target.
+      const click = vdSeatEdit ? ` onclick="vdSeatToggle(event,'${el.id}',${r},${c})"` : '';
+      const cls = 'vd-seat' + (vdSeatEdit ? ' is-editable' : '');
+      html += `<span class="${cls}" data-r="${r}" data-c="${c}" style="left:${Math.round(x)}px;top:${Math.round(y)}px;`
             + `width:${seatPx}px;height:${seatPx}px;background:${hexA(el.colour,.42)};`
-            + `border:1px solid ${hexA(el.colour,.85)}">`
+            + `border:1px solid ${hexA(el.colour,.85)}"${click}>`
             + (seatNo ? `<i class="vd-seat-no">${escapeHtml(seatNo)}</i>` : '')
             + `</span>`;
     }
@@ -2431,6 +2462,12 @@ function vdMouseDown(e, id){
   const canvas = document.getElementById('vd-canvas');
   const el = vdElements.find(x=>x.id===id);
   if(!el) return;
+  // Seat-edit mode: clicking a seat removes it, so don't start a drag.
+  const seatNode = e.target.closest ? e.target.closest('.vd-seat') : null;
+  if(vdSeatEdit && seatNode){
+    const r = +seatNode.dataset.r, c = +seatNode.dataset.c;
+    if(!isNaN(r) && !isNaN(c)){ vdSeatToggle(e, id, r, c); return; }
+  }
   const cr = canvas.getBoundingClientRect();
   // Include scroll offsets so a scrolled canvas doesn't make the item jump.
   const sx = canvas.parentElement ? canvas.parentElement.scrollLeft : 0;
@@ -2537,6 +2574,21 @@ function renderVdEditPanel(){
       <div class="ei-row">
         <div><label>Rows</label><input type="number" id="vd-rows" min="1" max="40" value="${el.opts.rows||1}"></div>
         <div><label>Seats per row</label><input type="number" id="vd-cols" min="1" max="60" value="${el.opts.cols||1}"></div>
+      </div>
+      <div class="vd-layout-group">
+        <div class="vd-layout-title">
+          <span>Seats <b id="vd-live-count">${vdLiveSeatCount(el)}</b> of ${(el.opts.rows||0)*(el.opts.cols||0)}</span>
+          <button type="button" class="vd-seat-edit-btn${vdSeatEdit?' on':''}"
+                  onclick="vdToggleSeatEdit()">${vdSeatEdit ? '✓ Done deleting' : '✕ Delete seats'}</button>
+        </div>
+        <div class="vd-setup-hint">${vdSeatEdit
+          ? 'Click a seat to remove it. Click a removed seat to put it back.'
+          : 'Turn this on, then click any seat to remove it — or use the grid below.'}</div>
+        ${vdSeatPickerHtml(el)}
+        ${(el.opts.removedSeats||[]).length ? `
+        <div class="vd-edit-actions">
+          <button class="danger" onclick="vdRestoreAllSeats()">↺ Restore all ${(el.opts.removedSeats||[]).length} seats</button>
+        </div>` : ''}
       </div>`}
       <div class="ei-row single">
         <div><label>Section prefix</label><input id="vd-prefix" value="${escapeAttr(el.opts.prefix||'')}" placeholder="Balcony 1"></div>
@@ -2631,6 +2683,8 @@ function vdApply(){
       if(v('vd-capacity')) el.opts.capacity = +v('vd-capacity').value || 0;
     } else {
       if(v('vd-rows') || v('vd-cols')) el.opts.capacity = el.opts.rows * el.opts.cols;
+      // Capacity should never count seats the organiser deleted.
+      el.opts.capacity = vdLiveSeatCount(el);
       const size = vdSectionSize(el.opts.rows, el.opts.cols, el.opts.skew, el.opts.curve, el.opts.align);
       el.w = size.w; el.h = size.h;   // keep the block tight around its seats
     }
@@ -2701,6 +2755,107 @@ function vdDelete(){
   vdSelectedId = null;
   renderVdCanvas(); renderVdEditPanel();
   if(el) showToast('Removed ' + el.label,'success');
+}
+
+// ── Seat editing ──────────────────────────────────────────────
+// Remove individual seats from a reserved section, or put them back.
+// `removed` is a Set of seat keys "r,c" so the layout can be reshaped
+// (rows, curve, skew…) without losing the deletions.
+function vdSeatKey(r, c){ return r + ',' + c; }
+
+function vdSeatRemoved(el, r, c){
+  return !!(el.opts.removedSeats && el.opts.removedSeats.indexOf(vdSeatKey(r,c)) !== -1);
+}
+
+// How many seats in this section are actually still there.
+function vdLiveSeatCount(el){
+  if(!el || el.type!=='section' || el.opts.admission === 'ga') return 0;
+  const rows = Math.max(0, el.opts.rows||0);
+  const cols = Math.max(0, el.opts.cols||0);
+  const gone = (el.opts.removedSeats||[]).length;
+  return Math.max(0, rows*cols - gone);
+}
+
+// Click a seat to remove / restore it. Called from the seat element itself.
+function vdSeatToggle(e, elId, r, c){
+  if(!vdSeatEdit) return;                 // only active in Delete seats mode
+  const el = vdElements.find(x=>x.id===elId);
+  if(!el) return;
+  if(!el.opts.removedSeats) el.opts.removedSeats = [];
+  const key = vdSeatKey(r, c);
+  const i = el.opts.removedSeats.indexOf(key);
+  let removed;
+  if(i === -1){ el.opts.removedSeats.push(key); removed = true; }
+  else { el.opts.removedSeats.splice(i,1); removed = false; }
+
+  // Keep the capacity in step with the seats that are really there.
+  el.opts.capacity = vdLiveSeatCount(el);
+  vdSelectedId = elId;
+  renderVdCanvas(); renderVdEditPanel();
+
+  const v = id => document.getElementById(id);
+  if(v('vd-capacity')) v('vd-capacity').value = el.opts.capacity;
+  showToast(removed ? 'Seat removed' : 'Seat restored','info');
+  e.stopPropagation();
+}
+
+// The whole block is clickable while deleting seats, so an empty spot
+// still selects the section rather than deselecting everything.
+function vdSeatBlockClick(e, elId){
+  if(!vdSeatEdit) return;
+  vdSelectedId = elId;
+  renderVdCanvas(); renderVdEditPanel();
+  e.stopPropagation();
+}
+
+function vdToggleSeatEdit(on){
+  const el = vdElements.find(x=>x.id===vdSelectedId);
+  vdSeatEdit = (typeof on === 'boolean') ? on : !vdSeatEdit;
+  const canvas = document.getElementById('vd-canvas');
+  if(canvas) canvas.classList.toggle('vd-seat-edit', vdSeatEdit);
+  renderVdCanvas(); renderVdEditPanel();
+  if(!el || el.type!=='section') return;
+  if(vdSeatEdit) showToast('Click seats to remove them','info');
+}
+
+// Put every deleted seat back in the selected section.
+function vdRestoreAllSeats(){
+  const el = vdElements.find(x=>x.id===vdSelectedId);
+  if(!el || el.type!=='section') return;
+  const n = (el.opts.removedSeats||[]).length;
+  el.opts.removedSeats = [];
+  el.opts.capacity = vdLiveSeatCount(el);
+  renderVdCanvas(); renderVdEditPanel();
+  const v = id => document.getElementById(id);
+  if(v('vd-capacity')) v('vd-capacity').value = el.opts.capacity;
+  if(n) showToast(n === 1 ? 'Seat restored' : n + ' seats restored','success');
+}
+
+// Grid of every seat position, so any seat can be removed or restored.
+function vdSeatPickerHtml(el){
+  const rows = Math.max(0, el.opts.rows||0);
+  const cols = Math.max(0, el.opts.cols||0);
+  if(!rows || !cols) return '<div class="vd-setup-hint">Set rows and seats per row first.</div>';
+
+  const rowPre    = (el.opts.row_prefix || '').trim();
+  const rowStart  = Math.max(1, +el.opts.row_start || 1);
+  const seatPre   = (el.opts.seat_prefix || el.opts.prefix || '').trim();
+  const seatStart = Math.max(1, +el.opts.seat_start || 1);
+
+  let html = '<div class="vd-seat-grid">';
+  for(let r=0;r<rows;r++){
+    const rowLabel = rowPre ? (rowPre + (rowStart + r)) : '';
+    if(rowLabel) html += `<span class="vd-seat-grid-row">${escapeHtml(rowLabel)}</span>`;
+    for(let c=0;c<cols;c++){
+      const gone = vdSeatRemoved(el, r, c);
+      const seatNo = seatPre ? (seatPre + (seatStart + c)) : ('R' + (r+1) + 'S' + (c+1));
+      html += `<button type="button" class="vd-seat-pick${gone?' is-gone':''}"`
+            + ` title="${escapeAttr(seatNo + (gone ? ' — removed' : ''))}"`
+            + ` onclick="vdSeatToggle(event,'${el.id}',${r},${c})">${escapeHtml(seatNo)}</button>`;
+    }
+  }
+  html += '</div>';
+  return html;
 }
 function renderCanvasElements(){
   const canvas=document.getElementById('seat-canvas');
