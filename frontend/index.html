@@ -312,6 +312,15 @@ body{
 .vd-seat-edit-btn:hover{border-color:var(--logo-red);color:var(--logo-red)}
 .vd-seat-edit-btn.on{background:var(--logo-red);border-color:var(--logo-red);color:#fff}
 
+/* Direction toggle: number the rows up/down, or the seats left/right */
+.vd-dir{display:flex;gap:3px;align-items:stretch}
+.vd-dir input[type=number]{flex:1;min-width:0}
+.vd-dir-btn{font-family:var(--font-b);font-size:10px;line-height:1;padding:0 7px;
+  border:1px solid rgba(0,0,0,.18);background:#fff;color:var(--text-on-light);
+  cursor:pointer;border-radius:2px;transition:all .12s}
+.vd-dir-btn:hover{border-color:var(--logo-purple);color:var(--logo-purple)}
+.vd-dir-btn.on{background:var(--logo-purple);border-color:var(--logo-purple);color:#fff}
+
 /* Setup panel in the rail (asks for rows/seats before creating) */
 .vd-setup{display:none;border-top:1px solid var(--line);padding-top:14px}
 .vd-setup-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
@@ -2087,8 +2096,10 @@ function vdConfirmAdd(){
     const label = ((v('vd-s-label')||{}).value || '').trim() || vdNextLabel('section');
     const rowPre   = ((v('vd-s-rowpre')||{}).value || '').trim();
     const rowStart = Math.max(1, +((v('vd-s-rowstart')||{}).value) || 1);
+    const rowDir   = ((v('vd-s-rowdir')||{}).value === 'up') ? 'up' : 'down';
     const seatPre  = ((v('vd-s-prefix')||{}).value || '').trim();
     const seatStart= Math.max(1, +((v('vd-s-start')||{}).value) || 1);
+    const seatDir  = ((v('vd-s-seatdir')||{}).value === 'rtl') ? 'rtl' : 'ltr';
     const colour= (v('vd-s-colour')||{}).value || ELEMENT_TOOLS.section.colour;
     const curve = +((v('vd-s-curve')||{}).value) || 0;
     const skew  = +((v('vd-s-skew')||{}).value) || 0;
@@ -2101,8 +2112,8 @@ function vdConfirmAdd(){
     el = vdMakeElement({
       type:'section', w:size.w, h:size.h, label, colour,
       opts:{ admission:admit, rows, cols, capacity:cap,
-             prefix:seatPre, seat_prefix:seatPre, seat_start:seatStart,
-             row_prefix:rowPre, row_start:rowStart,
+             prefix:seatPre, seat_prefix:seatPre, seat_start:seatStart, seat_dir:seatDir,
+             row_prefix:rowPre, row_start:rowStart, row_dir:rowDir,
              curve, skew, align, removedSeats:[] },
     });
   } else if(type === 'table'){
@@ -2179,11 +2190,23 @@ function renderVdSetupPanel(){
       </div>
       <div class="ei-row">
         <div><label>Row prefix</label><input id="vd-s-rowpre" placeholder="e.g. A" maxlength="4"></div>
-        <div><label>Row start with</label><input type="number" id="vd-s-rowstart" min="1" value="1"></div>
+        <div><label>Row start with</label>
+          <div class="vd-dir">
+            <input type="number" id="vd-s-rowstart" min="1" value="1">
+            <input type="hidden" id="vd-s-rowdir" value="down">
+            <button type="button" class="vd-dir-btn" id="vd-s-rowdir-up"   title="Top row first"    onclick="vdSetDir('vd-s-rowdir','up',['vd-s-rowdir-up','vd-s-rowdir-down'])">▲</button>
+            <button type="button" class="vd-dir-btn on" id="vd-s-rowdir-down" title="Bottom row first" onclick="vdSetDir('vd-s-rowdir','down',['vd-s-rowdir-up','vd-s-rowdir-down'])">▼</button>
+          </div></div>
       </div>
       <div class="ei-row">
         <div><label>Seat prefix</label><input id="vd-s-prefix" placeholder="e.g. 1" maxlength="4"></div>
-        <div><label>Seat start with</label><input type="number" id="vd-s-start" min="1" value="1"></div>
+        <div><label>Seat start with</label>
+          <div class="vd-dir">
+            <input type="number" id="vd-s-start" min="1" value="1">
+            <input type="hidden" id="vd-s-seatdir" value="ltr">
+            <button type="button" class="vd-dir-btn on" id="vd-s-seatdir-ltr" title="Left seat first"  onclick="vdSetDir('vd-s-seatdir','ltr',['vd-s-seatdir-ltr','vd-s-seatdir-rtl'])">◀</button>
+            <button type="button" class="vd-dir-btn" id="vd-s-seatdir-rtl" title="Right seat first" onclick="vdSetDir('vd-s-seatdir','rtl',['vd-s-seatdir-ltr','vd-s-seatdir-rtl'])">▶</button>
+          </div></div>
       </div>
       <div class="ei-row single">
         <div><label>Colour</label><input type="color" id="vd-s-colour" value="${ELEMENT_TOOLS.section.colour}"></div>
@@ -2390,6 +2413,13 @@ function vdSectionSeatsHtml(el){
   const rowStart  = Math.max(1, +o.row_start || 1);
   const seatPre   = (o.seat_prefix || o.prefix || '').trim();
   const seatStart = Math.max(1, +o.seat_start || 1);
+  // Direction the numbering runs in:
+  //   row_dir  'down' — top row gets the first number (default)
+  //            'up'   — bottom row gets the first number
+  //   seat_dir 'ltr'  — leftmost seat gets the first number (default)
+  //            'rtl'  — rightmost seat gets the first number
+  const rowDir  = o.row_dir === 'up' ? 'up' : 'down';
+  const seatDir = o.seat_dir === 'rtl' ? 'rtl' : 'ltr';
 
   const inner   = Math.max(1, el.w - pad*2);
   const baseGap = gapPx + ((seatPx + gapPx) * (skew/100) * 0.9);
@@ -2410,8 +2440,10 @@ function vdSectionSeatsHtml(el){
     const rowBaseY = topPad + r*(seatPx + gapPx + rowRise);
 
     // Row label sits to the left of the row, at its baseline.
+    // For an "up" direction the bottom row is numbered first.
     if(rowPre){
-      const rowLabel = rowPre + (rowStart + r);
+      const rowIdx = rowDir === 'up' ? (rows - 1 - r) : r;
+      const rowLabel = rowPre + (rowStart + rowIdx);
       html += `<span class="vd-row-label" style="left:${Math.round(pad - 20)}px;`
             + `top:${Math.round(rowBaseY + seatPx/2)}px">${escapeHtml(rowLabel)}</span>`;
     }
@@ -2423,7 +2455,7 @@ function vdSectionSeatsHtml(el){
       const t = cols > 1 ? c/(cols-1) : 0.5;
       const arc = curveLift * Math.sin(Math.PI * t);
       const y = rowBaseY - arc;    // + curve raises, − curve lowers
-      const seatNo = seatPre ? (seatPre + (seatStart + c)) : '';
+      const seatNo = seatPre ? (seatPre + (seatStart + (seatDir === 'rtl' ? (cols-1-c) : c))) : '';
       // In seat-edit mode the seat itself is the click target.
       const click = vdSeatEdit ? ` onclick="vdSeatToggle(event,'${el.id}',${r},${c})"` : '';
       const cls = 'vd-seat' + (vdSeatEdit ? ' is-editable' : '');
@@ -2595,11 +2627,23 @@ function renderVdEditPanel(){
       </div>
       <div class="ei-row">
         <div><label>Row prefix</label><input id="vd-rowpre" value="${escapeAttr(el.opts.row_prefix||'')}" placeholder="e.g. A" maxlength="4"></div>
-        <div><label>Row start with</label><input type="number" id="vd-rowstart" min="1" value="${el.opts.row_start||1}"></div>
+        <div><label>Row start with</label>
+          <div class="vd-dir">
+            <input type="number" id="vd-rowstart" min="1" value="${el.opts.row_start||1}">
+            <input type="hidden" id="vd-rowdir" value="${el.opts.row_dir==='up'?'up':'down'}">
+            <button type="button" class="vd-dir-btn${el.opts.row_dir==='up'?' on':''}" id="vd-rowdir-up"   title="Top row first"    onclick="vdSetDir('vd-rowdir','up',['vd-rowdir-up','vd-rowdir-down'])">▲</button>
+            <button type="button" class="vd-dir-btn${el.opts.row_dir==='up'?'':' on'}" id="vd-rowdir-down" title="Bottom row first" onclick="vdSetDir('vd-rowdir','down',['vd-rowdir-up','vd-rowdir-down'])">▼</button>
+          </div></div>
       </div>
       <div class="ei-row">
         <div><label>Seat prefix</label><input id="vd-seatpre" value="${escapeAttr(el.opts.seat_prefix||el.opts.prefix||'')}" placeholder="e.g. 1" maxlength="4"></div>
-        <div><label>Seat start with</label><input type="number" id="vd-seatstart" min="1" value="${el.opts.seat_start||1}"></div>
+        <div><label>Seat start with</label>
+          <div class="vd-dir">
+            <input type="number" id="vd-seatstart" min="1" value="${el.opts.seat_start||1}">
+            <input type="hidden" id="vd-seatdir" value="${el.opts.seat_dir==='rtl'?'rtl':'ltr'}">
+            <button type="button" class="vd-dir-btn${el.opts.seat_dir==='rtl'?'':' on'}" id="vd-seatdir-ltr" title="Left seat first"  onclick="vdSetDir('vd-seatdir','ltr',['vd-seatdir-ltr','vd-seatdir-rtl'])">◀</button>
+            <button type="button" class="vd-dir-btn${el.opts.seat_dir==='rtl'?' on':''}" id="vd-seatdir-rtl" title="Right seat first" onclick="vdSetDir('vd-seatdir','rtl',['vd-seatdir-ltr','vd-seatdir-rtl'])">▶</button>
+          </div></div>
       </div>
       ${isGa ? '' : `
       <div class="vd-layout-group">
@@ -2671,8 +2715,10 @@ function vdApply(){
     if(v('vd-prefix'))    el.opts.prefix      = v('vd-prefix').value;
     if(v('vd-rowpre'))    el.opts.row_prefix  = v('vd-rowpre').value;
     if(v('vd-rowstart'))  el.opts.row_start   = Math.max(1, +v('vd-rowstart').value || 1);
+    if(v('vd-rowdir'))    el.opts.row_dir     = v('vd-rowdir').value === 'up' ? 'up' : 'down';
     if(v('vd-seatpre'))   el.opts.seat_prefix = v('vd-seatpre').value;
     if(v('vd-seatstart')) el.opts.seat_start  = Math.max(1, +v('vd-seatstart').value || 1);
+    if(v('vd-seatdir'))   el.opts.seat_dir    = v('vd-seatdir').value === 'rtl' ? 'rtl' : 'ltr';
     // Layout: rows / seats rebuild the grid, curve + skew + align reshape it.
     if(v('vd-rows'))  el.opts.rows = Math.max(1, Math.min(40, +v('vd-rows').value || 1));
     if(v('vd-cols'))  el.opts.cols = Math.max(1, Math.min(60, +v('vd-cols').value || 1));
@@ -2755,6 +2801,16 @@ function vdDelete(){
   vdSelectedId = null;
   renderVdCanvas(); renderVdEditPanel();
   if(el) showToast('Removed ' + el.label,'success');
+}
+
+// Numbering direction toggles: which row / which seat gets the first number.
+function vdSetDir(hiddenId, value, btnIds){
+  const h = document.getElementById(hiddenId);
+  if(h) h.value = value;
+  (btnIds||[]).forEach(id=>{
+    const b = document.getElementById(id);
+    if(b) b.classList.toggle('on', b.id === hiddenId + '-' + value);
+  });
 }
 
 // ── Seat editing ──────────────────────────────────────────────
