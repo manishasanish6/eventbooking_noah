@@ -2106,11 +2106,13 @@ function vdConfirmAdd(){
     const cols  = Math.max(1, Math.min(60, +((v('vd-s-cols')||{}).value) || 1));
     const admit = (v('vd-s-admission')||{}).value || 'reserved';
     const label = ((v('vd-s-label')||{}).value || '').trim() || vdNextLabel('section');
-    const rowPre   = ((v('vd-s-rowpre')||{}).value || '').trim();
-    const rowStart = Math.max(1, +((v('vd-s-rowstart')||{}).value) || 1);
+    const rowStyle = ((v('vd-s-rowpre')||{}).value || '');
+    const rowStartRaw = ((v('vd-s-rowstart')||{}).value || '').trim();
+    const rowStart = rowStyle === 'letters' ? rowStartRaw.toUpperCase() || 'A' : vdStyleNum(rowStartRaw);
     const rowDir   = ((v('vd-s-rowdir')||{}).value === 'up') ? 'up' : 'down';
-    const seatPre  = ((v('vd-s-prefix')||{}).value || '').trim();
-    const seatStart= Math.max(1, +((v('vd-s-start')||{}).value) || 1);
+    const seatStyle= ((v('vd-s-prefix')||{}).value || '');
+    const seatStartRaw = ((v('vd-s-start')||{}).value || '').trim();
+    const seatStart= seatStyle === 'letters' ? seatStartRaw.toUpperCase() || 'A' : vdStyleNum(seatStartRaw);
     const seatDir  = ((v('vd-s-seatdir')||{}).value === 'rtl') ? 'rtl' : 'ltr';
     const colour= (v('vd-s-colour')||{}).value || ELEMENT_TOOLS.section.colour;
     const curve = +((v('vd-s-curve')||{}).value) || 0;
@@ -2124,8 +2126,8 @@ function vdConfirmAdd(){
     el = vdMakeElement({
       type:'section', w:size.w, h:size.h, label, colour,
       opts:{ admission:admit, rows, cols, capacity:cap,
-             prefix:seatPre, seat_prefix:seatPre, seat_start:seatStart, seat_dir:seatDir,
-             row_prefix:rowPre, row_start:rowStart, row_dir:rowDir,
+             prefix:seatStyle, seat_prefix:seatStyle, seat_start:seatStart, seat_dir:seatDir,
+             row_prefix:rowStyle, row_start:rowStart, row_dir:rowDir,
              curve, skew, align, removedSeats:[] },
     });
   } else if(type === 'table'){
@@ -2201,20 +2203,30 @@ function renderVdSetupPanel(){
         <div><label>Section name</label><input id="vd-s-label" placeholder="e.g. Balcony 1"></div>
       </div>
       <div class="ei-row">
-        <div><label>Row prefix</label><input id="vd-s-rowpre" placeholder="e.g. A" maxlength="4"></div>
+        <div><label>Row prefix</label>
+          <select id="vd-s-rowpre" onchange="vdPrefixStyleChange('s','row')">
+            <option value="" selected>None</option>
+            <option value="letters">A,B,C</option>
+            <option value="numbers">1,2,3</option>
+          </select></div>
         <div><label>Row start with</label>
           <div class="vd-dir">
-            <input type="number" id="vd-s-rowstart" min="1" value="1">
+            <input id="vd-s-rowstart" maxlength="3" value="1" oninput="vdStartTyped('s','row')">
             <input type="hidden" id="vd-s-rowdir" value="down">
             <button type="button" class="vd-dir-btn" id="vd-s-rowdir-up"   title="Top row first"    onclick="vdSetDir('vd-s-rowdir','up',['vd-s-rowdir-up','vd-s-rowdir-down'])">▲</button>
             <button type="button" class="vd-dir-btn on" id="vd-s-rowdir-down" title="Bottom row first" onclick="vdSetDir('vd-s-rowdir','down',['vd-s-rowdir-up','vd-s-rowdir-down'])">▼</button>
           </div></div>
       </div>
       <div class="ei-row">
-        <div><label>Seat prefix</label><input id="vd-s-prefix" placeholder="e.g. 1" maxlength="4"></div>
+        <div><label>Seat prefix</label>
+          <select id="vd-s-prefix" onchange="vdPrefixStyleChange('s','seat')">
+            <option value="" selected>None</option>
+            <option value="letters">A,B,C</option>
+            <option value="numbers">1,2,3</option>
+          </select></div>
         <div><label>Seat start with</label>
           <div class="vd-dir">
-            <input type="number" id="vd-s-start" min="1" value="1">
+            <input id="vd-s-start" maxlength="3" value="1" oninput="vdStartTyped('s','seat')">
             <input type="hidden" id="vd-s-seatdir" value="ltr">
             <button type="button" class="vd-dir-btn on" id="vd-s-seatdir-ltr" title="Left seat first"  onclick="vdSetDir('vd-s-seatdir','ltr',['vd-s-seatdir-ltr','vd-s-seatdir-rtl'])">◀</button>
             <button type="button" class="vd-dir-btn" id="vd-s-seatdir-rtl" title="Right seat first" onclick="vdSetDir('vd-s-seatdir','rtl',['vd-s-seatdir-ltr','vd-s-seatdir-rtl'])">▶</button>
@@ -2644,8 +2656,13 @@ function renderVdEditPanel(){
         <div class="vd-setup-hint">Give a seat its own number below, or renumber a whole row / section in one go. Renumbering skips deleted seats.</div>
         ${vdSeatNumbersHtml(el)}
         <div class="ei-row">
-          <div><label>Prefix</label><input id="vd-reno-pre" placeholder="e.g. A" maxlength="4" value="${escapeAttr(el.opts.seat_prefix||el.opts.prefix||'')}"></div>
-          <div><label>First number</label><input type="number" id="vd-reno-start" min="1" value="${Math.max(1,+el.opts.seat_start||1)}"></div>
+          <div><label>Prefix</label>
+            <select id="vd-reno-pre" onchange="vdRenumberStyleChange()">
+              <option value="">None</option>
+              <option value="letters"${el.opts.seat_prefix==='letters'?' selected':''}>A,B,C</option>
+              <option value="numbers"${(el.opts.seat_prefix||'numbers')==='numbers'?' selected':''}>1,2,3</option>
+            </select></div>
+          <div><label>First</label><input id="vd-reno-start" maxlength="3" value="${escapeAttr(el.opts.seat_start||1)}"></div>
         </div>
         <div class="ei-row">
           <div><label>Step</label><input type="number" id="vd-reno-step" min="1" value="1"></div>
@@ -2666,20 +2683,30 @@ function renderVdEditPanel(){
         <div><label>Section prefix</label><input id="vd-prefix" value="${escapeAttr(el.opts.prefix||'')}" placeholder="Balcony 1"></div>
       </div>
       <div class="ei-row">
-        <div><label>Row prefix</label><input id="vd-rowpre" value="${escapeAttr(el.opts.row_prefix||'')}" placeholder="e.g. A" maxlength="4"></div>
+        <div><label>Row prefix</label>
+          <select id="vd-rowpre" onchange="vdPrefixStyleChange('e','row')">
+            <option value="">None</option>
+            <option value="letters"${el.opts.row_prefix==='letters'?' selected':''}>A,B,C</option>
+            <option value="numbers"${(el.opts.row_prefix||'')==='numbers'?' selected':''}>1,2,3</option>
+          </select></div>
         <div><label>Row start with</label>
           <div class="vd-dir">
-            <input type="number" id="vd-rowstart" min="1" value="${el.opts.row_start||1}">
+            <input id="vd-rowstart" maxlength="3" value="${escapeAttr(el.opts.row_start||1)}" oninput="vdStartTyped('e','row')">
             <input type="hidden" id="vd-rowdir" value="${el.opts.row_dir==='up'?'up':'down'}">
             <button type="button" class="vd-dir-btn${el.opts.row_dir==='up'?' on':''}" id="vd-rowdir-up"   title="Top row first"    onclick="vdSetDir('vd-rowdir','up',['vd-rowdir-up','vd-rowdir-down'])">▲</button>
             <button type="button" class="vd-dir-btn${el.opts.row_dir==='up'?'':' on'}" id="vd-rowdir-down" title="Bottom row first" onclick="vdSetDir('vd-rowdir','down',['vd-rowdir-up','vd-rowdir-down'])">▼</button>
           </div></div>
       </div>
       <div class="ei-row">
-        <div><label>Seat prefix</label><input id="vd-seatpre" value="${escapeAttr(el.opts.seat_prefix||el.opts.prefix||'')}" placeholder="e.g. 1" maxlength="4"></div>
+        <div><label>Seat prefix</label>
+          <select id="vd-seatpre" onchange="vdPrefixStyleChange('e','seat')">
+            <option value="">None</option>
+            <option value="letters"${el.opts.seat_prefix==='letters'?' selected':''}>A,B,C</option>
+            <option value="numbers"${(el.opts.seat_prefix||'numbers')==='numbers'?' selected':''}>1,2,3</option>
+          </select></div>
         <div><label>Seat start with</label>
           <div class="vd-dir">
-            <input type="number" id="vd-seatstart" min="1" value="${el.opts.seat_start||1}">
+            <input id="vd-seatstart" maxlength="3" value="${escapeAttr(el.opts.seat_start||1)}" oninput="vdStartTyped('e','seat')">
             <input type="hidden" id="vd-seatdir" value="${el.opts.seat_dir==='rtl'?'rtl':'ltr'}">
             <button type="button" class="vd-dir-btn${el.opts.seat_dir==='rtl'?'':' on'}" id="vd-seatdir-ltr" title="Left seat first"  onclick="vdSetDir('vd-seatdir','ltr',['vd-seatdir-ltr','vd-seatdir-rtl'])">◀</button>
             <button type="button" class="vd-dir-btn${el.opts.seat_dir==='rtl'?' on':''}" id="vd-seatdir-rtl" title="Right seat first" onclick="vdSetDir('vd-seatdir','rtl',['vd-seatdir-ltr','vd-seatdir-rtl'])">▶</button>
@@ -2769,11 +2796,20 @@ function vdApply(){
     if(v('vd-admission')) el.opts.admission = v('vd-admission').value;
     if(v('vd-prefix'))    el.opts.prefix      = v('vd-prefix').value;
     if(v('vd-rowpre'))    el.opts.row_prefix  = v('vd-rowpre').value;
-    if(v('vd-rowstart'))  el.opts.row_start   = Math.max(1, +v('vd-rowstart').value || 1);
+    if(v('vd-rowstart')){
+      const rs = el.opts.row_prefix === 'letters' ? v('vd-rowstart').value.trim().toUpperCase() || 'A'
+                                                  : vdStyleNum(v('vd-rowstart').value);
+      el.opts.row_start = rs;
+    }
     if(v('vd-rowdir'))    el.opts.row_dir     = v('vd-rowdir').value === 'up' ? 'up' : 'down';
     if(v('vd-seatpre'))   el.opts.seat_prefix = v('vd-seatpre').value;
-    if(v('vd-seatstart')) el.opts.seat_start  = Math.max(1, +v('vd-seatstart').value || 1);
+    if(v('vd-seatstart')){
+      const ss = el.opts.seat_prefix === 'letters' ? v('vd-seatstart').value.trim().toUpperCase() || 'A'
+                                                    : vdStyleNum(v('vd-seatstart').value);
+      el.opts.seat_start = ss;
+    }
     if(v('vd-seatdir'))   el.opts.seat_dir    = v('vd-seatdir').value === 'rtl' ? 'rtl' : 'ltr';
+    delete el.opts.prefix;   // superseded by seat_prefix (which is now a style)
     // Layout: rows / seats rebuild the grid, curve + skew + align reshape it.
     if(v('vd-rows'))  el.opts.rows = Math.max(1, Math.min(40, +v('vd-rows').value || 1));
     if(v('vd-cols'))  el.opts.cols = Math.max(1, Math.min(60, +v('vd-cols').value || 1));
@@ -2869,7 +2905,97 @@ function vdSetDir(hiddenId, value, btnIds){
   });
 }
 
-// ── Seat editing ──────────────────────────────────────────────
+// ── Label styles ──────────────────────────────────────────────
+// A prefix is no longer free text: it picks a style, and the matching
+// "start with" value follows that style.
+//   'letters' → A, B, C …   start = a letter
+//   'numbers' → 1, 2, 3 …   start = a number
+function vdStyleNum(v){ return Math.max(1, Math.round(+v || 1)); }
+
+// "A" → 1, "B" → 2, "AA" → 27. Names the row/seat so numbering can continue
+// past Z as AA, AB … instead of running off the alphabet.
+function vdLetterToIndex(s){
+  const t = String(s||'').trim().toUpperCase();
+  if(!/^[A-Z]{1,3}$/.test(t)) return 1;
+  let n = 0;
+  for(const ch of t) n = n*26 + (ch.charCodeAt(0) - 64);
+  return n;
+}
+
+function vdIndexToLetter(n){
+  let v = Math.max(1, Math.round(+n || 1)), s = '';
+  while(v > 0){ const rem = (v - 1) % 26; s = String.fromCharCode(65 + rem) + s; v = Math.floor((v - 1) / 26); }
+  return s;
+}
+
+// The label `i` steps along from `start` in the given style.
+//   letters: start "A", i 0..2 → A, B, C   (wraps to AA, AB … past Z)
+//   numbers: start 5,  i 0..2 → 5, 6, 7
+function vdMakeLabel(style, start, i){
+  if(style === 'letters') return vdIndexToLetter(vdLetterToIndex(start) + i);
+  return String(vdStyleNum(start) + i);
+}
+
+// Number a prefix can use, whichever style it is.
+function vdMakeLabelNum(style, start){
+  return style === 'letters' ? vdLetterToIndex(start) : vdStyleNum(start);
+}
+
+// The starting value the opposite axis should inherit so seat letters don't
+// collide with the row letters (rows A,B,C → seats start at D).
+function vdNextAcrossStyle(style, rowStart, rows){
+  const base = vdMakeLabelNum(style, rowStart);
+  return style === 'letters' ? vdIndexToLetter(base + Math.max(1, rows)) : String(base + Math.max(1, rows));
+}
+
+function vdStyleName(style){ return style === 'letters' ? 'A,B,C' : '1,2,3'; }
+
+// Switching a prefix style rewrites its "start with" box, and keeps the two
+// axes off each other's labels (rows A,B,C → seats start at D).
+// `form` is 's' for the create form, 'e' for the edit panel; real element ids
+// are vd-<form>-<field>.
+function vdPrefixStyleChange(form, axis){
+  const v = field => document.getElementById('vd-' + form + '-' + field);
+  const styleEl  = v(axis === 'row' ? 'rowpre' : 'prefix');
+  const startEl  = v(axis === 'row' ? 'rowstart' : 'start');
+  const style    = styleEl ? styleEl.value : '';
+  if(!startEl) return;
+
+  if(style === 'letters'){
+    // Only convert when the box currently holds a plain number.
+    startEl.value = /^\d+$/.test(startEl.value.trim())
+      ? vdIndexToLetter(vdStyleNum(startEl.value))
+      : (startEl.value.trim().toUpperCase() || 'A');
+  } else if(style === 'numbers'){
+    startEl.value = /^[A-Za-z]{1,3}$/.test(startEl.value.trim())
+      ? String(vdLetterToIndex(startEl.value))
+      : String(vdStyleNum(startEl.value));
+  }
+
+  // If both axes would start on the same value, push the seat side along.
+  const rowStyleEl = v('rowpre'), rowStartEl = v('rowstart');
+  const seatStyleEl = v('prefix'), seatStartEl = v('start');
+  if(rowStyleEl && seatStyleEl && rowStartEl && seatStartEl){
+    const rs = rowStyleEl.value, ss = seatStyleEl.value;
+    if(rs && rs === ss && rowStartEl.value.trim().toUpperCase() === seatStartEl.value.trim().toUpperCase()){
+      // Rows live at vd-s-rows in the create form and vd-rows in the edit panel.
+      const rowsEl = v('rows') || document.getElementById('vd-rows');
+      const rows = Math.max(1, +((rowsEl||{}).value) || 1);
+      seatStartEl.value = vdNextAcrossStyle(ss, rowStartEl.value, rows);
+    }
+  }
+}
+
+// Keep the typed start value valid for whatever style the prefix uses.
+function vdStartTyped(form, axis){
+  const v = field => document.getElementById('vd-' + form + '-' + field);
+  const styleEl = v(axis === 'row' ? 'rowpre' : 'prefix');
+  const startEl = v(axis === 'row' ? 'rowstart' : 'start');
+  if(!styleEl || !startEl) return;
+  if(styleEl.value === 'letters') startEl.value = startEl.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,3);
+  else if(styleEl.value === 'numbers') startEl.value = startEl.value.replace(/[^0-9]/g,'').slice(0,3);
+}
+
 // Remove individual seats from a reserved section, or put them back.
 // `removed` is a Set of seat keys "r,c" so the layout can be reshaped
 // (rows, curve, skew…) without losing the deletions.
@@ -2895,26 +3021,34 @@ function vdClearSeatLabel(el, r, c){
   }
 }
 
-// Build the automatic label for a seat from the prefix / start / direction.
-// Returns '' when the section has no seat prefix — the canvas then shows no
-// number inside the seat, matching the original behaviour.
+// ── Seat editing ──────────────────────────────────────────────
+// Build the automatic label for a seat from the prefix style / start / direction.
+// The seat style is separate from the row style: rows A,B,C with seats 1,2,3
+// gives A1, A2, A3. Returns '' when neither axis produces anything.
 function vdAutoSeatLabel(o, r, c, rows, cols){
-  const seatPre   = ((o && o.seat_prefix) || (o && o.prefix) || '').trim();
-  const seatStart = Math.max(1, +(o && o.seat_start) || 1);
+  const seatStyle = (o && o.seat_prefix) === 'letters' ? 'letters' : 'numbers';
+  const seatStart = (o && o.seat_start) || 1;
+  const rowStyle  = (o && o.row_prefix)  === 'letters' ? 'letters' : 'numbers';
+  const rowStart  = (o && o.row_start)   || 1;
+  const rowDir    = (o && o.row_dir)  === 'up'  ? 'up'  : 'down';
   const seatDir   = (o && o.seat_dir) === 'rtl' ? 'rtl' : 'ltr';
-  if(!seatPre) return '';
+
+  const rowIdx = rowDir  === 'up'  ? (rows - 1 - r) : r;
   const colIdx = seatDir === 'rtl' ? (cols - 1 - c) : c;
-  return seatPre + (seatStart + colIdx);
+
+  const rowPart  = o && o.row_prefix  ? vdMakeLabel(rowStyle,  rowStart,  rowIdx) : '';
+  const seatPart = o && o.seat_prefix ? vdMakeLabel(seatStyle, seatStart, colIdx) : '';
+  return rowPart + seatPart;
 }
 
-// Row label only ("A1", "A2" …), used as a readable fallback in the panel.
+// Row label only ("A", "B" …), used as a readable fallback in the panel.
 function vdRowLabelOf(o, r, rows){
-  const rowPre    = ((o && o.row_prefix) || '').trim();
-  const rowStart  = Math.max(1, +(o && o.row_start) || 1);
-  const rowDir    = (o && o.row_dir) === 'up' ? 'up' : 'down';
-  if(!rowPre) return 'R' + (r + 1);
+  const rowStyle = (o && o.row_prefix) === 'letters' ? 'letters' : 'numbers';
+  const rowStart = (o && o.row_start) || 1;
+  const rowDir   = (o && o.row_dir) === 'up' ? 'up' : 'down';
+  if(!(o && o.row_prefix)) return 'R' + (r + 1);
   const rowIdx = rowDir === 'up' ? (rows - 1 - r) : r;
-  return rowPre + (rowStart + rowIdx);
+  return vdMakeLabel(rowStyle, rowStart, rowIdx);
 }
 
 // The label a seat actually shows: manual override if set, else the automatic
@@ -3031,8 +3165,9 @@ function vdRenumberSeats(){
   const el = vdElements.find(x=>x.id===vdSelectedId);
   if(!el || el.type!=='section') return;
   const v = id => document.getElementById(id);
-  const pre   = ((v('vd-reno-pre')||{}).value || '').trim();
-  const start = Math.max(1, +((v('vd-reno-start')||{}).value) || 1);
+  const pre   = ((v('vd-reno-pre')||{}).value || '');
+  const startRaw = ((v('vd-reno-start')||{}).value || '').trim();
+  const start = pre === 'letters' ? (startRaw.toUpperCase() || 'A') : vdStyleNum(startRaw);
   const step  = Math.max(1, +((v('vd-reno-step')||{}).value) || 1);
   const scope = (v('vd-reno-scope')||{}).value || 'all';
 
@@ -3042,12 +3177,11 @@ function vdRenumberSeats(){
 
   if(!el.opts.seat_labels) el.opts.seat_labels = {};
 
-  let n = start;
   const applyRow = (r) => {
     for(let c=0;c<cols;c++){
       if(vdSeatRemoved(el, r, c)) continue;           // deleted seats are skipped
       const colIdx = seatDir === 'rtl' ? (cols-1-c) : c;
-      el.opts.seat_labels[vdSeatLabelKey(r, c)] = pre + (start + colIdx * step);
+      el.opts.seat_labels[vdSeatLabelKey(r, c)] = vdMakeLabel(pre, start, colIdx * step);
     }
   };
 
@@ -3061,6 +3195,18 @@ function vdRenumberSeats(){
   }
 
   renderVdCanvas(); renderVdEditPanel();
+}
+
+// Prefix style in the renumber form: swap the "First" box between 1 and A.
+function vdRenumberStyleChange(){
+  const pre = document.getElementById('vd-reno-pre');
+  const box = document.getElementById('vd-reno-start');
+  if(!pre || !box) return;
+  if(pre.value === 'letters'){
+    box.value = /^\d+$/.test(box.value.trim()) ? vdIndexToLetter(vdStyleNum(box.value)) : (box.value.trim().toUpperCase() || 'A');
+  } else if(pre.value === 'numbers'){
+    box.value = /^[A-Za-z]{1,3}$/.test(box.value.trim()) ? String(vdLetterToIndex(box.value)) : String(vdStyleNum(box.value));
+  }
 }
 
 // Drop every manual number so the automatic prefixes take over again.
