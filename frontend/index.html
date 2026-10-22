@@ -2438,17 +2438,9 @@ function vdSectionSeatsHtml(el){
   const skew  = Math.max(0, Math.min(100, +o.skew||0));
   const align = o.align || 'center';
 
-  const rowPre    = (o.row_prefix || '').trim();
-  const rowStart  = Math.max(1, +o.row_start || 1);
-  const seatPre   = (o.seat_prefix || o.prefix || '').trim();
-  const seatStart = Math.max(1, +o.seat_start || 1);
-  // Direction the numbering runs in:
-  //   row_dir  'down' — top row gets the first number (default)
-  //            'up'   — bottom row gets the first number
-  //   seat_dir 'ltr'  — leftmost seat gets the first number (default)
-  //            'rtl'  — rightmost seat gets the first number
-  const rowDir  = o.row_dir === 'up' ? 'up' : 'down';
-  const seatDir = o.seat_dir === 'rtl' ? 'rtl' : 'ltr';
+  // Row/seat formats: 'letters' (A,B,C) or 'numbers' (1,2,3), resolved by the
+  // shared label helpers so the canvas matches the edit panel exactly.
+  const hasRowLabels = !!(o.row_prefix);
 
   const inner   = Math.max(1, el.w - pad*2);
   const baseGap = gapPx + ((seatPx + gapPx) * (skew/100) * 0.9);
@@ -2470,9 +2462,8 @@ function vdSectionSeatsHtml(el){
 
     // Row label sits to the left of the row, at its baseline.
     // For an "up" direction the bottom row is numbered first.
-    if(rowPre){
-      const rowIdx = rowDir === 'up' ? (rows - 1 - r) : r;
-      const rowLabel = rowPre + (rowStart + rowIdx);
+    if(hasRowLabels){
+      const rowLabel = vdRowLabelOf(o, r, rows);
       html += `<span class="vd-row-label" style="left:${Math.round(pad - 20)}px;`
             + `top:${Math.round(rowBaseY + seatPx/2)}px">${escapeHtml(rowLabel)}</span>`;
     }
