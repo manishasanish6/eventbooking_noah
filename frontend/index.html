@@ -11,23 +11,24 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
 :root{
-  --black:#0A0A0A;--dark:#111111;--dark2:#e8e8e8;--dark3:#222222;
-  --white:#F5F1EB;--gray:#aaa;--gold:#C9A84C;
+  --black:#f4f5f7;--dark:#eceef2;--dark2:#ffffff;--dark3:#f7f8fa;
+  --white:#1a1a1a;--gray:#6b7280;--gold:#C9A84C;
   --logo-purple:#8b44ff;--logo-red:#ff3e37;--logo-red-dark:#c61b21;
-  --logo-bg-purple:rgba(139,68,255,0.16);--logo-bg-red:rgba(255,62,55,0.14);
+  --logo-bg-purple:rgba(139,68,255,0.10);--logo-bg-red:rgba(255,62,55,0.10);
   --logo-gradient:linear-gradient(135deg,#8b44ff,#ff3e37);
-  --green:#3ddc84;--red:#ff4d4d;--blue:#5b9cf6;
+  --green:#22b573;--red:#e0382f;--blue:#3b82f6;
   --font-d:'Bebas Neue',sans-serif;--font-b:'Montserrat',sans-serif;
   --text-on-light:#1a1a1a;
+  --line:rgba(0,0,0,0.12);--line-soft:rgba(0,0,0,0.07);
 }
 
 body{
   background:
-    radial-gradient(ellipse 80% 50% at 50% 60%, rgba(255,62,55,0.08), transparent),
-    radial-gradient(ellipse 40% 60% at 80% 30%, rgba(139,68,255,0.10), transparent),
+    radial-gradient(ellipse 80% 50% at 50% 60%, rgba(255,62,55,0.05), transparent),
+    radial-gradient(ellipse 40% 60% at 80% 30%, rgba(139,68,255,0.07), transparent),
     var(--black);
   color:var(--white);font-family:var(--font-b);font-size:14px;line-height:1.6;min-height:100vh;
-  font-weight:300;letter-spacing:.05em;
+  font-weight:400;letter-spacing:.05em;
 }
 
 /* ── TEXT ON LIGHT CARDS ── */
@@ -39,24 +40,25 @@ body{
 
 ::selection{background:var(--logo-purple);color:#fff}
 ::-webkit-scrollbar{width:6px}
-::-webkit-scrollbar-track{background:var(--black)}
-::-webkit-scrollbar-thumb{background:#444;border-radius:3px}
-::-webkit-scrollbar-thumb:hover{background:#555}
+::-webkit-scrollbar-track{background:#e9ebef}
+::-webkit-scrollbar-thumb{background:#c3c8d0;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#aab0ba}
 
 /* ── TOP NAV ── */
 .top-nav{
   display:flex;align-items:center;gap:0;position:fixed;top:0;left:0;right:0;z-index:50;
-  background:linear-gradient(to bottom,rgba(10,10,10,0.95),transparent);
-  backdrop-filter:blur(4px);padding:1.2rem 4rem;transition:background .3s,border-color .3s;
+  background:linear-gradient(to bottom,rgba(255,255,255,0.96),rgba(255,255,255,0.88));
+  backdrop-filter:blur(6px);padding:1.2rem 4rem;transition:background .3s,border-color .3s;
+  border-bottom:1px solid var(--line-soft);
 }
-.top-nav.scrolled{background:rgba(10,10,10,0.98);border-bottom:1px solid rgba(255,78,54,0.12)}
+.top-nav.scrolled{background:rgba(255,255,255,0.99);border-bottom:1px solid var(--line)}
 .nav-logo{display:flex;align-items:center;gap:0.75rem;font-family:'Nasalization Heavy','Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.04em;color:var(--white);flex-shrink:0;border:none;padding:0}
 .nav-logo img{height:90px;width:auto;display:block;filter:none}
 .nav-tabs{display:flex;margin-left:2.5rem;gap:0}
 .nav-tab{
   padding:0.6rem 1.2rem;font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;
   color:var(--gray);cursor:pointer;border:none;background:none;
-  font-family:var(--font-b);font-weight:500;
+  font-family:var(--font-b);font-weight:600;
   transition:color .2s;white-space:nowrap;position:relative;
 }
 .nav-tab:hover{color:var(--white)}
@@ -77,21 +79,31 @@ body{
 .admin-view{display:none;padding:28px;max-width:720px;margin:0 auto;min-height:calc(100vh - 140px)}
 .admin-view.active{display:block}
 
-/* ── EVENT CREATION WIZARD ── */
-.wiz-steps{display:flex;gap:10px;margin-bottom:22px}
-.wiz-step{flex:1;display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;
+/* ── EVENT CREATION WIZARD (Bootstrap-style left sidebar) ── */
+.admin-view.wide{max-width:1080px}
+.wiz-shell{display:grid;grid-template-columns:250px 1fr;gap:26px;align-items:start}
+.wiz-content{min-width:0}
+.wiz-sidebar{position:sticky;top:24px;grid-column:1;grid-row:1}
+.wiz-content{grid-column:2;grid-row:1}
+.wiz-sidebar-title{font-family:var(--font-d);font-size:13px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--gray);margin-bottom:10px;padding-left:4px}
+.wiz-steps{display:flex;flex-direction:column;gap:8px}
+.wiz-step{display:flex;align-items:center;gap:11px;padding:13px 14px;cursor:pointer;
   background:var(--dark2);border:1px solid rgba(0,0,0,0.1);border-left:3px solid rgba(0,0,0,0.12);transition:all .2s}
 .wiz-step:hover{background:var(--dark3)}
-.wiz-step .ws-num{flex:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+.wiz-step .ws-num{flex:none;width:28px;height:28px;display:flex;align-items:center;justify-content:center;
   border-radius:50%;background:rgba(0,0,0,0.08);color:#666;font-size:12px;font-weight:700}
 .wiz-step .ws-txt{min-width:0}
-.wiz-step .ws-label{font-family:var(--font-d);font-size:14px;letter-spacing:1.5px;color:#666;text-transform:uppercase;line-height:1.2}
+.wiz-step .ws-label{font-family:var(--font-d);font-size:15px;letter-spacing:1.5px;color:#666;text-transform:uppercase;line-height:1.2}
 .wiz-step .ws-sub{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#999}
-.wiz-step.active{background:var(--dark2);border-left-color:var(--logo-purple);box-shadow:0 4px 24px rgba(139,68,255,0.12)}
+.wiz-step.active{background:#fff;border-left-color:var(--logo-purple);box-shadow:0 6px 22px rgba(139,68,255,0.16)}
 .wiz-step.active .ws-num{background:var(--logo-gradient);color:#fff}
 .wiz-step.active .ws-label{color:var(--text-on-light)}
+.wiz-step.active .ws-sub{color:#777}
 .wiz-step.done{border-left-color:var(--green)}
 .wiz-step.done .ws-num{background:var(--green);color:#08240f}
+.wiz-progress{height:4px;background:var(--line-soft);margin-top:12px;overflow:hidden}
+.wiz-progress > i{display:block;height:100%;width:33%;background:var(--logo-gradient);transition:width .25s}
 .wiz-panel{display:none}
 .wiz-panel.active{display:block}
 .wiz-nav{display:flex;gap:10px;align-items:center;margin-top:20px}
@@ -103,6 +115,15 @@ body{
 .wiz-review-row .wr-k{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#888;flex:none;padding-top:2px}
 .wiz-review-row .wr-v{text-align:right;color:var(--text-on-light);word-break:break-word}
 .wiz-hint{font-size:11px;color:#777;font-style:italic;margin-top:10px}
+@media(max-width:900px){
+  .wiz-shell{grid-template-columns:1fr}
+  .wiz-sidebar,.wiz-content{grid-column:1;grid-row:auto}
+  .wiz-sidebar{position:static;order:-1}
+  .wiz-steps{flex-direction:row;flex-wrap:wrap}
+  .wiz-step{flex:1;min-width:140px;border-left:none;border-bottom:3px solid rgba(0,0,0,0.12)}
+  .wiz-step.active{border-bottom-color:var(--logo-purple)}
+  .wiz-progress{display:none}
+}
 
 /* ── SECTION TITLES ── */
 .s-title{font-family:var(--font-d);font-size:22px;letter-spacing:2px;margin-bottom:4px;color:var(--white)}
@@ -115,14 +136,14 @@ body{
 .field{margin-bottom:16px}
 .field label{display:block;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gray);margin-bottom:6px;font-weight:500}
 .field input,.field select,.field textarea{
-  width:100%;background:var(--dark3);border:1px solid rgba(0,0,0,0.12);
+  width:100%;background:#fff;border:1px solid var(--line);
   padding:10px 13px;color:var(--white);font-family:var(--font-b);font-size:14px;
-  outline:none;transition:border-color .2s,box-shadow .2s;font-weight:300;
+  outline:none;transition:border-color .2s,box-shadow .2s;font-weight:400;
 }
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--logo-purple);box-shadow:0 0 0 2px rgba(139,68,255,0.15)}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--logo-purple);box-shadow:0 0 0 3px rgba(139,68,255,0.14)}
 .field textarea{resize:vertical;min-height:72px}
 .field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b44ff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer}
-.field select option{background:var(--dark3);color:var(--white);padding:6px 10px}
+.field select option{background:#fff;color:var(--white);padding:6px 10px}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .field input[type="date"],.field input[type="time"]{color-scheme:light}
 
@@ -136,17 +157,181 @@ body{
 /* ── SEAT CANVAS ── */
 .seat-canvas-wrap{background:var(--dark3);border:1px solid rgba(255,78,54,0.12);padding:12px;margin-bottom:16px;overflow-y:auto}
 .seat-canvas{position:relative;width:100%;min-height:250px;max-height:80vh;overflow-y:auto;background:var(--dark);border:1px solid rgba(0,0,0,0.08);cursor:crosshair}
-.seat-canvas .sc-seat{position:absolute;width:22px;height:22px;border-radius:0;border:2px solid rgba(255,255,255,0.3);cursor:grab;transform:translate(-50%,-50%);transition:opacity .2s;display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:500;user-select:none}
+.seat-canvas .sc-seat{position:absolute;width:22px;height:22px;border-radius:0;border:2px solid rgba(0,0,0,0.25);cursor:grab;transform:translate(-50%,-50%);transition:opacity .2s;display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:500;user-select:none}
 .seat-canvas .sc-seat:hover{opacity:.8;z-index:10}
 .seat-canvas .sc-seat.is-held{background:rgba(255,62,55,.35)!important;border-color:var(--logo-red)!important}
 .seat-canvas .sc-seat.is-held::after{content:'🔒';position:absolute;font-size:9px;top:-8px;right:-8px}
 .seat-canvas .sc-seat .sc-del{position:absolute;top:-6px;right:-6px;width:14px;height:14px;background:var(--logo-red);border:none;color:#fff;font-size:9px;line-height:14px;text-align:center;border-radius:50%;cursor:pointer;display:none}
 .seat-canvas .sc-seat:hover .sc-del{display:block}
+
+/* ── CANVAS ELEMENTS LAYER ── */
+.sc-element{position:absolute;border:2px solid;box-sizing:border-box;cursor:move;user-select:none;
+  display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;
+  letter-spacing:.06em;overflow:hidden;z-index:1}
+.sc-element .sce-label{pointer-events:none;padding:2px 4px;line-height:1.25;word-break:break-word;font-weight:600}
+.sc-element.selected{outline:2px solid var(--logo-purple);outline-offset:2px;z-index:20;
+  box-shadow:0 0 0 4px rgba(139,68,255,0.18)}
+.sc-element .sce-handle{position:absolute;right:-5px;bottom:-5px;width:12px;height:12px;
+  background:#fff;border:2px solid var(--logo-purple);cursor:nwse-resize;z-index:22;display:none}
+.sc-element.selected .sce-handle{display:block}
+.sc-table-seat{position:absolute;width:13px;height:13px;border-radius:50%;border:1px solid rgba(0,0,0,.35);
+  transform:translate(-50%,-50%);pointer-events:none}
+.canvas-entry{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:-8px 0 20px}
+.canvas-entry-hint{font-size:11px;color:var(--gray);line-height:1.5}
+.canvas-open-btn{display:inline-flex;align-items:center;gap:7px;background:var(--logo-purple);border:1px solid var(--logo-purple);
+  color:#fff;padding:9px 16px;cursor:pointer;font-family:var(--font-b);font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;transition:all .2s;white-space:nowrap}
+.canvas-open-btn:hover{background:#7a35e8;border-color:#7a35e8;transform:translateY(-1px)}
+.canvas-close-btn{border-color:var(--line)!important;color:var(--gray)!important}
+.canvas-close-btn:hover{border-color:var(--logo-red)!important;color:var(--logo-red)!important;background:rgba(255,62,55,.06)!important}
+.element-toolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 0 12px}
+.element-toolbar .et-btn{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);
+  color:var(--text-on-light);padding:7px 12px;cursor:pointer;font-family:var(--font-b);font-size:11px;
+  letter-spacing:.06em;transition:all .2s}
+.element-toolbar .et-btn:hover{border-color:var(--logo-purple);color:var(--logo-purple);background:rgba(139,68,255,.06)}
+.element-toolbar .et-sep{width:1px;height:22px;background:var(--line);margin:0 2px}
+.element-inspector{background:var(--dark3);border:1px solid var(--line-soft);padding:12px 14px;margin-bottom:12px;display:none}
+.element-inspector.open{display:block}
+.element-inspector .ei-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+.element-inspector .ei-row.single{grid-template-columns:1fr}
+.element-inspector label{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gray);margin-bottom:4px}
+.element-inspector input,.element-inspector select{width:100%;background:#fff;border:1px solid var(--line);
+  padding:6px 9px;font-family:var(--font-b);font-size:12px;color:var(--text-on-light);outline:none}
+.element-inspector input:focus,.element-inspector select:focus{border-color:var(--logo-purple)}
+.ei-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.ei-actions button{padding:6px 11px;border:1px solid var(--line);background:#fff;cursor:pointer;
+  font-size:11px;letter-spacing:.06em;font-family:var(--font-b);color:var(--text-on-light)}
+.ei-actions button.primary{background:var(--logo-purple);border-color:var(--logo-purple);color:#fff}
+.ei-actions button.danger{border-color:var(--logo-red);color:var(--logo-red)}
+.ei-hint{font-size:10.5px;color:var(--gray);margin-top:8px;line-height:1.5}
+
+/* ── VENUE DESIGNER (full-screen modal) ── */
+.vd-overlay{position:fixed;inset:0;z-index:9000;background:rgba(12,12,16,.72);backdrop-filter:blur(3px);
+  display:flex;align-items:stretch;justify-content:center;padding:0}
+.vd-modal{background:#f4f5f7;width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden}
+.vd-topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 20px;
+  background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.vd-title{display:flex;flex-direction:column;gap:2px;min-width:0}
+.vd-title-main{font-family:var(--font-d);font-size:20px;letter-spacing:2px;color:var(--text-on-light);text-transform:uppercase}
+.vd-title-sub{font-size:11px;color:var(--gray)}
+.vd-topbar-actions{display:flex;gap:8px;align-items:center}
+.vd-btn{padding:9px 16px;border:1px solid var(--line);background:#fff;cursor:pointer;font-family:var(--font-b);
+  font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-on-light);transition:all .2s;white-space:nowrap}
+.vd-btn-ghost:hover{border-color:var(--logo-red);color:var(--logo-red);background:rgba(255,62,55,.06)}
+.vd-btn-primary{background:var(--logo-purple);border-color:var(--logo-purple);color:#fff}
+.vd-btn-primary:hover{background:#7a35e8;border-color:#7a35e8}
+
+.vd-body{display:grid;grid-template-columns:1fr 250px;flex:1;min-height:0}
+.vd-canvas-area{display:flex;flex-direction:column;min-width:0;min-height:0}
+.vd-canvas-scroll{flex:1;overflow:auto;padding:22px;min-height:0}
+.vd-canvas{position:relative;min-height:900px;min-width:100%;background-color:#fff;
+  background-image:linear-gradient(rgba(0,0,0,.055) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(0,0,0,.055) 1px,transparent 1px);
+  background-size:22px 22px;background-position:0 0;
+  border:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:default}
+.vd-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;pointer-events:none;text-align:center;padding:24px}
+.vd-empty-icon{font-size:40px;color:#cfd2d8;line-height:1}
+.vd-empty-title{font-family:var(--font-d);font-size:16px;letter-spacing:2px;color:#9aa0aa;text-transform:uppercase}
+.vd-empty-text{font-size:11.5px;color:#a8adb6;line-height:1.6}
+.vd-statusbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 20px;
+  background:#fff;border-top:1px solid var(--line);font-size:11px;color:var(--gray);flex-wrap:wrap}
+
+.vd-rail{background:#fff;border-left:1px solid var(--line);overflow-y:auto;padding:16px 14px;min-height:0}
+.vd-rail-section{margin-bottom:18px}
+.vd-rail-title{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--gray);
+  font-weight:600;margin-bottom:10px}
+.vd-tool{display:grid;grid-template-columns:26px 1fr;grid-template-rows:auto auto;gap:0 10px;
+  width:100%;text-align:left;background:#fff;border:1px solid var(--line);padding:10px 11px;
+  margin-bottom:8px;cursor:pointer;transition:all .18s;font-family:var(--font-b)}
+.vd-tool:hover{border-color:var(--logo-purple);background:rgba(139,68,255,.05);transform:translateX(-2px)}
+.vd-tool-icon{grid-row:1/3;align-self:center;font-size:17px;color:var(--logo-purple)}
+.vd-tool-name{font-size:12.5px;color:var(--text-on-light);font-weight:600}
+.vd-tool-sub{font-size:10px;color:var(--gray)}
+
+.vd-edit{border-top:1px solid var(--line);padding-top:14px}
+.vd-edit .ei-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:8px}
+.vd-edit .ei-row.single{grid-template-columns:1fr}
+.vd-edit label{display:block;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--gray);margin-bottom:4px}
+.vd-edit input,.vd-edit select{width:100%;background:#fff;border:1px solid var(--line);padding:6px 8px;
+  font-family:var(--font-b);font-size:12px;color:var(--text-on-light);outline:none}
+.vd-edit input:focus,.vd-edit select:focus{border-color:var(--logo-purple)}
+.vd-edit-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
+.vd-edit-title{font-family:var(--font-d);font-size:13px;letter-spacing:1.6px;color:var(--text-on-light);text-transform:uppercase}
+.vd-edit input[type=color]{width:34px;height:28px;padding:0;cursor:pointer}
+.vd-edit input[type=range]{width:100%;border:none;padding:0;background:transparent}
+.vd-edit-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.vd-edit-actions button{flex:1;min-width:64px;padding:7px 8px;border:1px solid var(--line);background:#fff;
+  cursor:pointer;font-size:10.5px;letter-spacing:.05em;font-family:var(--font-b);color:var(--text-on-light)}
+.vd-edit-actions button.primary{background:var(--logo-purple);border-color:var(--logo-purple);color:#fff}
+.vd-edit-actions button.danger{border-color:var(--logo-red);color:var(--logo-red)}
+.vd-edit-actions button.danger:hover{background:rgba(255,62,55,.07)}
+
+/* Elements drawn on the designer canvas */
+.vd-el{position:absolute;border:2px solid;box-sizing:border-box;cursor:move;user-select:none;
+  display:flex;align-items:flex-start;justify-content:flex-start;text-align:left;overflow:hidden}
+.vd-el .vd-el-label{pointer-events:none;padding:5px 6px;line-height:1.25;word-break:break-word;
+  font-size:10px;font-weight:600;letter-spacing:.05em}
+/* Text / object elements look better with their label centred. */
+.vd-el[data-vdkind="text"],.vd-el[data-vdkind="object"]{align-items:center;justify-content:center;text-align:center}
+.vd-el .vd-el-sub{display:block;font-weight:400;opacity:.75;font-size:9px}
+.vd-el-vd-selected,.vd-el.selected{outline:2px solid var(--logo-purple);outline-offset:2px;z-index:20;
+  box-shadow:0 0 0 4px rgba(139,68,255,.18)}
+.vd-el-handle{position:absolute;right:-6px;bottom:-6px;width:13px;height:13px;background:#fff;
+  border:2px solid var(--logo-purple);cursor:nwse-resize;z-index:22;display:none}
+.vd-el.selected .vd-el-handle{display:block}
+.vd-table-seat{position:absolute;width:13px;height:13px;border-radius:50%;
+  border:1px solid rgba(0,0,0,.35);transform:translate(-50%,-50%);pointer-events:none}
+.vd-seat{position:absolute;border-radius:2px;pointer-events:none;box-sizing:border-box;
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+.vd-seat .vd-seat-no{font-style:normal;font-size:8px;line-height:1;color:rgba(0,0,0,.62);
+  font-weight:600;letter-spacing:-.02em;pointer-events:none}
+.vd-row-label{position:absolute;transform:translateY(-50%);font-size:9.5px;font-weight:700;
+  color:var(--gray);letter-spacing:.04em;pointer-events:none;white-space:nowrap}
+
+/* Setup panel in the rail (asks for rows/seats before creating) */
+.vd-setup{display:none;border-top:1px solid var(--line);padding-top:14px}
+.vd-setup-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
+.vd-setup-title{font-family:var(--font-d);font-size:13px;letter-spacing:1.6px;
+  color:var(--text-on-light);text-transform:uppercase}
+.vd-setup-x{background:none;border:none;cursor:pointer;color:var(--gray);font-size:13px;padding:2px 4px}
+.vd-setup-x:hover{color:var(--logo-red)}
+.vd-setup .ei-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:8px}
+.vd-setup .ei-row.single{grid-template-columns:1fr}
+.vd-setup label{display:block;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--gray);margin-bottom:4px}
+.vd-setup input,.vd-setup select{width:100%;background:#fff;border:1px solid var(--line);padding:6px 8px;
+  font-family:var(--font-b);font-size:12px;color:var(--text-on-light);outline:none}
+.vd-setup input:focus,.vd-setup select:focus{border-color:var(--logo-purple)}
+.vd-setup input[type=color]{width:34px;height:28px;padding:0;cursor:pointer}
+.vd-setup input[type=range]{width:100%;border:none;padding:0;background:transparent}
+.vd-setup-hint{font-size:10px;color:var(--gray);margin-top:8px;line-height:1.5}
+
+/* Layout (curve / skew / alignment) controls */
+.vd-layout-group{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+.vd-layout-title{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--gray);
+  font-weight:600;margin-bottom:9px}
+.vd-slider{margin-bottom:10px}
+.vd-slider label{display:flex;align-items:center;justify-content:space-between;
+  font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gray);margin-bottom:4px}
+.vd-slider-val{font-size:10px;color:var(--logo-purple);font-weight:600;letter-spacing:0}
+.vd-slider input[type=range]{width:100%;height:4px;accent-color:var(--logo-purple);cursor:pointer}
+.vd-slider-ends{display:flex;justify-content:space-between;font-size:8.5px;color:var(--gray);
+  letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
+.vd-edit .vd-layout-group .ei-row,
+.vd-setup .vd-layout-group .ei-row{display:grid;grid-template-columns:1fr;gap:9px;margin-bottom:8px}
+
+@media(max-width:820px){
+  .vd-body{grid-template-columns:1fr}
+  .vd-rail{border-left:none;border-top:1px solid var(--line)}
+  .vd-canvas-scroll{padding:12px}
+}
 .sc-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
 .sc-toolbar label{font-size:11px;color:var(--gray)}
 .sc-toolbar select{background:var(--dark2);border:1px solid rgba(0,0,0,0.1);padding:5px 8px;color:#000;font-family:var(--font-b);font-size:12px;outline:none}
 .sc-toolbar button{background:var(--dark2);border:1px solid rgba(0,0,0,0.1);padding:5px 10px;color:#000;font-size:11px;cursor:pointer;font-family:var(--font-b);transition:border-color .2s}
-.sc-toolbar button:hover{border-color:var(--logo-purple);color:var(--white)}
+.sc-toolbar button:hover{border-color:var(--logo-purple);color:var(--logo-purple)}
 .sc-walkway{position:absolute;top:0;bottom:0;width:2px;background:repeating-linear-gradient(180deg,transparent 0,transparent 4px,rgba(255,78,54,0.3) 4px,rgba(255,78,54,0.3) 8px);pointer-events:none;z-index:5}
 
 .sc-info{font-size:11px;color:var(--gray);margin-top:6px;text-align:center}
@@ -168,7 +353,7 @@ body{
 
 .admin-link{
   background:transparent;color:var(--gray);
-  border:1px solid rgba(255,255,255,0.15);
+  border:1px solid var(--line);
   padding:0.6rem 1rem;cursor:pointer;
   font-family:'Montserrat',sans-serif;
   font-size:0.7rem;font-weight:600;letter-spacing:0.15em;
@@ -208,29 +393,28 @@ body{
 .admin-event-card{background:var(--dark3);border:1px solid rgba(255,78,54,0.1);overflow:hidden;position:relative;transition:border-color .3s,transform .3s;cursor:pointer}
 .admin-event-card:hover{border-color:rgba(255,78,54,0.5);transform:translateY(-4px)}
 .admin-event-img{width:100%;aspect-ratio:16/10;background:var(--dark);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-.admin-event-img::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(10,10,10,0.9))}
+.admin-event-img::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 45%,rgba(10,10,10,0.75))}
 .admin-event-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
 .admin-event-icon{font-size:3rem;color:rgba(255,78,54,0.2)}
 .admin-event-badge{position:absolute;top:1rem;left:1rem;font-size:.6rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.3rem .7rem;z-index:2}
 .admin-event-badge.live{background:rgba(61,220,132,.85);color:#fff}
-.admin-event-badge.draft{background:rgba(255,255,255,.15);color:var(--gray)}
+.admin-event-badge.draft{background:rgba(0,0,0,.55);color:#fff}
 .admin-event-badge.sold{background:rgba(255,77,77,.85);color:#fff}
-.admin-event-date{position:absolute;top:1rem;right:1rem;background:rgba(10,10,10,0.85);border:1px solid rgba(255,78,54,0.3);color:var(--white);text-align:center;padding:.5rem .7rem;z-index:2}
+.admin-event-date{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,0.92);border:1px solid rgba(255,78,54,0.3);color:var(--text-on-light);text-align:center;padding:.5rem .7rem;z-index:2}
 .admin-event-date .day{font-family:var(--font-d);font-size:1.8rem;line-height:1;display:block;color:var(--logo-red)}
-.admin-event-date .month{font-size:.6rem;letter-spacing:.2em;color:var(--gray);text-transform:uppercase}
+.admin-event-date .month{font-size:.6rem;letter-spacing:.2em;color:#666;text-transform:uppercase}
 .admin-event-body{padding:1rem 1.2rem}
 .admin-event-body .cat{font-size:.62rem;letter-spacing:.2em;color:var(--logo-red);text-transform:uppercase;font-weight:600;margin-bottom:.4rem}
 .admin-event-body .name{font-family:var(--font-d);font-size:1.3rem;letter-spacing:.05em;color:var(--white);margin-bottom:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.admin-event-body .meta{font-size:.72rem;color:rgba(245,241,235,0.5);display:flex;gap:.8rem;align-items:center;margin-bottom:.6rem;flex-wrap:wrap}
+.admin-event-body .meta{font-size:.72rem;color:#6b7280;display:flex;gap:.8rem;align-items:center;margin-bottom:.6rem;flex-wrap:wrap}
 .admin-event-body .meta span{display:flex;align-items:center;gap:.3rem}
 .admin-event-body .stats{font-size:.7rem;color:var(--gray);margin-bottom:.8rem;line-height:1.6}
 .admin-event-body .stats strong{color:var(--white);font-weight:500}
-.admin-event-body .footer{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(245,241,235,0.08);padding-top:.8rem}
+.admin-event-body .footer{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line-soft);padding-top:.8rem}
 .admin-event-body .price{font-family:var(--font-d);font-size:1.4rem;color:var(--white)}
 .admin-event-body .price span{font-size:.7rem;color:var(--gray);font-family:var(--font-b)}
-.admin-event-actions{display:flex;gap:4px;opacity:0;transition:opacity .2s}
-.admin-event-card:hover .admin-event-actions{opacity:1}
-.admin-event-actions button{background:none;border:1px solid rgba(255,255,255,0.15);color:var(--gray);padding:4px 8px;cursor:pointer;font-size:10px;letter-spacing:.08em;transition:all .2s}
+.admin-event-actions{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.admin-event-actions button{background:none;border:1px solid var(--line);color:var(--gray);padding:4px 8px;cursor:pointer;font-size:10px;letter-spacing:.08em;transition:all .2s}
 .admin-event-actions button:hover{border-color:var(--logo-purple);color:var(--logo-purple);background:rgba(139,68,255,0.08)}
 .empty-state{text-align:center;padding:60px 20px;color:var(--gray)}
 
@@ -242,7 +426,7 @@ body{
 .vp-row{display:flex;align-items:center;gap:3px}
 .vp-seats-wrap{display:flex;gap:3px;margin:0 auto}
 .vp-label{font-size:10px;color:var(--gray);width:16px;text-align:center;flex-shrink:0}
-.vp-seat{width:18px;height:16px;border:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.vp-seat{width:18px;height:16px;border:1px solid var(--line-soft);flex-shrink:0}
 .vp-walkway,.held-walkway{width:18px;height:16px;flex-shrink:0;background:repeating-linear-gradient(90deg,transparent,transparent 3px,rgba(255,78,54,0.2) 3px,rgba(255,78,54,0.2) 6px);border:1px dashed rgba(255,78,54,0.15);margin:0 1px}
 .vp-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
 .vp-leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gray)}
@@ -253,7 +437,7 @@ body{
 .held-row{display:flex;align-items:center;gap:3px}
 .held-seats-wrap{display:flex;gap:3px;margin:0 auto}
 .held-label{font-size:10px;color:var(--gray);width:16px;text-align:center;flex-shrink:0}
-.held-seat{width:18px;height:16px;border:1px solid rgba(255,255,255,.06);cursor:pointer;transition:opacity .2s;position:relative}
+.held-seat{width:18px;height:16px;border:1px solid var(--line-soft);cursor:pointer;transition:opacity .2s;position:relative}
 .held-seat:hover{opacity:.7}
 .held-seat::before{content:attr(data-sid);position:absolute;bottom:calc(100%+4px);left:50%;transform:translateX(-50%);background:var(--dark2);color:var(--white);font-size:9px;padding:2px 6px;white-space:nowrap;opacity:0;transition:opacity .15s;pointer-events:none;z-index:5;border:1px solid rgba(255,78,54,0.2)}
 .held-seat:hover::before{opacity:1}
@@ -274,6 +458,8 @@ body{
 .toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--dark3);color:var(--white);padding:12px 24px;border:1px solid rgba(255,78,54,0.25);font-weight:500;font-size:14px;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.error{background:var(--logo-red-dark);color:#fff}
+.toast.success{background:#12703f;color:#fff}
+.toast.info{background:#2a2f3a;color:#fff}
 
 /* ── DIVIDER ── */
 hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
@@ -308,7 +494,6 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
   .admin-view{padding:20px}
   .form-card{padding:16px}
   .admin-events-grid{grid-template-columns:1fr}
-  .admin-event-actions{opacity:1}
   .zone-row{grid-template-columns:20px 1fr 40px 40px 48px 48px 18px;padding:6px 8px}
   .zone-header{display:none}
 }
@@ -337,25 +522,13 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
 
 <!-- ════════════════════════════════════ ADMIN PAGE ════════════════════════════════════ -->
 <div class="page active" id="page-admin">
-  <div class="admin-view active" id="view-create">
+  <div class="admin-view active wide" id="view-create">
     <div class="s-title" id="form-title">NEW EVENT</div>
     <div class="s-sub" id="form-sub">Fill in the details below</div>
 
-    <!-- WIZARD STEP TABS -->
-    <div class="wiz-steps" id="wiz-steps">
-      <div class="wiz-step active" data-step="1" onclick="goStep(1)">
-        <div class="ws-num">1</div>
-        <div class="ws-txt"><div class="ws-label">Build Event</div><div class="ws-sub">Details &amp; venue</div></div>
-      </div>
-      <div class="wiz-step" data-step="2" onclick="goStep(2)">
-        <div class="ws-num">2</div>
-        <div class="ws-txt"><div class="ws-label">Add Tickets</div><div class="ws-sub">Seating &amp; zones</div></div>
-      </div>
-      <div class="wiz-step" data-step="3" onclick="goStep(3)">
-        <div class="ws-num">3</div>
-        <div class="ws-txt"><div class="ws-label">Publish</div><div class="ws-sub">Review &amp; go live</div></div>
-      </div>
-    </div>
+    <div class="wiz-shell">
+      <!-- MAIN CONTENT -->
+      <div class="wiz-content">
 
     <!-- ════════ STEP 1 · BUILD EVENT ════════ -->
     <div class="wiz-panel active" id="wiz-panel-1">
@@ -401,22 +574,12 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
           <textarea id="f-artist-details" rows="2" placeholder="Any extra info about the artist..."></textarea>
         </div>
       </div>
-      <div class="field-row">
-        <div class="field">
-          <label>Genre</label>
-          <select id="f-genre">
-            <option>Pop</option><option>Hip-Hop</option>
-            <option>Rock</option><option>Indie</option><option>Jazz & Soul</option>
-            <option>Classical</option><option>Other</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Status</label>
-          <select id="f-status">
-            <option value="live">Live</option>
-            <option value="draft">Draft</option>
-          </select>
-        </div>
+      <div class="field">
+        <label>Status</label>
+        <select id="f-status">
+          <option value="live">Live</option>
+          <option value="draft">Draft</option>
+        </select>
       </div>
       <div class="field">
         <label>Date</label>
@@ -477,6 +640,12 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
       <div class="layout-toggle">
         <button class="lm-btn active" data-mode="auto" onclick="setLayoutMode('auto')">■ Auto Seating</button>
         <button class="lm-btn" data-mode="manual" onclick="setLayoutMode('manual')">✎ Manual Seating</button>
+      </div>
+
+      <!-- ＋ CANVAS — opens the Venue Designer -->
+      <div class="canvas-entry">
+        <button class="canvas-open-btn" id="canvas-open-btn" onclick="openVenueDesigner()">＋ Canvas</button>
+        <div class="canvas-entry-hint">Open the Venue Designer to build your seat map from scratch.</div>
       </div>
 
       <!-- AUTO SEATING SECTION -->
@@ -563,7 +732,7 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
 
         <hr class="div">
 
-        <!-- SEAT CANVAS -->
+        <!-- SEAT CANVAS (existing reserved-seating placement) -->
         <div style="margin-bottom:8px">
           <div style="font-family:var(--font-d);font-size:16px;letter-spacing:2px;margin-bottom:2px">SEAT CANVAS</div>
           <div style="font-size:11px;color:var(--muted)">Click on the canvas to place seats · Drag to reposition</div>
@@ -574,9 +743,15 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
             <select id="sc-zone-select"></select>
             <button onclick="autoGenerateSeats()">Auto Fill</button>
             <button onclick="clearCanvasSeats()">✕ Clear All</button>
+            <button onclick="openVenueDesigner()">▦ Venue Designer</button>
           </div>
+
+          <!-- ELEMENT INSPECTOR (select an element, then Edit, then Apply) -->
+          <div class="element-inspector" id="element-inspector"></div>
+
           <div class="seat-canvas" id="seat-canvas" oncontextmenu="return false"></div>
           <div class="sc-info" id="sc-info">0 seats placed</div>
+          <div class="ei-hint">Click an element to select it · drag to reposition · click the corner handle to resize</div>
         </div>
 
         <!-- HELD SEATS (canvas) -->
@@ -676,6 +851,98 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
       <button class="btn btn-outline btn-full" id="cancel-edit-btn" onclick="cancelEdit()" style="display:none">Cancel Edit</button>
       <div class="wiz-hint" id="wiz-publish-hint">Published events appear immediately on the public site.</div>
     </div><!-- /step 3 -->
+
+      </div><!-- /wiz-content -->
+
+      <!-- RIGHT SIDEBAR: STEP NAVIGATION -->
+      <aside class="wiz-sidebar">
+        <div class="wiz-sidebar-title">Steps</div>
+        <div class="wiz-steps" id="wiz-steps">
+          <div class="wiz-step active" data-step="1" onclick="goStep(1)">
+            <div class="ws-num">1</div>
+            <div class="ws-txt"><div class="ws-label">Build Event</div><div class="ws-sub">Details &amp; venue</div></div>
+          </div>
+          <div class="wiz-step" data-step="2" onclick="goStep(2)">
+            <div class="ws-num">2</div>
+            <div class="ws-txt"><div class="ws-label">Add Tickets</div><div class="ws-sub">Seating &amp; zones</div></div>
+          </div>
+          <div class="wiz-step" data-step="3" onclick="goStep(3)">
+            <div class="ws-num">3</div>
+            <div class="ws-txt"><div class="ws-label">Publish</div><div class="ws-sub">Review &amp; go live</div></div>
+          </div>
+        </div>
+        <div class="wiz-progress"><i id="wiz-progress-bar"></i></div>
+      </aside>
+    </div><!-- /wiz-shell -->
+  </div>
+
+  <!-- ═══════════════════ VENUE DESIGNER (full-screen modal) ═══════════════════ -->
+  <div class="vd-overlay" id="vd-overlay" style="display:none">
+    <div class="vd-modal">
+      <!-- TOP BAR -->
+      <div class="vd-topbar">
+        <div class="vd-title">
+          <span class="vd-title-main">Venue Designer</span>
+          <span class="vd-title-sub" id="vd-subtitle">Empty canvas · place sections, tables, objects and text yourself</span>
+        </div>
+        <div class="vd-topbar-actions">
+          <button class="vd-btn vd-btn-ghost" onclick="vdClearAll()" title="Remove everything from the canvas">✕ Clear canvas</button>
+          <button class="vd-btn vd-btn-primary" onclick="closeVenueDesigner()">✓ Done</button>
+        </div>
+      </div>
+
+      <!-- BODY: canvas on the left, tool rail on the RIGHT -->
+      <div class="vd-body">
+        <div class="vd-canvas-area">
+          <div class="vd-canvas-scroll">
+            <div class="vd-canvas" id="vd-canvas" oncontextmenu="return false">
+              <div class="vd-empty" id="vd-empty">
+                <div class="vd-empty-icon">▦</div>
+                <div class="vd-empty-title">Empty canvas</div>
+                <div class="vd-empty-text">Use the tools on the right to add a Section, Table, Object or Text.<br>Drag anything you add to reposition it.</div>
+              </div>
+            </div>
+          </div>
+          <div class="vd-statusbar">
+            <span id="vd-status">0 elements</span>
+            <span class="vd-status-hint">Drag to move · corner handle to resize · select then Edit on the right</span>
+          </div>
+        </div>
+
+        <!-- RIGHT TOOL RAIL -->
+        <aside class="vd-rail">
+          <div class="vd-rail-section">
+            <div class="vd-rail-title">Add element</div>
+            <button class="vd-tool" onclick="vdBeginAdd('section')" title="Reserved or general-admission area">
+              <span class="vd-tool-icon">▭</span>
+              <span class="vd-tool-name">Section</span>
+              <span class="vd-tool-sub">Rows &amp; seats</span>
+            </button>
+            <button class="vd-tool" onclick="vdBeginAdd('table')" title="A table with seats around it">
+              <span class="vd-tool-icon">⬤</span>
+              <span class="vd-tool-name">Table</span>
+              <span class="vd-tool-sub">Seats around it</span>
+            </button>
+            <button class="vd-tool" onclick="vdBeginAdd('object')" title="Stage, bar, washroom, exit">
+              <span class="vd-tool-icon">◆</span>
+              <span class="vd-tool-name">Object</span>
+              <span class="vd-tool-sub">Stage, bar, exit…</span>
+            </button>
+            <button class="vd-tool" onclick="vdBeginAdd('text')" title="A free text label">
+              <span class="vd-tool-icon">T</span>
+              <span class="vd-tool-name">Text</span>
+              <span class="vd-tool-sub">Free label</span>
+            </button>
+          </div>
+
+          <!-- SETUP PANEL: appears first when you pick a tool -->
+          <div class="vd-rail-section vd-setup" id="vd-setup"></div>
+
+          <!-- EDIT PANEL appears when something is selected -->
+          <div class="vd-rail-section vd-edit" id="vd-edit"></div>
+        </aside>
+      </div>
+    </div>
   </div>
 
   <!-- EVENTS VIEW -->
@@ -685,7 +952,10 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
         <div style="font-size:9px;letter-spacing:.2em;color:var(--logo-red);text-transform:uppercase;font-weight:600;margin-bottom:4px">Events</div>
         <h2 style="font-family:var(--font-d);font-size:28px;letter-spacing:2px;color:var(--white)">All Events <span id="events-count-label" style="font-size:14px;color:var(--gray);font-family:var(--font-b);letter-spacing:0">(0)</span></h2>
       </div>
-      <button class="btn btn-outline btn-sm" onclick="clearAll()">Clear All</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-outline btn-sm" onclick="downloadAllBookings()" title="Download seat bookings for every event below as Excel files">⤓ Download All</button>
+        <button class="btn btn-outline btn-sm" onclick="clearAll()">Clear All</button>
+      </div>
     </div>
     <div class="admin-events-grid" id="admin-event-list"></div>
   </div>
@@ -825,6 +1095,8 @@ function goStep(n){
     el.classList.toggle('active', s===n);
     el.classList.toggle('done', s<n);
   });
+  const bar = document.getElementById('wiz-progress-bar');
+  if(bar) bar.style.width = (n*33.33)+'%';
   if(n===3) renderReview();
   const view = document.getElementById('view-create');
   if(view) view.scrollTop = 0;
@@ -854,6 +1126,8 @@ function goStepPinned(n){
     el.classList.toggle('active', s===n);
     el.classList.toggle('done', s<n);
   });
+  const bar2 = document.getElementById('wiz-progress-bar');
+  if(bar2) bar2.style.width = (n*33.33)+'%';
 }
 
 function eventStatusLabel(status){
@@ -870,7 +1144,6 @@ function renderReview(){
   const date = val('f-date');
   const time = val('f-time');
   const endTime = val('f-end-time');
-  const genre = val('f-genre');
   const status = val('f-status');
   const selling = zones.map(z=>`${z.name} — $${z.price} (${z.rows} row${z.rows===1?'':'s'})`).join('<br>') || '(none)';
   const totalSeats = zones.reduce((a,z)=>a+(+z.rows||0),0) * (+document.getElementById('f-cols').value||0);
@@ -879,7 +1152,6 @@ function renderReview(){
     row('Event', name + (artist?`<br><span style="color:#777">${artist}</span>`:'')) +
     row('When', `${date||'—'} · ${time||'—'}${endTime?'–'+endTime:''}`) +
     row('Where', venue) +
-    row('Genre', genre) +
     row('Ticket zones', selling) +
     row('Seats', totalSeats ? `${totalSeats} seats across ${zones.length} zone(s)` : '—') +
     row('Build mode', (document.querySelector('.lm-btn.active')?.dataset.mode==='manual' ? 'Manual seating' : 'Auto seating')) +
@@ -1120,6 +1392,28 @@ function getSeatId(row,col,zones,cols,zoneMap){
 let heldSeats = [];
 let canvasSeats = [];
 
+// ─────────────────── CANVAS ELEMENTS (sections · tables · objects · text) ──
+// A separate layer that sits alongside seats on the same canvas. Seats keep
+// their own flat array so the existing booking/pricing flow is untouched.
+let canvasElements = [];      // [{id,type,x,y,w,h,label,colour,opts,seats}]
+let selectedElementId = null; // single-selection id (click-to-select)
+let elementDrag = null;       // in-progress drag state
+
+const ELEMENT_TOOLS = {
+  section: { label: 'Section', icon: '▭', colour: '#8b44ff', w: 220, h: 130 },
+  table:   { label: 'Table',   icon: '⬤', colour: '#ff9f43', w: 90,  h: 90  },
+  object:  { label: 'Object',  icon: '◆', colour: '#5b9cf6', w: 150, h: 40  },
+  text:    { label: 'Text',    icon: 'T', colour: '#c97bff', w: 140, h: 34  },
+};
+
+// Objects are the non-ticketed furniture Eventbrite offers.
+const OBJECT_PRESETS = [
+  { key: 'stage',  label: 'Stage',    icon: '◆', w: 300, h: 60 },
+  { key: 'bar',    label: 'Bar',      icon: '▬', w: 150, h: 40 },
+  { key: 'toilet', label: 'Washroom', icon: '⬓', w: 110, h: 40 },
+  { key: 'exit',   label: 'Exit',     icon: '⇥', w: 90,  h: 40 },
+];
+
 function renderHeldGrid(){
   const rows=Math.max(1,+document.getElementById('f-rows').value||8);
   const cols=Math.max(1,+document.getElementById('f-cols').value||12);
@@ -1309,7 +1603,6 @@ async function saveEvent(publishAs){
   const date=document.getElementById('f-date').value;
   const time=document.getElementById('f-time').value;
   const end_time=document.getElementById('f-end-time').value;
-  const genre=document.getElementById('f-genre').value;
   const statusSelect=document.getElementById('f-status');
   // The Publish step's button sets the final status (live / draft)
   if(publishAs==='live' || publishAs==='draft') statusSelect.value = publishAs;
@@ -1328,7 +1621,7 @@ async function saveEvent(publishAs){
   const venue_address=(a1||a2||a3||pc)?{address1:a1,address2:a2,address3:a3,postal_code:pc}:null;
 
   const payload={
-    name,artist,venue,date,time,end_time,genre,status,
+    name,artist,venue,date,time,end_time,status,
     rows,cols,
     zones:JSON.parse(JSON.stringify(zones)),
     held_seats:heldSeats,
@@ -1403,7 +1696,6 @@ function editEvent(id){
   document.getElementById('f-date').value=e.date;
   document.getElementById('f-time').value=e.time||'20:00';
   document.getElementById('f-end-time').value=e.end_time||'22:00';
-  document.getElementById('f-genre').value=e.genre;
   document.getElementById('f-status').value=e.status;
   document.getElementById('f-artist-bio').value=e.artist_bio||'';
   _artistPhotoData = e.artist_photo||'';
@@ -1702,8 +1994,968 @@ function renderCanvas(){
     const maxY=Math.max(...canvasSeats.map(s=>s.y));
     canvas.style.height=Math.max(250,parseInt(canvas.style.height)||300,maxY+60)+'px';
   }
+  renderCanvasElements();
+  // Grow to fit elements so nothing is clipped by the canvas edge.
+  if(canvasElements.length){
+    const maxElY=Math.max(...canvasElements.map(el=>el.y+el.h));
+    canvas.style.height=Math.max(250, parseInt(canvas.style.height)||300, maxElY+30)+'px';
+  }
   updateScInfo();
 }
+
+// ─────────────── VENUE DESIGNER ───────────────
+// Full-screen modal opened by the ＋ Canvas button. The canvas starts EMPTY and
+// the user places everything from the tool rail on the right. Elements live in
+// `canvasElements` and are drawn onto `#vd-canvas` (not the inline seat canvas).
+let vdElements = [];            // [{id,type,x,y,w,h,label,colour,opts}]
+let vdSelectedId = null;        // currently selected element
+let vdDrag = null;              // drag state
+let vdResize = null;            // resize state
+
+function openVenueDesigner(){
+  const ov = document.getElementById('vd-overlay');
+  if(!ov) return;
+  ov.style.display = 'flex';
+  renderVdCanvas();
+  vdGrowCanvas();
+  showToast('Venue Designer opened','success');
+}
+
+function closeVenueDesigner(){
+  const ov = document.getElementById('vd-overlay');
+  if(ov) ov.style.display = 'none';
+  // Mirror the designer map into the seat canvas so the existing seat/pricing
+  // flow can still see what was drawn (elements are display-only for now).
+  canvasElements = vdElements.slice();
+  renderCanvasElements();
+  showToast('Canvas saved to this event','success');
+}
+
+function vdClearAll(){
+  if(!vdElements.length){ showToast('Canvas is already empty','info'); return; }
+  if(!confirm('Remove everything from the canvas?')) return;
+  vdElements = []; vdSelectedId = null;
+  renderVdCanvas(); renderVdEditPanel();
+  showToast('Canvas cleared','success');
+}
+
+// Step 1 — clicking a rail tool opens its setup form instead of dropping a shape.
+let vdPendingType = null;
+
+function vdBeginAdd(type){
+  vdPendingType = type;
+  vdSelectedId = null;
+  renderVdCanvas();
+  renderVdEditPanel();
+  renderVdSetupPanel();
+}
+
+// Step 2 — the setup form is confirmed, so the element gets created.
+function vdConfirmAdd(){
+  const type = vdPendingType;
+  if(!type) return;
+  const v = id => document.getElementById(id);
+
+  let el;
+  if(type === 'section'){
+    const rows  = Math.max(1, Math.min(40, +((v('vd-s-rows')||{}).value) || 1));
+    const cols  = Math.max(1, Math.min(60, +((v('vd-s-cols')||{}).value) || 1));
+    const admit = (v('vd-s-admission')||{}).value || 'reserved';
+    const label = ((v('vd-s-label')||{}).value || '').trim() || vdNextLabel('section');
+    const rowPre   = ((v('vd-s-rowpre')||{}).value || '').trim();
+    const rowStart = Math.max(1, +((v('vd-s-rowstart')||{}).value) || 1);
+    const seatPre  = ((v('vd-s-prefix')||{}).value || '').trim();
+    const seatStart= Math.max(1, +((v('vd-s-start')||{}).value) || 1);
+    const colour= (v('vd-s-colour')||{}).value || ELEMENT_TOOLS.section.colour;
+    const curve = +((v('vd-s-curve')||{}).value) || 0;
+    const skew  = +((v('vd-s-skew')||{}).value) || 0;
+    const align = (v('vd-s-align')||{}).value || 'center';
+    const cap   = admit === 'ga' ? (Math.max(1, +((v('vd-s-occ')||{}).value) || rows*cols)) : rows*cols;
+
+    // Size the block so the grid of seats fits, allowing for skew spacing.
+    const size = vdSectionSize(rows, cols, skew, curve, align);
+
+    el = vdMakeElement({
+      type:'section', w:size.w, h:size.h, label, colour,
+      opts:{ admission:admit, rows, cols, capacity:cap,
+             prefix:seatPre, seat_prefix:seatPre, seat_start:seatStart,
+             row_prefix:rowPre, row_start:rowStart,
+             curve, skew, align },
+    });
+  } else if(type === 'table'){
+    const seats  = Math.max(0, Math.min(40, +((v('vd-t-seats')||{}).value) || 0));
+    const endMax = (v('vd-t-end')||{}).value === 'max';
+    const label  = ((v('vd-t-label')||{}).value || '').trim() || vdNextLabel('table');
+    const colour = (v('vd-t-colour')||{}).value || ELEMENT_TOOLS.table.colour;
+    el = vdMakeElement({
+      type:'table', w:90, h:90, label, colour,
+      opts:{ tableSeats: endMax ? Math.max(seats, Math.round((90+90)/16)) : seats, endMax },
+    });
+  } else if(type === 'object'){
+    const preset = (v('vd-o-preset')||{}).value || 'stage';
+    const p = OBJECT_PRESETS.find(x=>x.key===preset) || OBJECT_PRESETS[0];
+    el = vdMakeElement({ type:'object', w:p.w, h:p.h, label:p.label, colour:ELEMENT_TOOLS.object.colour,
+                         opts:{ preset:p.label } });
+  } else {
+    const label = ((v('vd-x-label')||{}).value || '').trim() || vdNextLabel('text');
+    const colour= (v('vd-x-colour')||{}).value || ELEMENT_TOOLS.text.colour;
+    el = vdMakeElement({ type:'text', w:150, h:34, label, colour, opts:{} });
+  }
+
+  vdPendingType = null;
+  renderVdSetupPanel();
+  vdSelectedId = el.id;
+  renderVdCanvas(); renderVdEditPanel();
+  showToast(el.label + ' added — drag to position','success');
+}
+
+// Shared element factory: lays the new item out under the existing ones.
+function vdMakeElement(spec){
+  const canvas = document.getElementById('vd-canvas');
+  const maxW = canvas ? canvas.clientWidth : 900;
+  const n = vdElements.length;
+  const el = Object.assign({
+    id: 'vd_' + Date.now().toString(36) + Math.floor(Math.random()*1e4).toString(36),
+    x: 30 + ((n*26) % Math.max(60, maxW-300)),
+    y: 30 + ((n*26) % 320),
+    w: 180, h: 120, label: 'Element', colour: '#8b44ff', opts: {},
+  }, spec);
+  vdElements.push(el);
+  return el;
+}
+
+// The setup form shown in the rail before an element is created.
+function renderVdSetupPanel(){
+  const box = document.getElementById('vd-setup');
+  if(!box) return;
+  if(!vdPendingType){ box.innerHTML = ''; return; }
+
+  let body = '';
+  if(vdPendingType === 'section'){
+    body = `
+      <div class="vd-setup-head">
+        <span class="vd-setup-title">New Section</span>
+        <button class="vd-setup-x" onclick="vdCancelAdd()" title="Cancel">✕</button>
+      </div>
+      <div class="ei-row">
+        <div><label>Rows</label><input type="number" id="vd-s-rows" min="1" max="26" value="5" autofocus></div>
+        <div><label>Seats per row</label><input type="number" id="vd-s-cols" min="1" max="50" value="10"></div>
+      </div>
+      <div class="ei-row single">
+        <div><label>Seating type</label>
+          <select id="vd-s-admission" onchange="vdSectionAdmissionChange()">
+            <option value="reserved">Reserved seating (pick seats)</option>
+            <option value="ga">General admission (pick area)</option>
+          </select></div>
+      </div>
+      <div class="ei-row single" id="vd-s-occ-row" style="display:none">
+        <div><label>Occupancy limit</label><input type="number" id="vd-s-occ" min="1" value="50"></div>
+      </div>
+      <div class="ei-row single">
+        <div><label>Section name</label><input id="vd-s-label" placeholder="e.g. Balcony 1"></div>
+      </div>
+      <div class="ei-row">
+        <div><label>Row prefix</label><input id="vd-s-rowpre" placeholder="e.g. A" maxlength="4"></div>
+        <div><label>Row start with</label><input type="number" id="vd-s-rowstart" min="1" value="1"></div>
+      </div>
+      <div class="ei-row">
+        <div><label>Seat prefix</label><input id="vd-s-prefix" placeholder="e.g. 1" maxlength="4"></div>
+        <div><label>Seat start with</label><input type="number" id="vd-s-start" min="1" value="1"></div>
+      </div>
+      <div class="ei-row single">
+        <div><label>Colour</label><input type="color" id="vd-s-colour" value="${ELEMENT_TOOLS.section.colour}"></div>
+      </div>
+      <div class="vd-layout-group">
+        <div class="vd-layout-title">Layout</div>
+        <div class="ei-row single">
+          <div><label>Alignment</label>
+            <select id="vd-s-align">
+              <option value="left">Left</option>
+              <option value="center" selected>Centre</option>
+              <option value="right">Right</option>
+            </select></div>
+        </div>
+        <div class="vd-slider">
+          <label>Curve <span class="vd-slider-val" id="vd-s-curve-val">Flat</span></label>
+          <input type="range" id="vd-s-curve" min="-100" max="100" step="1" value="0"
+                 oninput="vdCurveLabel('vd-s-curve','vd-s-curve-val')">
+          <div class="vd-slider-ends"><span>Down</span><span>Flat</span><span>Up</span></div>
+        </div>
+        <div class="vd-slider">
+          <label>Skew <span class="vd-slider-val" id="vd-s-skew-val">0</span></label>
+          <input type="range" id="vd-s-skew" min="0" max="100" step="1" value="0"
+                 oninput="document.getElementById('vd-s-skew-val').textContent=this.value">
+        </div>
+      </div>
+      <div class="vd-edit-actions">
+        <button class="primary" onclick="vdConfirmAdd()">✓ Create section</button>
+        <button onclick="vdCancelAdd()">Cancel</button>
+      </div>
+      <div class="vd-setup-hint">Rows × seats builds the grid of seats on the canvas.</div>`;
+  } else if(vdPendingType === 'table'){
+    body = `
+      <div class="vd-setup-head">
+        <span class="vd-setup-title">New Table</span>
+        <button class="vd-setup-x" onclick="vdCancelAdd()" title="Cancel">✕</button>
+      </div>
+      <div class="ei-row">
+        <div><label>Seats</label><input type="number" id="vd-t-seats" min="0" max="40" value="8"></div>
+        <div><label>End seats</label>
+          <select id="vd-t-end">
+            <option value="max">Maximum</option>
+            <option value="fewer">As entered</option>
+          </select></div>
+      </div>
+      <div class="ei-row single">
+        <div><label>Table name</label><input id="vd-t-label" placeholder="e.g. Table 1"></div>
+      </div>
+      <div class="ei-row single">
+        <div><label>Colour</label><input type="color" id="vd-t-colour" value="${ELEMENT_TOOLS.table.colour}"></div>
+      </div>
+      <div class="vd-edit-actions">
+        <button class="primary" onclick="vdConfirmAdd()">✓ Create table</button>
+        <button onclick="vdCancelAdd()">Cancel</button>
+      </div>`;
+  } else if(vdPendingType === 'object'){
+    body = `
+      <div class="vd-setup-head">
+        <span class="vd-setup-title">New Object</span>
+        <button class="vd-setup-x" onclick="vdCancelAdd()" title="Cancel">✕</button>
+      </div>
+      <div class="ei-row single">
+        <div><label>Object</label>
+          <select id="vd-o-preset">
+            ${OBJECT_PRESETS.map(p=>`<option value="${p.key}">${p.icon} ${p.label}</option>`).join('')}
+          </select></div>
+      </div>
+      <div class="vd-edit-actions">
+        <button class="primary" onclick="vdConfirmAdd()">✓ Create object</button>
+        <button onclick="vdCancelAdd()">Cancel</button>
+      </div>`;
+  } else {
+    body = `
+      <div class="vd-setup-head">
+        <span class="vd-setup-title">New Text</span>
+        <button class="vd-setup-x" onclick="vdCancelAdd()" title="Cancel">✕</button>
+      </div>
+      <div class="ei-row single">
+        <div><label>Text</label><input id="vd-x-label" placeholder="e.g. Entrance"></div>
+      </div>
+      <div class="ei-row single">
+        <div><label>Colour</label><input type="color" id="vd-x-colour" value="${ELEMENT_TOOLS.text.colour}"></div>
+      </div>
+      <div class="vd-edit-actions">
+        <button class="primary" onclick="vdConfirmAdd()">✓ Create text</button>
+        <button onclick="vdCancelAdd()">Cancel</button>
+      </div>`;
+  }
+
+  box.innerHTML = body;
+  box.style.display = 'block';
+  const first = box.querySelector('input,select');
+  if(first) first.focus();
+}
+
+function vdSectionAdmissionChange(){
+  const sel = document.getElementById('vd-s-admission');
+  const row = document.getElementById('vd-s-occ-row');
+  if(!sel || !row) return;
+  row.style.display = sel.value === 'ga' ? 'block' : 'none';
+}
+
+function vdCancelAdd(){
+  vdPendingType = null;
+  renderVdSetupPanel();
+}
+
+function vdNextLabel(type){
+  const n = vdElements.filter(e=>e.type===type).length + 1;
+  if(type==='section') return 'Section ' + n;
+  if(type==='table')   return 'Table ' + n;
+  if(type==='text')    return 'Text ' + n;
+  return 'Stage';
+}
+
+function renderVdCanvas(){
+  const canvas = document.getElementById('vd-canvas');
+  if(!canvas) return;
+  canvas.querySelectorAll('.vd-el').forEach(n=>n.remove());
+
+  const empty = document.getElementById('vd-empty');
+  if(empty) empty.style.display = vdElements.length ? 'none' : 'flex';
+
+  vdElements.forEach(el=>{
+    const d = document.createElement('div');
+    d.className = 'vd-el' + (el.id===vdSelectedId ? ' selected' : '');
+    d.dataset.vdid = el.id;
+    d.dataset.vdkind = el.type;
+    d.style.left = el.x+'px';
+    d.style.top = el.y+'px';
+    d.style.width = el.w+'px';
+    d.style.height = el.h+'px';
+    d.style.background = hexA(el.colour, el.type==='text' ? .10 : .16);
+    d.style.borderColor = el.colour;
+    if(el.type==='text') d.style.borderStyle = 'dashed';
+
+    let seats = '';
+    if(el.type==='table'){
+      const n = el.opts.tableSeats||0;
+      for(let i=0;i<n;i++){
+        const a = (Math.PI*2*i)/Math.max(1,n) - Math.PI/2;
+        const rx = el.w/2+9, ry = el.h/2+9;
+        seats += `<span class="vd-table-seat" style="left:${el.w/2+Math.cos(a)*rx}px;top:${el.h/2+Math.sin(a)*ry}px;background:${hexA(el.colour,.55)}"></span>`;
+      }
+    } else if(el.type==='section' && el.opts.admission !== 'ga'){
+      // Reserved sections show the real seat grid the organiser entered,
+      // shaped by the curve / skew / alignment settings.
+      seats = vdSectionSeatsHtml(el);
+    }
+    const sub = el.type==='table' ? `${el.opts.tableSeats||0} seats`
+              : el.type==='section' ? (el.opts.admission==='ga'
+                  ? `${el.opts.capacity||0} occupancy · GA`
+                  : `${el.opts.rows||0} × ${el.opts.cols||0} = ${el.opts.capacity||0} seats`)
+              : '';
+    d.innerHTML = seats
+      + `<span class="vd-el-label">${escapeHtml(el.label)}`
+      + (sub ? `<span class="vd-el-sub">${escapeHtml(sub)}</span>` : '')
+      + `</span><span class="vd-el-handle"></span>`;
+
+    d.addEventListener('mousedown', e=>vdMouseDown(e, el.id));
+    d.addEventListener('click', e=>{
+      if(vdDrag && vdDrag.moved) return;
+      vdSelectedId = el.id; renderVdCanvas(); renderVdEditPanel(); e.stopPropagation();
+    });
+    d.querySelector('.vd-el-handle').addEventListener('mousedown', e=>vdResizeDown(e, el.id));
+    canvas.appendChild(d);
+  });
+
+  const st = document.getElementById('vd-status');
+  if(st) st.textContent = vdElements.length === 1 ? '1 element' : vdElements.length + ' elements';
+
+  vdGrowCanvas();
+}
+
+// Layout maths for a reserved section's seats.
+//   curve — bends each row into an arc (0 = flat row, 100 = deep arc)
+//   skew  — fans the seats apart within a row (0 = even, 100 = wide)
+//   align — left / centre / right anchoring of each row inside the block
+// Prefixes:
+//   row_prefix + row_start   label each ROW   (e.g. A1, A2, A3 …)
+//   seat_prefix + seat_start label each SEAT  (e.g. 1, 2, 3 …)
+// Returns absolutely-positioned <span> elements.
+function vdSectionSeatsHtml(el){
+  const o = el.opts || {};
+  const rows = Math.max(0, o.rows||0);
+  const cols = Math.max(0, o.cols||0);
+  if(!rows || !cols) return '';
+
+  const pad = 34, seatPx = 20, gapPx = 4;   // left pad leaves room for row labels
+  // Curve is signed:  +  bows the row UP   (ends lower, middle higher)
+  //                   −  bows the row DOWN (ends higher, middle lower)
+  const curve = Math.max(-100, Math.min(100, +o.curve||0));
+  const skew  = Math.max(0, Math.min(100, +o.skew||0));
+  const align = o.align || 'center';
+
+  const rowPre    = (o.row_prefix || '').trim();
+  const rowStart  = Math.max(1, +o.row_start || 1);
+  const seatPre   = (o.seat_prefix || o.prefix || '').trim();
+  const seatStart = Math.max(1, +o.seat_start || 1);
+
+  const inner   = Math.max(1, el.w - pad*2);
+  const baseGap = gapPx + ((seatPx + gapPx) * (skew/100) * 0.9);
+  const rowWidth = cols*seatPx + Math.max(0, cols-1)*baseGap;
+
+  // How far the middle of a row sits from its ends. Signed, so it lifts or sinks.
+  const curveLift = (curve/100) * 100 * 0.55;
+  const rowRise = curve ? Math.abs(curve) * 0.06 : 0;
+  // Headroom so a curved first row stays inside the block.
+  const topPad = 26 + (curve > 0 ? curveLift : 0);
+  const bottomPad = curve < 0 ? Math.abs(curveLift) : 16;
+
+  let html = '';
+  for(let r=0;r<rows;r++){
+    const startX = align==='left'  ? pad
+                 : align==='right' ? pad + Math.max(0, inner - rowWidth)
+                 : pad + Math.max(0, (inner - rowWidth)/2);
+    const rowBaseY = topPad + r*(seatPx + gapPx + rowRise);
+
+    // Row label sits to the left of the row, at its baseline.
+    if(rowPre){
+      const rowLabel = rowPre + (rowStart + r);
+      html += `<span class="vd-row-label" style="left:${Math.round(pad - 20)}px;`
+            + `top:${Math.round(rowBaseY + seatPx/2)}px">${escapeHtml(rowLabel)}</span>`;
+    }
+
+    for(let c=0;c<cols;c++){
+      const x = startX + c*(seatPx + baseGap);
+      // Arc across the row: 0 at both ends, ±curveLift in the middle.
+      const t = cols > 1 ? c/(cols-1) : 0.5;
+      const arc = curveLift * Math.sin(Math.PI * t);
+      const y = rowBaseY - arc;    // + curve raises, − curve lowers
+      const seatNo = seatPre ? (seatPre + (seatStart + c)) : '';
+      html += `<span class="vd-seat" style="left:${Math.round(x)}px;top:${Math.round(y)}px;`
+            + `width:${seatPx}px;height:${seatPx}px;background:${hexA(el.colour,.42)};`
+            + `border:1px solid ${hexA(el.colour,.85)}">`
+            + (seatNo ? `<i class="vd-seat-no">${escapeHtml(seatNo)}</i>` : '')
+            + `</span>`;
+    }
+  }
+  return html;
+}
+
+// Size a section block to fit its (possibly curved / skewed) seat layout.
+// Alignment needs a little slack, otherwise left/centre/right all coincide.
+function vdSectionSize(rows, cols, skew, curve, align){
+  const pad = 34, seatPx = 20, gapPx = 4;
+  const baseGap = gapPx + ((seatPx + gapPx) * (Math.max(0,Math.min(100,skew||0))/100) * 0.9);
+  const rowWidth = cols*seatPx + Math.max(0,cols-1)*baseGap;
+  // Give the block extra width so alignment has room to shift the rows.
+  const slack = (align && align !== 'center') ? Math.max(24, rowWidth*0.18) : Math.max(16, rowWidth*0.08);
+  const cv = Math.max(-100, Math.min(100, curve||0));
+  const curveLift = Math.abs((cv/100) * 100 * 0.55);
+  const rowRise = cv ? Math.abs(cv) * 0.06 : 0;
+  // Headroom for an up curve, and sag room for a down curve.
+  const topPad = 26 + (cv > 0 ? curveLift : 0);
+  const bottomPad = cv < 0 ? curveLift : 16;
+  const w = Math.max(140, pad*2 + rowWidth + slack);
+  const h = Math.max(80,  topPad + rows*(seatPx+gapPx+rowRise) + bottomPad);
+  return { w: Math.round(w), h: Math.round(h) };
+}
+
+function vdMouseDown(e, id){
+  if(e.button!==0) return;
+  if(e.target.classList.contains('vd-el-handle')) return;
+  const canvas = document.getElementById('vd-canvas');
+  const el = vdElements.find(x=>x.id===id);
+  if(!el) return;
+  const cr = canvas.getBoundingClientRect();
+  // Include scroll offsets so a scrolled canvas doesn't make the item jump.
+  const sx = canvas.parentElement ? canvas.parentElement.scrollLeft : 0;
+  const sy = canvas.parentElement ? canvas.parentElement.scrollTop  : 0;
+  vdDrag = { id, moved:false,
+             offX: e.clientX - cr.left + sx - el.x,
+             offY: e.clientY - cr.top  + sy - el.y };
+  vdSelectedId = id;
+  document.addEventListener('mousemove', vdMouseMove);
+  document.addEventListener('mouseup', vdMouseUp);
+  e.preventDefault(); e.stopPropagation();
+}
+
+// Make sure the canvas is large enough to hold everything the user has placed,
+// so items can be dragged anywhere instead of hitting a fixed edge.
+function vdGrowCanvas(){
+  const canvas = document.getElementById('vd-canvas');
+  if(!canvas) return;
+  const minH = 560, minW = Math.max(600, canvas.parentElement ? canvas.parentElement.clientWidth - 44 : 600);
+  let needW = minW, needH = minH;
+  vdElements.forEach(el=>{
+    needW = Math.max(needW, el.x + el.w + 60);
+    needH = Math.max(needH, el.y + el.h + 60);
+  });
+  canvas.style.minHeight = Math.round(needH) + 'px';
+  canvas.style.minWidth  = Math.round(needW) + 'px';
+}
+
+function vdMouseMove(e){
+  if(!vdDrag) return;
+  const canvas = document.getElementById('vd-canvas');
+  const el = vdElements.find(x=>x.id===vdDrag.id);
+  if(!el || !canvas) return;
+  const cr = canvas.getBoundingClientRect();
+  const sx = canvas.parentElement ? canvas.parentElement.scrollLeft : 0;
+  const sy = canvas.parentElement ? canvas.parentElement.scrollTop  : 0;
+  const x = e.clientX - cr.left + sx - vdDrag.offX;
+  const y = e.clientY - cr.top  + sy - vdDrag.offY;
+  if(Math.abs(x-el.x)>2 || Math.abs(y-el.y)>2) vdDrag.moved = true;
+  // Free movement inside the current canvas area; the area grows as you go.
+  el.x = Math.max(0, x);
+  el.y = Math.max(0, y);
+  const node = canvas.querySelector(`.vd-el[data-vdid="${el.id}"]`);
+  if(node){ node.style.left = el.x+'px'; node.style.top = el.y+'px'; }
+  vdGrowCanvas();   // expand so there is always more room to drag into
+}
+function vdMouseUp(){
+  const moved = vdDrag && vdDrag.moved;
+  vdDrag = null;
+  document.removeEventListener('mousemove', vdMouseMove);
+  document.removeEventListener('mouseup', vdMouseUp);
+  if(moved) renderVdEditPanel();
+}
+
+function vdResizeDown(e, id){
+  const el = vdElements.find(x=>x.id===id);
+  if(!el) return;
+  vdResize = { id, sx:e.clientX, sy:e.clientY, w0:el.w, h0:el.h };
+  document.addEventListener('mousemove', vdResizeMove);
+  document.addEventListener('mouseup', vdResizeUp);
+  e.preventDefault(); e.stopPropagation();
+}
+function vdResizeMove(e){
+  if(!vdResize) return;
+  const el = vdElements.find(x=>x.id===vdResize.id);
+  const canvas = document.getElementById('vd-canvas');
+  if(!el) return;
+  el.w = Math.max(50, vdResize.w0 + (e.clientX-vdResize.sx));
+  el.h = Math.max(30, vdResize.h0 + (e.clientY-vdResize.sy));
+  const node = canvas && canvas.querySelector(`.vd-el[data-vdid="${el.id}"]`);
+  if(node){ node.style.width = el.w+'px'; node.style.height = el.h+'px'; }
+  vdGrowCanvas();
+}
+function vdResizeUp(){
+  vdResize = null;
+  document.removeEventListener('mousemove', vdResizeMove);
+  document.removeEventListener('mouseup', vdResizeUp);
+  renderVdCanvas(); renderVdEditPanel();
+}
+
+// Right-rail edit panel (select an element, edit, then Apply)
+function renderVdEditPanel(){
+  const box = document.getElementById('vd-edit');
+  if(!box) return;
+  const el = vdElements.find(x=>x.id===vdSelectedId);
+  if(!el){ box.innerHTML = ''; return; }
+
+  const typeName = (ELEMENT_TOOLS[el.type]||{}).label || el.type;
+  let fields = '';
+
+  if(el.type==='section'){
+    const isGa = el.opts.admission === 'ga';
+    fields = `
+      <div class="ei-row">
+        <div><label>Admission</label>
+          <select id="vd-admission">
+            <option value="reserved"${el.opts.admission!=='ga'?' selected':''}>Reserved (pick seats)</option>
+            <option value="ga"${el.opts.admission==='ga'?' selected':''}>General admission</option>
+          </select></div>
+        <div><label>${isGa?'Occupancy':'Capacity'}</label>
+          <input type="number" id="vd-capacity" min="0" value="${el.opts.capacity||0}"></div>
+      </div>
+      ${isGa ? '' : `
+      <div class="ei-row">
+        <div><label>Rows</label><input type="number" id="vd-rows" min="1" max="40" value="${el.opts.rows||1}"></div>
+        <div><label>Seats per row</label><input type="number" id="vd-cols" min="1" max="60" value="${el.opts.cols||1}"></div>
+      </div>`}
+      <div class="ei-row single">
+        <div><label>Section prefix</label><input id="vd-prefix" value="${escapeAttr(el.opts.prefix||'')}" placeholder="Balcony 1"></div>
+      </div>
+      <div class="ei-row">
+        <div><label>Row prefix</label><input id="vd-rowpre" value="${escapeAttr(el.opts.row_prefix||'')}" placeholder="e.g. A" maxlength="4"></div>
+        <div><label>Row start with</label><input type="number" id="vd-rowstart" min="1" value="${el.opts.row_start||1}"></div>
+      </div>
+      <div class="ei-row">
+        <div><label>Seat prefix</label><input id="vd-seatpre" value="${escapeAttr(el.opts.seat_prefix||el.opts.prefix||'')}" placeholder="e.g. 1" maxlength="4"></div>
+        <div><label>Seat start with</label><input type="number" id="vd-seatstart" min="1" value="${el.opts.seat_start||1}"></div>
+      </div>
+      ${isGa ? '' : `
+      <div class="vd-layout-group">
+        <div class="vd-layout-title">Layout</div>
+        <div class="ei-row single">
+          <div><label>Alignment</label>
+            <select id="vd-align">
+              <option value="left"${el.opts.align==='left'?' selected':''}>Left</option>
+              <option value="center"${(el.opts.align||'center')==='center'?' selected':''}>Centre</option>
+              <option value="right"${el.opts.align==='right'?' selected':''}>Right</option>
+            </select></div>
+        </div>
+        <div class="vd-slider">
+          <label>Curve <span class="vd-slider-val" id="vd-curve-val">${vdCurveText(el.opts.curve)}</span></label>
+          <input type="range" id="vd-curve" min="-100" max="100" step="1" value="${el.opts.curve||0}"
+                 oninput="vdLiveLayout('vd-curve','vd-curve-val')">
+          <div class="vd-slider-ends"><span>Down</span><span>Flat</span><span>Up</span></div>
+        </div>
+        <div class="vd-slider">
+          <label>Skew <span class="vd-slider-val" id="vd-skew-val">${el.opts.skew||0}</span></label>
+          <input type="range" id="vd-skew" min="0" max="100" step="1" value="${el.opts.skew||0}"
+                 oninput="vdLiveLayout('vd-skew','vd-skew-val')">
+        </div>
+        <div class="vd-setup-hint">Curve bends the rows — drag left for a down curve, right for an up curve. Skew fans the seats apart in each row.</div>
+      </div>`}`;
+  } else if(el.type==='table'){
+    fields = `
+      <div class="ei-row">
+        <div><label>Seats</label><input type="number" id="vd-tseats" min="0" max="40" value="${el.opts.tableSeats||0}"></div>
+        <div><label>End seats</label>
+          <select id="vd-endseats">
+            <option value="max">Maximum</option>
+            <option value="fewer">Fewer</option>
+          </select></div>
+      </div>`;
+  } else if(el.type==='object'){
+    fields = `
+      <div class="ei-row single">
+        <div><label>Object</label>
+          <select id="vd-preset">
+            ${OBJECT_PRESETS.map(p=>`<option value="${p.key}"${(el.opts.preset||'').toLowerCase()===p.key?' selected':''}>${p.icon} ${p.label}</option>`).join('')}
+          </select></div>
+      </div>`;
+  }
+
+  box.innerHTML = `
+    <div class="vd-edit-head">
+      <div class="vd-edit-title">${typeName} · Edit</div>
+      <input type="color" id="vd-colour" value="${el.colour}" title="Colour">
+    </div>
+    <div class="ei-row single"><div><label>Label</label><input id="vd-label" value="${escapeAttr(el.label)}"></div></div>
+    ${fields}
+    <div class="vd-edit-actions">
+      <button class="primary" onclick="vdApply()">✓ Apply</button>
+      <button onclick="vdDuplicate()">⧉ Copy</button>
+      <button class="danger" onclick="vdDelete()">🗑 Delete</button>
+    </div>`;
+}
+
+function vdApply(){
+  const el = vdElements.find(x=>x.id===vdSelectedId);
+  if(!el) return;
+  const v = id => document.getElementById(id);
+  if(v('vd-label')) el.label = v('vd-label').value || el.label;
+  if(v('vd-colour')) el.colour = v('vd-colour').value;
+
+  if(el.type==='section'){
+    if(v('vd-admission')) el.opts.admission = v('vd-admission').value;
+    if(v('vd-prefix'))    el.opts.prefix      = v('vd-prefix').value;
+    if(v('vd-rowpre'))    el.opts.row_prefix  = v('vd-rowpre').value;
+    if(v('vd-rowstart'))  el.opts.row_start   = Math.max(1, +v('vd-rowstart').value || 1);
+    if(v('vd-seatpre'))   el.opts.seat_prefix = v('vd-seatpre').value;
+    if(v('vd-seatstart')) el.opts.seat_start  = Math.max(1, +v('vd-seatstart').value || 1);
+    // Layout: rows / seats rebuild the grid, curve + skew + align reshape it.
+    if(v('vd-rows'))  el.opts.rows = Math.max(1, Math.min(40, +v('vd-rows').value || 1));
+    if(v('vd-cols'))  el.opts.cols = Math.max(1, Math.min(60, +v('vd-cols').value || 1));
+    if(v('vd-align')) el.opts.align = v('vd-align').value;
+    if(v('vd-curve')) el.opts.curve = +v('vd-curve').value || 0;
+    if(v('vd-skew'))  el.opts.skew  = +v('vd-skew').value || 0;
+    if(el.opts.admission === 'ga'){
+      if(v('vd-capacity')) el.opts.capacity = +v('vd-capacity').value || 0;
+    } else {
+      if(v('vd-rows') || v('vd-cols')) el.opts.capacity = el.opts.rows * el.opts.cols;
+      const size = vdSectionSize(el.opts.rows, el.opts.cols, el.opts.skew, el.opts.curve, el.opts.align);
+      el.w = size.w; el.h = size.h;   // keep the block tight around its seats
+    }
+  } else if(el.type==='table'){
+    if(v('vd-tseats')) el.opts.tableSeats = +v('vd-tseats').value || 0;
+    if(v('vd-endseats') && v('vd-endseats').value==='max'){
+      const perim = Math.max(2, Math.round((el.w+el.h)/16));
+      el.opts.tableSeats = Math.min(40, perim);
+    }
+  } else if(el.type==='object'){
+    if(v('vd-preset')){
+      const p = OBJECT_PRESETS.find(x=>x.key===v('vd-preset').value);
+      if(p){ el.opts.preset = p.label; el.label = p.label; el.w = p.w; el.h = p.h; }
+    }
+  }
+  renderVdCanvas(); renderVdEditPanel();
+  showToast('Applied to ' + el.label,'success');
+}
+
+// Readable curve value: negative = down curve, positive = up curve.
+function vdCurveText(v){
+  const n = Math.round(+v||0);
+  if(n === 0) return 'Flat';
+  return n < 0 ? ('Down ' + Math.abs(n)) : ('Up ' + n);
+}
+
+// Live label for the create-form curve slider.
+function vdCurveLabel(sliderId, valId){
+  const s = document.getElementById(sliderId);
+  const o = document.getElementById(valId);
+  if(s && o) o.textContent = vdCurveText(s.value);
+}
+
+// Live preview while dragging the curve / skew sliders — updates the shape
+// immediately without closing the panel, so the effect is visible as you drag.
+function vdLiveLayout(sliderId, valId){
+  const el = vdElements.find(x=>x.id===vdSelectedId);
+  if(!el || el.type!=='section') return;
+  const slide = document.getElementById(sliderId);
+  const out   = document.getElementById(valId);
+  if(!slide) return;
+  const key = sliderId === 'vd-curve' ? 'curve' : 'skew';
+  el.opts[key] = +slide.value || 0;
+  if(out) out.textContent = key === 'curve' ? vdCurveText(slide.value) : slide.value;
+  // Both curve and skew change the block's footprint.
+  const size = vdSectionSize(el.opts.rows, el.opts.cols, el.opts.skew, el.opts.curve, el.opts.align);
+  el.w = size.w; el.h = size.h;
+  renderVdCanvas();
+}
+
+function vdDuplicate(){
+  const src = vdElements.find(x=>x.id===vdSelectedId);
+  if(!src) return;
+  const copy = JSON.parse(JSON.stringify(src));
+  copy.id = 'vd_' + Date.now().toString(36) + Math.floor(Math.random()*1e4).toString(36);
+  copy.x += 24; copy.y += 24;
+  copy.label = vdNextLabel(copy.type);
+  vdElements.push(copy);
+  vdSelectedId = copy.id;
+  renderVdCanvas(); renderVdEditPanel();
+  showToast('Duplicated ' + src.label,'success');
+}
+
+function vdDelete(){
+  if(!vdSelectedId) return;
+  const el = vdElements.find(x=>x.id===vdSelectedId);
+  vdElements = vdElements.filter(x=>x.id!==vdSelectedId);
+  vdSelectedId = null;
+  renderVdCanvas(); renderVdEditPanel();
+  if(el) showToast('Removed ' + el.label,'success');
+}
+function renderCanvasElements(){
+  const canvas=document.getElementById('seat-canvas');
+  if(!canvas) return;
+  canvas.querySelectorAll('.sc-element').forEach(el=>el.remove());
+
+  canvasElements.forEach(el=>{
+    const d=document.createElement('div');
+    d.className='sc-element'+(el.id===selectedElementId?' selected':'');
+    d.dataset.elid=el.id;
+    d.style.left=el.x+'px';
+    d.style.top=el.y+'px';
+    d.style.width=el.w+'px';
+    d.style.height=el.h+'px';
+    d.style.background=hexA(el.colour, el.type==='text'?0.10:0.16);
+    d.style.borderColor=el.colour;
+    if(el.type==='text') d.style.borderStyle='dashed';
+
+    // Table seats drawn around the perimeter; "end seats" = max fills the shape.
+    let seatHtml='';
+    if(el.type==='table'){
+      const n=el.opts.tableSeats||0;
+      for(let i=0;i<n;i++){
+        const a=(Math.PI*2*i)/Math.max(1,n) - Math.PI/2;
+        const rx=el.w/2+9, ry=el.h/2+9;
+        seatHtml+=`<span class="sc-table-seat" style="left:${el.w/2+Math.cos(a)*rx}px;top:${el.h/2+Math.sin(a)*ry}px;background:${hexA(el.colour,0.55)}"></span>`;
+      }
+    }
+    const sub = el.type==='table' ? `${el.opts.tableSeats||0} seats`
+              : el.type==='section' ? `${el.opts.capacity||0} seats${el.opts.admission==='ga'?' · GA':''}`
+              : '';
+    d.innerHTML = seatHtml
+      + `<span class="sce-label">${escapeHtml(el.label)}`
+      + (sub?`<br><span style="font-weight:400;opacity:.75;font-size:9px">${escapeHtml(sub)}</span>`:'')
+      + `</span><span class="sce-handle"></span>`;
+
+    d.addEventListener('mousedown', e=>elementMouseDown(e, el.id));
+    d.addEventListener('click', e=>{ if(!elementDrag|| !elementDrag.moved){ selectElement(el.id); e.stopPropagation(); } });
+    d.querySelector('.sce-handle').addEventListener('mousedown', e=>resizeMouseDown(e, el.id));
+    canvas.appendChild(d);
+  });
+}
+
+// hex + alpha -> rgba() so element fills read as translucent on the light canvas
+function hexA(hex, a){
+  const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex||'#8b44ff');
+  if(!m) return `rgba(139,68,255,${a})`;
+  return `rgba(${parseInt(m[1],16)},${parseInt(m[2],16)},${parseInt(m[3],16)},${a})`;
+}
+
+function nextElementLabel(type){
+  const n=canvasElements.filter(el=>el.type===type).length+1;
+  if(type==='section') return 'Section '+n;
+  if(type==='table')   return 'Table '+n;
+  if(type==='text')    return 'Text '+n;
+  return 'Stage';
+}
+
+function addCanvasElement(type){
+  const t=ELEMENT_TOOLS[type]||ELEMENT_TOOLS.section;
+  const canvas=document.getElementById('seat-canvas');
+  const defaults={
+    id:'el_'+(Date.now().toString(36))+Math.floor(Math.random()*1e4).toString(36),
+    type, x:20+((canvasElements.length*18)%160), y:20+((canvasElements.length*18)%110),
+    w:t.w, h:t.h, label:nextElementLabel(type), colour:t.colour,
+    opts: type==='section' ? {admission:'reserved', capacity:0, prefix:'', row:'', seat:''}
+        : type==='table'   ? {tableSeats:8}
+        : type==='object'  ? {preset:'Stage'}
+        : {},
+  };
+  canvasElements.push(defaults);
+  selectedElementId=defaults.id;
+  renderCanvasElements(); renderElementInspector();
+  showToast(t.label+' added — drag to position','success');
+}
+
+function selectElement(id){
+  selectedElementId=id;
+  renderCanvasElements();
+  renderElementInspector();
+}
+
+function duplicateSelectedElement(){
+  const src=canvasElements.find(el=>el.id===selectedElementId);
+  if(!src){ showToast('Select an element first','error'); return; }
+  const copy=JSON.parse(JSON.stringify(src));
+  copy.id='el_'+(Date.now().toString(36))+Math.floor(Math.random()*1e4).toString(36);
+  copy.x+=22; copy.y+=22;
+  copy.label=nextElementLabel(copy.type);
+  canvasElements.push(copy);
+  selectedElementId=copy.id;
+  renderCanvasElements(); renderElementInspector();
+  showToast('Duplicated '+src.label,'success');
+}
+
+function deleteSelectedElement(){
+  if(!selectedElementId){ showToast('Select an element first','error'); return; }
+  const el=canvasElements.find(x=>x.id===selectedElementId);
+  canvasElements=canvasElements.filter(x=>x.id!==selectedElementId);
+  selectedElementId=null;
+  renderCanvasElements(); renderElementInspector();
+  if(el) showToast('Removed '+el.label,'success');
+}
+
+// Drag to reposition (any element type)
+function elementMouseDown(e, id){
+  if(e.button!==0) return;
+  if(e.target.classList.contains('sce-handle')) return;
+  const canvas=document.getElementById('seat-canvas');
+  const el=canvasElements.find(x=>x.id===id);
+  if(!el) return;
+  const cr=canvas.getBoundingClientRect();
+  elementDrag={ id, moved:false,
+    offX: e.clientX-cr.left-el.x,
+    offY: e.clientY-cr.top+canvas.scrollTop-el.y };
+  selectedElementId=id;
+  document.addEventListener('mousemove',elementMouseMove);
+  document.addEventListener('mouseup',elementMouseUp);
+  e.preventDefault(); e.stopPropagation();
+}
+function elementMouseMove(e){
+  if(!elementDrag) return;
+  const canvas=document.getElementById('seat-canvas');
+  const el=canvasElements.find(x=>x.id===elementDrag.id);
+  if(!el) return;
+  const cr=canvas.getBoundingClientRect();
+  let x=e.clientX-cr.left-elementDrag.offX;
+  let y=e.clientY-cr.top+canvas.scrollTop-elementDrag.offY;
+  if(Math.abs(x-el.x)>2||Math.abs(y-el.y)>2) elementDrag.moved=true;
+  const maxX=Math.max(0, canvas.offsetWidth-el.w);
+  const maxY=Math.max(0, canvas.scrollHeight-el.h);
+  el.x=Math.max(0, Math.min(maxX, x));
+  el.y=Math.max(0, Math.min(maxY, y));
+  const node=canvas.querySelector(`.sc-element[data-elid="${el.id}"]`);
+  if(node){ node.style.left=el.x+'px'; node.style.top=el.y+'px'; }
+}
+function elementMouseUp(){ elementDrag=null; document.removeEventListener('mousemove',elementMouseMove); document.removeEventListener('mouseup',elementMouseUp); }
+
+// Resize from the corner handle
+let elementResize=null;
+function resizeMouseDown(e, id){
+  const el=canvasElements.find(x=>x.id===id);
+  if(!el) return;
+  elementResize={ id, startX:e.clientX, startY:e.clientY, w0:el.w, h0:el.h };
+  document.addEventListener('mousemove',resizeMouseMove);
+  document.addEventListener('mouseup',resizeMouseUp);
+  e.preventDefault(); e.stopPropagation();
+}
+function resizeMouseMove(e){
+  if(!elementResize) return;
+  const canvas=document.getElementById('seat-canvas');
+  const el=canvasElements.find(x=>x.id===elementResize.id);
+  if(!el) return;
+  el.w=Math.max(50, Math.min(canvas.offsetWidth-el.x, elementResize.w0+(e.clientX-elementResize.startX)));
+  el.h=Math.max(30, elementResize.h0+(e.clientY-elementResize.startY));
+  const node=canvas.querySelector(`.sc-element[data-elid="${el.id}"]`);
+  if(node){ node.style.width=el.w+'px'; node.style.height=el.h+'px'; }
+}
+function resizeMouseUp(){ elementResize=null; document.removeEventListener('mousemove',resizeMouseMove); document.removeEventListener('mouseup',resizeMouseUp); renderCanvasElements(); renderElementInspector(); }
+
+// Inspector: select the item, then Edit, then Apply
+function renderElementInspector(){
+  const box=document.getElementById('element-inspector');
+  if(!box) return;
+  const el=canvasElements.find(x=>x.id===selectedElementId);
+  if(!el){ box.className='element-inspector'; box.innerHTML=''; return; }
+  box.className='element-inspector open';
+
+  const typeName=(ELEMENT_TOOLS[el.type]||{}).label||el.type;
+  let fields='';
+
+  if(el.type==='section'){
+    fields=`
+      <div class="ei-row">
+        <div><label>Admission</label>
+          <select id="ei-admission">
+            <option value="reserved"${el.opts.admission!=='ga'?' selected':''}>Reserved seating (pick seats)</option>
+            <option value="ga"${el.opts.admission==='ga'?' selected':''}>General admission (pick area)</option>
+          </select></div>
+        <div><label>${el.opts.admission==='ga'?'Occupancy limit':'Capacity'}</label>
+          <input type="number" id="ei-capacity" min="0" value="${el.opts.capacity||0}"></div>
+      </div>
+      <div class="ei-row">
+        <div><label>Section prefix</label><input id="ei-prefix" value="${escapeAttr(el.opts.prefix||'')}" placeholder="e.g. Balcony 1"></div>
+        <div><label>Row prefix</label><input id="ei-rowlab" value="${escapeAttr(el.opts.row||'')}" placeholder="e.g. AA"></div>
+      </div>
+      <div class="ei-row single">
+        <div><label>Seat prefix</label><input id="ei-seat" value="${escapeAttr(el.opts.seat||'')}" placeholder="e.g. 7"></div>
+      </div>`;
+  } else if(el.type==='table'){
+    fields=`
+      <div class="ei-row">
+        <div><label>Seats at table</label><input type="number" id="ei-tseats" min="0" max="40" value="${el.opts.tableSeats||0}"></div>
+        <div><label>End seats</label>
+          <select id="ei-endseats">
+            <option value="max">Maximum (all facing each other)</option>
+            <option value="fewer">Fewer</option>
+          </select></div>
+      </div>`;
+  } else if(el.type==='object'){
+    fields=`
+      <div class="ei-row single">
+        <div><label>Object</label>
+          <select id="ei-preset">
+            ${OBJECT_PRESETS.map(p=>`<option value="${p.key}"${(el.opts.preset||'').toLowerCase()===p.key?' selected':''}>${p.icon} ${p.label}</option>`).join('')}
+          </select></div>
+      </div>`;
+  }
+
+  box.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-family:var(--font-d);font-size:15px;letter-spacing:1.6px">${typeName.toUpperCase()} · EDIT</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gray)">Colour</span>
+        <input type="color" id="ei-colour" value="${el.colour}" style="width:30px;height:26px;padding:0;border:1px solid var(--line);background:#fff;cursor:pointer">
+      </div>
+    </div>
+    <div class="ei-row single"><div><label>Label</label><input id="ei-label" value="${escapeAttr(el.label)}"></div></div>
+    ${fields}
+    <div class="ei-actions">
+      <button class="primary" onclick="applyElementEdit()">✓ Apply</button>
+      <button onclick="duplicateSelectedElement()">⧉ Duplicate</button>
+      <button class="danger" onclick="deleteSelectedElement()">🗑 Delete</button>
+    </div>
+    <div class="ei-hint">Changes apply when you click Apply. ${el.type==='section'?'Reserved seating uses the seat canvas; GA sections do not need seats.':''}</div>`;
+}
+
+function applyElementEdit(){
+  const el=canvasElements.find(x=>x.id===selectedElementId);
+  if(!el) return;
+  const v=id=>document.getElementById(id);
+  if(v('ei-label')) el.label=v('ei-label').value||el.label;
+  if(v('ei-colour')) el.colour=v('ei-colour').value;
+
+  if(el.type==='section'){
+    el.opts.admission = v('ei-admission') ? v('ei-admission').value : el.opts.admission;
+    el.opts.capacity  = v('ei-capacity') ? (+v('ei-capacity').value||0) : el.opts.capacity;
+    el.opts.prefix    = v('ei-prefix')   ? v('ei-prefix').value   : el.opts.prefix;
+    el.opts.row       = v('ei-rowlab')   ? v('ei-rowlab').value   : el.opts.row;
+    el.opts.seat      = v('ei-seat')     ? v('ei-seat').value     : el.opts.seat;
+  } else if(el.type==='table'){
+    el.opts.tableSeats = v('ei-tseats') ? (+v('ei-tseats').value||0) : el.opts.tableSeats;
+    // "End seats = maximum" packs the perimeter fully.
+    if(v('ei-endseats') && v('ei-endseats').value==='max'){
+      const perim=Math.max(2, Math.round((el.w+el.h)/16));
+      el.opts.tableSeats=Math.min(40, perim);
+      if(v('ei-tseats')) v('ei-tseats').value=el.opts.tableSeats;
+    }
+  } else if(el.type==='object'){
+    if(v('ei-preset')){
+      const p=OBJECT_PRESETS.find(x=>x.key===v('ei-preset').value);
+      if(p){ el.opts.preset=p.label; el.label=p.label; el.w=p.w; el.h=p.h; }
+    }
+  }
+  renderCanvasElements(); renderElementInspector();
+  showToast('Applied to '+el.label,'success');
+}
+
 let canvasDragId=null, canvasDragOffX=0, canvasDragOffY=0, canvasWasDragged=false;
 function canvasSeatMouseDown(e,id){
   if(e.button!==0) return;
@@ -1760,7 +3012,7 @@ document.addEventListener('click',function(e){
   const canvas=document.getElementById('seat-canvas');
   if(!canvas||!canvas.offsetParent) return;
   if(canvasSeats.length>100) return;
-  if(e.target.closest('.sc-seat,.sc-toolbar')) return;
+  if(e.target.closest('.sc-seat,.sc-toolbar,.sc-element,.element-toolbar,.element-inspector')) return;
   const r=canvas.getBoundingClientRect();
   const x=e.clientX-r.left, y=e.clientY-r.top+canvas.scrollTop;
   if(x<0||y<0||x>canvas.offsetWidth||y>canvas.scrollHeight) return;
@@ -1855,7 +3107,6 @@ function renderAdminList(){
         +(dateObj?'<div class="admin-event-date"><span class="day">'+day+'</span><span class="month">'+month+'</span></div>':'')
         +'</div>'
         +'<div class="admin-event-body">'
-        +'<div class="cat">'+escHtml(e.genre||'Event')+'</div>'
         +'<div class="name">'+escHtml(e.name||'?')+'</div>'
         +'<div class="meta"><span>📍 '+escHtml(e.venue||'')+'</span><span>🕗 '+(e.time||'20:00')+'</span>'+(e.organiser_name?'<span style="font-size:11px;color:var(--gray);display:block;margin-top:2px">🎤 '+escHtml(e.organiser_name)+'</span>':'')+'</div>'
         +'<div class="stats"><strong>'+total+'</strong> seats · from <strong>$'+minPrice(e)+'</strong> · <strong>'+e.booked.length+'/'+total+'</strong> booked (<strong>'+soldPct+'%</strong>)</div>'
@@ -1864,6 +3115,7 @@ function renderAdminList(){
         +'<div class="admin-event-actions">'
         +'<button onclick="event.stopPropagation();toggleStatus(\''+e.id+'\')" title="Toggle status">'+statusText+'</button>'
         +'<button onclick="event.stopPropagation();editEvent(\''+e.id+'\')">✎ Edit</button>'
+        +'<button onclick="event.stopPropagation();downloadBookings(\''+e.id+'\',\''+escAttr(e.name||'event')+'\')" title="Download seat bookings as Excel">⤓ Excel</button>'
         +(isCreator?'<button onclick="event.stopPropagation();deleteEvent(\''+e.id+'\')">✕</button>':'')
         +'</div></div></div></div>';
     } catch(err){
@@ -1873,6 +3125,60 @@ function renderAdminList(){
   el.innerHTML=html||'<div class="empty-state"><p style="color:var(--red)">All events failed to render</p></div>';
 }
 function escHtml(s){ return String(s).replace(/[&<>"']/g,function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; }); }
+// Safe inside a single-quoted JS string that itself sits in an HTML attribute.
+// Backslash first, then the JS quote, then HTML-escape anything (like `"`) that
+// would otherwise close the surrounding attribute and truncate the handler.
+function escAttr(s){
+  return String(s)
+    .replace(/\\/g,'\\\\')
+    .replace(/'/g,"\\'")
+    .replace(/&/g,'&amp;')
+    .replace(/"/g,'&quot;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/[\r\n]/g,' ');
+}
+// Aliases used by the canvas-element layer.
+function escapeHtml(s){ return escHtml(s); }
+function escapeAttr(s){ return escAttr(s); }
+
+// ─────────────────── EXPORT BOOKINGS (EXCEL) ───────────────────
+async function downloadBookings(eventId, eventName){
+  showToast('Preparing Excel export…','info');
+  try {
+    const res = await fetch('/export/event/'+encodeURIComponent(eventId));
+    if(!res.ok){
+      let msg='Export failed';
+      try { const j=await res.json(); msg=j.detail||msg; } catch(_){}
+      throw new Error(msg);
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const safe = String(eventName||'event').replace(/[^A-Za-z0-9 _.-]/g,'').trim().replace(/\s+/g,'-')||'event';
+    a.href = url;
+    a.download = safe+'-seats.xlsx';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    showToast('Seat bookings downloaded ✓','success');
+  } catch(err){
+    console.error(err);
+    showToast(err.message||'Could not export bookings','error');
+  }
+}
+
+// Download one workbook per event, spaced out so browsers allow every file.
+async function downloadAllBookings(){
+  if(!events.length){ showToast('No events to export','error'); return; }
+  if(!confirm('Download seat bookings for all '+events.length+' event(s) as Excel files?')) return;
+  let ok=0, fail=0;
+  for(const e of events){
+    try { await downloadBookings(e.id, e.name); ok++; }
+    catch(err){ fail++; }
+    await new Promise(r=>setTimeout(r,600));   // avoid rapid-fire download blocking
+  }
+  showToast('Exported '+ok+' file(s)'+(fail?' · '+fail+' failed':''), fail?'error':'success');
+}
 
 // ─────────────────── HELPERS ───────────────────
 function save(){ localStorage.setItem('sf_events',JSON.stringify(events)); }

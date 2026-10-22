@@ -579,11 +579,6 @@
     color: var(--white);
   }
 
-  .celeb-genre {
-    font-size: 0.6rem; color: var(--red); letter-spacing: 0.15em;
-    text-transform: uppercase;
-  }
-
   /* HOW IT WORKS */
   #how {
     background: var(--black);
@@ -836,7 +831,6 @@
   .bmodal{background:var(--dark2);width:100%;max-width:none;height:100vh;overflow-y:auto;transform:translateY(20px);transition:transform .25s}
   .overlay.open .bmodal{transform:translateY(0)}
   .bm-header{padding:28px 32px 22px;border-bottom:1px solid rgba(255,78,54,0.15);display:flex;justify-content:space-between;align-items:flex-start;position:sticky;top:0;background:var(--dark2);z-index:2}
-  .bm-genre{font-size:0.68rem;font-weight:600;letter-spacing:0.3em;text-transform:uppercase;color:var(--logo-purple);margin-bottom:4px}
   .bm-name{font-family:var(--font-d);font-size:40px;letter-spacing:2px;line-height:1;color:var(--white)}
   .bm-sub{color:var(--gray);font-size:13px;margin-top:6px}
   .close-x{background:none;border:none;color:var(--gray);width:34px;height:34px;cursor:pointer;font-size:1.5rem;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:color .2s}
@@ -1270,7 +1264,6 @@
   <div class="bmodal">
     <div class="bm-header">
       <div>
-        <div class="bm-genre" id="bm-genre"></div>
         <div class="bm-name" id="bm-name"></div>
         <div class="bm-sub" id="bm-sub"></div>
         <div id="bm-artist-details" style="margin-top:12px;display:flex;gap:14px;align-items:flex-start"></div>
@@ -1519,7 +1512,7 @@
           </div>
         </div>
         <div class="event-info">
-          <div class="event-cat">${e.genre || 'Event'}</div>
+          <div class="event-cat">${e.organiser_name || 'Noah Events'}</div>
           <div class="event-name">${e.name}</div>
           <div class="event-meta">
             <span>📍 ${[e.venue,addrStr].filter(Boolean).join(', ')}</span>
@@ -1636,7 +1629,6 @@
     if (!e) return;
     bookingEvent = e; selectedSeats = []; selectedAddons = [];
     const dateStr = e.date ? new Date(e.date+'T12:00').toLocaleDateString('en-SG',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) : 'TBA';
-    document.getElementById('bm-genre').textContent = e.genre;
     document.getElementById('bm-name').textContent = e.name;
     const va=e.venue_address||{};
     const mapQ=[e.venue,va.address1,va.address2,va.address3,va.postal_code].filter(Boolean).join(', ');

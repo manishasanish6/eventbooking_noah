@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from backend.database import engine, Base
-from backend.routes import events, bookings, auth, contact, gallery
+from backend.routes import events, bookings, auth, contact, gallery, export as export_routes
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s %(message)s")
 
@@ -125,5 +125,6 @@ app.include_router(events.router,   prefix="/events",   tags=["Events"])
 app.include_router(bookings.router, prefix="/bookings", tags=["Bookings"])
 app.include_router(contact.router,  prefix="/contact",  tags=["Contact"])
 app.include_router(gallery.router,  prefix="/gallery",  tags=["Gallery"])
+app.include_router(export_routes.router, prefix="/export", tags=["Export"])
 
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
