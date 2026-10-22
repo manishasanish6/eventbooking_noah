@@ -321,6 +321,18 @@ body{
 .vd-dir-btn:hover{border-color:var(--logo-purple);color:var(--logo-purple)}
 .vd-dir-btn.on{background:var(--logo-purple);border-color:var(--logo-purple);color:#fff}
 
+/* Manual seat numbering */
+.vd-seat-pick.is-custom{border-color:var(--logo-purple);color:var(--logo-purple);font-weight:700}
+.vd-num-list{display:flex;flex-direction:column;gap:3px;margin-top:8px;max-height:170px;overflow:auto;
+  padding:2px}
+.vd-num-row{display:flex;gap:3px;align-items:center}
+.vd-num-rowlab{font-size:9px;font-weight:700;color:var(--gray);min-width:16px;letter-spacing:.04em}
+.vd-seat-num{width:34px;font-family:var(--font-b);font-size:9px;padding:3px 4px;text-align:center;
+  border:1px solid rgba(0,0,0,.16);background:#fff;color:var(--text-on-light);border-radius:2px}
+.vd-seat-num::placeholder{color:rgba(0,0,0,.3)}
+.vd-seat-num:focus{outline:none;border-color:var(--logo-purple)}
+.vd-seat-num.is-custom{border-color:var(--logo-purple);background:rgba(139,68,255,.06);font-weight:700}
+
 /* Setup panel in the rail (asks for rows/seats before creating) */
 .vd-setup{display:none;border-top:1px solid var(--line);padding-top:14px}
 .vd-setup-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
@@ -2455,7 +2467,8 @@ function vdSectionSeatsHtml(el){
       const t = cols > 1 ? c/(cols-1) : 0.5;
       const arc = curveLift * Math.sin(Math.PI * t);
       const y = rowBaseY - arc;    // + curve raises, − curve lowers
-      const seatNo = seatPre ? (seatPre + (seatStart + (seatDir === 'rtl' ? (cols-1-c) : c))) : '';
+      // Manual number if the organiser set one, otherwise the automatic label.
+      const seatNo = vdSeatLabel(el, r, c);
       // In seat-edit mode the seat itself is the click target.
       const click = vdSeatEdit ? ` onclick="vdSeatToggle(event,'${el.id}',${r},${c})"` : '';
       const cls = 'vd-seat' + (vdSeatEdit ? ' is-editable' : '');
@@ -2621,6 +2634,33 @@ function renderVdEditPanel(){
         <div class="vd-edit-actions">
           <button class="danger" onclick="vdRestoreAllSeats()">↺ Restore all ${(el.opts.removedSeats||[]).length} seats</button>
         </div>` : ''}
+      </div>
+      <div class="vd-layout-group">
+        <div class="vd-layout-title">
+          <span>Number the seats</span>
+          ${Object.keys(el.opts.seat_labels||{}).length ? `
+          <button type="button" class="vd-seat-edit-btn" onclick="vdResetNumbering()">↺ Auto</button>` : ''}
+        </div>
+        <div class="vd-setup-hint">Give a seat its own number below, or renumber a whole row / section in one go. Renumbering skips deleted seats.</div>
+        ${vdSeatNumbersHtml(el)}
+        <div class="ei-row">
+          <div><label>Prefix</label><input id="vd-reno-pre" placeholder="e.g. A" maxlength="4" value="${escapeAttr(el.opts.seat_prefix||el.opts.prefix||'')}"></div>
+          <div><label>First number</label><input type="number" id="vd-reno-start" min="1" value="${Math.max(1,+el.opts.seat_start||1)}"></div>
+        </div>
+        <div class="ei-row">
+          <div><label>Step</label><input type="number" id="vd-reno-step" min="1" value="1"></div>
+          <div><label>Apply to</label>
+            <select id="vd-reno-scope">
+              <option value="all">Whole section</option>
+              <option value="row">One row</option>
+            </select></div>
+        </div>
+        <div class="ei-row single">
+          <div><label>Row number (for "One row")</label><input type="number" id="vd-reno-row" min="1" max="${el.opts.rows||1}" value="1"></div>
+        </div>
+        <div class="vd-edit-actions">
+          <button class="primary" onclick="vdRenumberSeats()">🔢 Renumber seats</button>
+        </div>
       </div>`}
       <div class="ei-row single">
         <div><label>Section prefix</label><input id="vd-prefix" value="${escapeAttr(el.opts.prefix||'')}" placeholder="Balcony 1"></div>
@@ -2703,6 +2743,21 @@ function renderVdEditPanel(){
     </div>`;
 }
 
+// Drop manual numbers that point at positions which no longer exist after the
+// section's rows / seats-per-row changed.
+function vdPruneSeatLabels(el){
+  const m = el.opts.seat_labels;
+  if(!m) return;
+  const rows = Math.max(0, el.opts.rows||0);
+  const cols = Math.max(0, el.opts.cols||0);
+  Object.keys(m).forEach(k=>{
+    const p = k.split(',');
+    const r = +p[0], c = +p[1];
+    if(!(r >= 0 && r < rows && c >= 0 && c < cols)) delete m[k];
+  });
+  if(!Object.keys(m).length) delete el.opts.seat_labels;
+}
+
 function vdApply(){
   const el = vdElements.find(x=>x.id===vdSelectedId);
   if(!el) return;
@@ -2722,6 +2777,7 @@ function vdApply(){
     // Layout: rows / seats rebuild the grid, curve + skew + align reshape it.
     if(v('vd-rows'))  el.opts.rows = Math.max(1, Math.min(40, +v('vd-rows').value || 1));
     if(v('vd-cols'))  el.opts.cols = Math.max(1, Math.min(60, +v('vd-cols').value || 1));
+    vdPruneSeatLabels(el);   // don't keep numbers for seats that are gone
     if(v('vd-align')) el.opts.align = v('vd-align').value;
     if(v('vd-curve')) el.opts.curve = +v('vd-curve').value || 0;
     if(v('vd-skew'))  el.opts.skew  = +v('vd-skew').value || 0;
@@ -2819,6 +2875,65 @@ function vdSetDir(hiddenId, value, btnIds){
 // (rows, curve, skew…) without losing the deletions.
 function vdSeatKey(r, c){ return r + ',' + c; }
 
+// Manual seat numbers live in `seat_labels` as {"r,c":"A12"} so a bespoke
+// number sticks to its seat no matter how the layout is reshaped.
+function vdSeatLabelKey(r, c){ return r + ',' + c; }
+
+function vdGetSeatLabel(section, r, c){
+  const m = (section && section.opts && section.opts.seat_labels) || {};
+  const v = m[vdSeatLabelKey(r, c)];
+  return (typeof v === 'string' && v.length) ? v : '';
+}
+
+// Leave a number for the row/column — falls back to the automatic scheme.
+function vdClearSeatLabel(el, r, c){
+  if(!el.opts.seat_labels) return;
+  const key = vdSeatLabelKey(r, c);
+  if(el.opts.seat_labels[key] !== undefined){
+    delete el.opts.seat_labels[key];
+    if(!Object.keys(el.opts.seat_labels).length) delete el.opts.seat_labels;
+  }
+}
+
+// Build the automatic label for a seat from the prefix / start / direction.
+// Returns '' when the section has no seat prefix — the canvas then shows no
+// number inside the seat, matching the original behaviour.
+function vdAutoSeatLabel(o, r, c, rows, cols){
+  const seatPre   = ((o && o.seat_prefix) || (o && o.prefix) || '').trim();
+  const seatStart = Math.max(1, +(o && o.seat_start) || 1);
+  const seatDir   = (o && o.seat_dir) === 'rtl' ? 'rtl' : 'ltr';
+  if(!seatPre) return '';
+  const colIdx = seatDir === 'rtl' ? (cols - 1 - c) : c;
+  return seatPre + (seatStart + colIdx);
+}
+
+// Row label only ("A1", "A2" …), used as a readable fallback in the panel.
+function vdRowLabelOf(o, r, rows){
+  const rowPre    = ((o && o.row_prefix) || '').trim();
+  const rowStart  = Math.max(1, +(o && o.row_start) || 1);
+  const rowDir    = (o && o.row_dir) === 'up' ? 'up' : 'down';
+  if(!rowPre) return 'R' + (r + 1);
+  const rowIdx = rowDir === 'up' ? (rows - 1 - r) : r;
+  return rowPre + (rowStart + rowIdx);
+}
+
+// The label a seat actually shows: manual override if set, else the automatic
+// seat number, else nothing.
+function vdSeatLabel(el, r, c){
+  const manual = vdGetSeatLabel(el, r, c);
+  if(manual) return manual;
+  const o = el.opts || {};
+  return vdAutoSeatLabel(o, r, c, Math.max(0,o.rows||0), Math.max(0,o.cols||0));
+}
+
+// What the panel calls a seat when it has no number of its own.
+function vdSeatRef(el, r, c){
+  const o = el.opts || {};
+  const rows = Math.max(0, o.rows||0);
+  return vdRowLabelOf(o, r, rows) + (vdAutoSeatLabel(o, r, c, rows, Math.max(0,o.cols||0)) || (' · Seat ' + (c+1)));
+}
+
+
 function vdSeatRemoved(el, r, c){
   return !!(el.opts.removedSeats && el.opts.removedSeats.indexOf(vdSeatKey(r,c)) !== -1);
 }
@@ -2887,32 +3002,122 @@ function vdRestoreAllSeats(){
   if(n) showToast(n === 1 ? 'Seat restored' : n + ' seats restored','success');
 }
 
-// Grid of every seat position, so any seat can be removed or restored.
+// Grid of every seat position. Each seat can be removed / restored, and its
+// number can be typed in by hand (which then sticks to that position).
 function vdSeatPickerHtml(el){
   const rows = Math.max(0, el.opts.rows||0);
   const cols = Math.max(0, el.opts.cols||0);
   if(!rows || !cols) return '<div class="vd-setup-hint">Set rows and seats per row first.</div>';
 
-  const rowPre    = (el.opts.row_prefix || '').trim();
-  const rowStart  = Math.max(1, +el.opts.row_start || 1);
-  const seatPre   = (el.opts.seat_prefix || el.opts.prefix || '').trim();
-  const seatStart = Math.max(1, +el.opts.seat_start || 1);
-
   let html = '<div class="vd-seat-grid">';
   for(let r=0;r<rows;r++){
-    const rowLabel = rowPre ? (rowPre + (rowStart + r)) : '';
-    if(rowLabel) html += `<span class="vd-seat-grid-row">${escapeHtml(rowLabel)}</span>`;
+    html += `<span class="vd-seat-grid-row">${escapeHtml(vdRowLabelOf(el.opts, r, rows))}</span>`;
     for(let c=0;c<cols;c++){
       const gone = vdSeatRemoved(el, r, c);
-      const seatNo = seatPre ? (seatPre + (seatStart + c)) : ('R' + (r+1) + 'S' + (c+1));
-      html += `<button type="button" class="vd-seat-pick${gone?' is-gone':''}"`
-            + ` title="${escapeAttr(seatNo + (gone ? ' — removed' : ''))}"`
-            + ` onclick="vdSeatToggle(event,'${el.id}',${r},${c})">${escapeHtml(seatNo)}</button>`;
+      const label = vdSeatLabel(el, r, c) || ('Seat ' + (c+1));
+      const custom = !!vdGetSeatLabel(el, r, c);
+      html += `<button type="button" class="vd-seat-pick${gone?' is-gone':''}${custom?' is-custom':''}"`
+            + ` title="${escapeAttr(vdSeatRef(el, r, c) + (gone ? ' — removed' : (custom ? ' — custom' : '')))}"`
+            + ` onclick="vdSeatToggle(event,'${el.id}',${r},${c})">${escapeHtml(label)}</button>`;
     }
   }
   html += '</div>';
   return html;
 }
+
+// Renumber the seats in one go: prefix + first number + step, applied left
+// to right (or right to left) across every seat that is still present.
+function vdRenumberSeats(){
+  const el = vdElements.find(x=>x.id===vdSelectedId);
+  if(!el || el.type!=='section') return;
+  const v = id => document.getElementById(id);
+  const pre   = ((v('vd-reno-pre')||{}).value || '').trim();
+  const start = Math.max(1, +((v('vd-reno-start')||{}).value) || 1);
+  const step  = Math.max(1, +((v('vd-reno-step')||{}).value) || 1);
+  const scope = (v('vd-reno-scope')||{}).value || 'all';
+
+  const rows = Math.max(0, el.opts.rows||0);
+  const cols = Math.max(0, el.opts.cols||0);
+  const seatDir = el.opts.seat_dir === 'rtl' ? 'rtl' : 'ltr';
+
+  if(!el.opts.seat_labels) el.opts.seat_labels = {};
+
+  let n = start;
+  const applyRow = (r) => {
+    for(let c=0;c<cols;c++){
+      if(vdSeatRemoved(el, r, c)) continue;           // deleted seats are skipped
+      const colIdx = seatDir === 'rtl' ? (cols-1-c) : c;
+      el.opts.seat_labels[vdSeatLabelKey(r, c)] = pre + (start + colIdx * step);
+    }
+  };
+
+  if(scope === 'row'){
+    const r = Math.max(0, Math.min(rows-1, +((v('vd-reno-row')||{}).value) || 1)) - 1;
+    applyRow(r);
+    showToast('Renumbered row ' + (r+1),'success');
+  } else {
+    for(let r=0;r<rows;r++) applyRow(r);
+    showToast('Renumbered ' + vdLiveSeatCount(el) + ' seats','success');
+  }
+
+  renderVdCanvas(); renderVdEditPanel();
+}
+
+// Drop every manual number so the automatic prefixes take over again.
+function vdResetNumbering(){
+  const el = vdElements.find(x=>x.id===vdSelectedId);
+  if(!el || el.type!=='section') return;
+  delete el.opts.seat_labels;
+  renderVdCanvas(); renderVdEditPanel();
+  showToast('Numbers reset to the automatic scheme','success');
+}
+
+// Per-seat number editor: a small input for every seat that is still there.
+// Blank restores the automatic number; typing sets a custom one.
+function vdSeatNumbersHtml(el){
+  const rows = Math.max(0, el.opts.rows||0);
+  const cols = Math.max(0, el.opts.cols||0);
+  if(!rows || !cols) return '';
+  const map = el.opts.seat_labels || {};
+  const custom = Object.keys(map).length;
+
+  let html = `<div class="vd-num-list">`;
+  for(let r=0;r<rows;r++){
+    html += `<div class="vd-num-row"><span class="vd-num-rowlab">${escapeHtml(vdRowLabelOf(el.opts, r, rows))}</span>`;
+    for(let c=0;c<cols;c++){
+      if(vdSeatRemoved(el, r, c)) continue;
+      const val   = vdGetSeatLabel(el, r, c);
+      const isCus = !!val;
+      html += `<input class="vd-seat-num${isCus?' is-custom':''}" data-r="${r}" data-c="${c}"`
+            + ` value="${escapeAttr(val)}" placeholder="${escapeAttr(vdAutoSeatLabel(el.opts,r,c,rows,cols))}"`
+            + ` title="${escapeAttr(vdSeatRef(el, r, c))}"`
+            + ` oninput="vdSetSeatLabel(${r},${c},this.value)">`;
+    }
+    html += `</div>`;
+  }
+  html += `</div>`;
+  html += `<div class="vd-setup-hint">${custom
+    ? custom + ' seat' + (custom===1?'':'s') + ' numbered by hand.'
+    : 'Every seat is using its automatic number.'}</div>`;
+  return html;
+}
+
+// Type a number into one seat directly.
+function vdSetSeatLabel(r, c, value){
+  const el = vdElements.find(x=>x.id===vdSelectedId);
+  if(!el || el.type!=='section') return;
+  const txt = (value||'').trim();
+  if(!txt){ vdClearSeatLabel(el, r, c); }
+  else {
+    if(!el.opts.seat_labels) el.opts.seat_labels = {};
+    el.opts.seat_labels[vdSeatLabelKey(r, c)] = txt;
+  }
+  renderVdCanvas();
+  // Keep focus in the box the user is typing in.
+  const again = document.querySelector('.vd-seat-num[data-r="'+r+'"][data-c="'+c+'"]');
+  if(again){ again.focus(); again.select(); }
+}
+
 function renderCanvasElements(){
   const canvas=document.getElementById('seat-canvas');
   if(!canvas) return;
