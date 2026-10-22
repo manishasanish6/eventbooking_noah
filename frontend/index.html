@@ -2294,8 +2294,11 @@ function renderVdCanvas(){
     d.style.width = el.w+'px';
     d.style.height = el.h+'px';
     d.style.background = hexA(el.colour, el.type==='text' ? .10 : .16);
+    // Only text / object elements keep an outline; sections and tables render
+    // borderless so the seat layout reads as the shape itself.
     d.style.borderColor = el.colour;
     if(el.type==='text') d.style.borderStyle = 'dashed';
+    else if(el.type==='section' || el.type==='table') d.style.borderStyle = 'none';
 
     let seats = '';
     if(el.type==='table'){
@@ -2713,8 +2716,11 @@ function renderCanvasElements(){
     d.style.width=el.w+'px';
     d.style.height=el.h+'px';
     d.style.background=hexA(el.colour, el.type==='text'?0.10:0.16);
+    // Only text / object elements keep an outline; sections and tables render
+    // borderless so the seat layout reads as the shape itself.
     d.style.borderColor=el.colour;
     if(el.type==='text') d.style.borderStyle='dashed';
+    else if(el.type==='section' || el.type==='table') d.style.borderStyle='none';
 
     // Table seats drawn around the perimeter; "end seats" = max fills the shape.
     let seatHtml='';
