@@ -276,27 +276,22 @@ def create_booking(data: BookingCreate, bg: BackgroundTasks, db: Session = Depen
     if held_conflicts:
         raise HTTPException(status_code=409, detail=f"Seats are held and unavailable: {held_conflicts}")
 
-    # Per-zone max_seats validation
-    all_zones = list(ev.zones or [])
-    zone_prefixes = sorted(
-        [(z.get("seat_prefix") or "", z) for z in all_zones],
-        key=lambda x: -len(x[0])
-    )
-    seat_zones = {}
+    # Per-zone max_seats validation. Resolve each seat through the same layout
+    # the public page uses (prefixes in auto mode, seat_layout in manual), so
+    # max-per-booking also covers designer sections and tables.
+    zone_by_name = {z.get("name"): z for z in (ev.zones or [])}
+    seat_info = _seat_zone_info(ev, data.seats)
+    zone_counts = {}
     for s in data.seats:
-        matched = None
-        for prefix, z in zone_prefixes:
-            if prefix and s.startswith(prefix):
-                matched = z
-                break
-        if matched:
-            zn = matched["name"]
-            max_s = matched.get("max_seats")
-            if zn not in seat_zones:
-                seat_zones[zn] = {"count": 0, "max": max_s}
-            seat_zones[zn]["count"] += 1
-            if seat_zones[zn]["max"] and seat_zones[zn]["count"] > seat_zones[zn]["max"]:
-                raise HTTPException(status_code=400, detail=f"Max {max_s} seats in {zn}")
+        zn = (seat_info.get(s) or {}).get("zone")
+        if not zn:
+            continue
+        max_s = (zone_by_name.get(zn) or {}).get("max_seats")
+        if not max_s:
+            continue
+        zone_counts[zn] = zone_counts.get(zn, 0) + 1
+        if zone_counts[zn] > int(max_s):
+            raise HTTPException(status_code=400, detail=f"Max {max_s} seats in {zn}")
 
     total, subtotal, fee, discount_items, raw_subtotal, addon_total, addon_items = _calc_total(ev, data.seats, data.addons)
 

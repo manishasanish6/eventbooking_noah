@@ -1222,7 +1222,10 @@ function renderReview(){
   const endTime = val('f-end-time');
   const status = val('f-status');
   const selling = zones.map(z=>`${z.name} — $${z.price} (${z.rows} row${z.rows===1?'':'s'})`).join('<br>') || '(none)';
-  const totalSeats = zones.reduce((a,z)=>a+(+z.rows||0),0) * (+document.getElementById('f-cols').value||0);
+  const manual = document.querySelector('.lm-btn.active')?.dataset.mode==='manual';
+  const totalSeats = manual
+    ? canvasSeats.length
+    : zones.reduce((a,z)=>a+(+z.rows||0),0) * (+document.getElementById('f-cols').value||0);
   const row = (k,v)=>`<div class="wiz-review-row"><span class="wr-k">${k}</span><span class="wr-v">${v}</span></div>`;
   box.innerHTML =
     row('Event', name + (artist?`<br><span style="color:#777">${artist}</span>`:'')) +
@@ -2111,6 +2114,116 @@ function openVenueDesigner(){
   showToast('Venue Designer opened','success');
 }
 
+// Turn the designer map into the seat layout + price zones that the booking
+// page already understands. Only reserved sections and tables produce tickets;
+// GA sections and decorative objects/text are ignored. Returns null when there
+// is nothing bookable, so a purely decorative canvas leaves the zones alone.
+function vdBuildBookingLayout(){
+  const bookable = vdElements.filter(el =>
+    el.type === 'table' ||
+    (el.type === 'section' && (el.opts.admission || 'reserved') !== 'ga'));
+  if(!bookable.length) return null;
+  // Canvases saved before ticket pricing existed have no price on their
+  // elements. Leave those events' zones untouched until the organiser sets a
+  // price, instead of silently replacing their prices with $0.
+  const priced = bookable.some(el => (el.opts || {}).price !== undefined);
+  if(!priced) return null;
+
+  // 1. One price zone per section / table. Names must be unique because the
+  //    booking flow looks zones up by name.
+  const used = Object.create(null);
+  const zonesOut = [];
+  const zoneNameById = Object.create(null);
+  bookable.forEach(el=>{
+    const o = el.opts || {};
+    const base = ((el.label || '').trim()) || (el.type === 'table' ? 'Table' : 'Section');
+    let name = base, n = 2;
+    while(used[name.toLowerCase()]) name = base + ' ' + (n++);
+    used[name.toLowerCase()] = true;
+    zoneNameById[el.id] = name;
+    zonesOut.push({
+      name,
+      rows: el.type === 'section' ? Math.max(1, o.rows || 1) : 1,
+      price: Math.max(0, +o.price || 0),
+      color: el.colour || '#8b44ff',
+      promotions: JSON.parse(JSON.stringify(o.promotions || {})),
+      seat_prefix: '',
+      seat_start: 1,
+      max_seats: o.max_seats || null,
+      walkway_mode: 'none', walkway_width: 1, walkway_numbering: 'flow'
+    });
+  });
+
+  // 2. Collect every live seat with its absolute position in the designer.
+  const raw = [];
+  bookable.forEach(el=>{
+    const zoneName = zoneNameById[el.id];
+    // Seat IDs are injected into inline handlers on the public page, so strip
+    // quotes that would break the markup.
+    const safeZone = zoneName.replace(/['"<>\\]/g, '');
+    if(el.type === 'section'){
+      const sink = [];
+      vdSectionSeatsHtml(el, sink);
+      sink.forEach(p=>{
+        const label = p.label || ('R' + (p.r+1) + 'C' + (p.c+1));
+        raw.push({
+          id: safeZone + ' · ' + label,
+          zoneSafe: safeZone, label, row: p.r,
+          ax: el.x + p.x, ay: el.y + p.y, zone: zoneName
+        });
+      });
+    } else {
+      vdTableSeatPositions(el).forEach(p=>raw.push({
+        id: safeZone + ' · ' + p.label,
+        zoneSafe: safeZone, label: p.label,
+        ax: el.x + p.x, ay: el.y + p.y, zone: zoneName
+      }));
+    }
+  });
+  if(!raw.length) return null;
+
+  // 3. Fit the map into the 600×400 space the public seat canvas scales from.
+  const pad = 24;
+  const xs = raw.map(s=>s.ax), ys = raw.map(s=>s.ay);
+  const minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
+  const minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
+  const spanX = Math.max(1, maxX - minX), spanY = Math.max(1, maxY - minY);
+  const scale = Math.min((600 - pad*2)/spanX, (400 - pad*2)/spanY);
+  const cx = (minX + maxX)/2, cy = (minY + maxY)/2;
+
+  // 4. Guarantee unique seat IDs. When a section repeats its seat numbers from
+  //    row to row (no row prefix chosen), qualify every seat in that section
+  //    with its row instead of tacking on a meaningless "(2)".
+  const labelCount = Object.create(null);
+  raw.forEach(s=>{
+    const k = s.zone + '|' + s.label;
+    labelCount[k] = (labelCount[k] || 0) + 1;
+  });
+  const repeatZone = Object.create(null);
+  Object.keys(labelCount).forEach(k=>{
+    if(labelCount[k] > 1) repeatZone[k.split('|')[0]] = true;
+  });
+
+  const seen = Object.create(null);
+  const seats = raw.map(s=>{
+    let base = s.id;
+    if(s.row !== undefined && repeatZone[s.zone]){
+      base = s.zoneSafe + ' · R' + (s.row+1) + '-' + s.label;
+    }
+    let id = base, n = 2;
+    while(seen[id]) id = base + ' (' + (n++) + ')';
+    seen[id] = true;
+    return {
+      id,
+      x: Math.round(300 + (s.ax - cx) * scale),
+      y: Math.round(200 + (s.ay - cy) * scale),
+      zone: s.zone
+    };
+  });
+
+  return { zones: zonesOut, seats };
+}
+
 function closeVenueDesigner(){
   const ov = document.getElementById('vd-overlay');
   if(ov) ov.style.display = 'none';
@@ -2118,12 +2231,26 @@ function closeVenueDesigner(){
   vdSeatEdit = false; vdSeatPick = false; vdPickedSeats = [];
   const canvas = document.getElementById('vd-canvas');
   if(canvas) canvas.classList.remove('vd-seat-edit','vd-seat-pick');
-  // Mirror the designer map into the seat canvas so the existing seat/pricing
-  // flow can still see what was drawn (elements are display-only for now).
+
+  // The designer is the source of truth for seating and pricing: turn the map
+  // into zones + a manual seat layout, then switch the wizard over to it.
+  const built = vdBuildBookingLayout();
+  if(built){
+    zones = built.zones;
+    canvasSeats = built.seats;
+    // Drop holds that point at seats which no longer exist.
+    const ids = new Set(canvasSeats.map(s=>s.id));
+    heldSeats = heldSeats.filter(id=>ids.has(id));
+    setLayoutMode('manual');
+    updateScZoneSelect();
+  }
+
   canvasElements = vdElements.slice();
   renderCanvasElements();
   renderSavedCanvasPreview();
-  showToast('Canvas saved to this event','success');
+  showToast(built
+    ? 'Canvas saved — ' + built.seats.length + ' seats ready to book'
+    : 'Canvas saved to this event', 'success');
 }
 
 // Draw the saved map under the ＋ Canvas button, scaled to fit. This is what
@@ -2247,6 +2374,8 @@ function vdConfirmAdd(){
     const skew  = +((v('vd-s-skew')||{}).value) || 0;
     const align = (v('vd-s-align')||{}).value || 'center';
     const cap   = admit === 'ga' ? (Math.max(1, +((v('vd-s-occ')||{}).value) || rows*cols)) : rows*cols;
+    const price = admit === 'ga' ? 0 : Math.max(0, +((v('vd-s-price')||{}).value) || 0);
+    const maxSeats = +((v('vd-s-max')||{}).value) || 0;
 
     // Size the block so the grid of seats fits, allowing for skew spacing.
     const size = vdSectionSize(rows, cols, skew, curve, align);
@@ -2256,6 +2385,7 @@ function vdConfirmAdd(){
       opts:{ admission:admit, rows, cols, capacity:cap,
              prefix:seatStyle, seat_prefix:seatStyle, seat_start:seatStart, seat_dir:seatDir,
              row_prefix:rowStyle, row_start:rowStart, row_dir:rowDir,
+             price, max_seats: maxSeats > 0 ? maxSeats : null, promotions:{},
              curve, skew, align, removedSeats:[] },
     });
   } else if(type === 'table'){
@@ -2263,9 +2393,12 @@ function vdConfirmAdd(){
     const endMax = (v('vd-t-end')||{}).value === 'max';
     const label  = ((v('vd-t-label')||{}).value || '').trim() || vdNextLabel('table');
     const colour = (v('vd-t-colour')||{}).value || ELEMENT_TOOLS.table.colour;
+    const price  = Math.max(0, +((v('vd-t-price')||{}).value) || 0);
+    const maxSeats = +((v('vd-t-max')||{}).value) || 0;
     el = vdMakeElement({
       type:'table', w:90, h:90, label, colour,
-      opts:{ tableSeats: endMax ? Math.max(seats, Math.round((90+90)/16)) : seats, endMax },
+      opts:{ tableSeats: endMax ? Math.max(seats, Math.round((90+90)/16)) : seats, endMax,
+             price, max_seats: maxSeats > 0 ? maxSeats : null, promotions:{} },
     });
   } else if(type === 'object'){
     const preset = (v('vd-o-preset')||{}).value || 'stage';
@@ -2329,6 +2462,10 @@ function renderVdSetupPanel(){
       </div>
       <div class="ei-row single">
         <div><label>Section name</label><input id="vd-s-label" placeholder="e.g. Balcony 1"></div>
+      </div>
+      <div class="ei-row" id="vd-s-price-row">
+        <div><label>Ticket price ($)</label><input type="number" id="vd-s-price" min="0" step="1" value="50"></div>
+        <div><label>Max per booking</label><input type="number" id="vd-s-max" min="0" placeholder="No limit"></div>
       </div>
       <div class="ei-row">
         <div><label>Row</label>
@@ -2407,6 +2544,10 @@ function renderVdSetupPanel(){
       <div class="ei-row single">
         <div><label>Table name</label><input id="vd-t-label" placeholder="e.g. Table 1"></div>
       </div>
+      <div class="ei-row">
+        <div><label>Ticket price ($)</label><input type="number" id="vd-t-price" min="0" step="1" value="50"></div>
+        <div><label>Max per booking</label><input type="number" id="vd-t-max" min="0" placeholder="No limit"></div>
+      </div>
       <div class="ei-row single">
         <div><label>Colour</label><input type="color" id="vd-t-colour" value="${ELEMENT_TOOLS.table.colour}"></div>
       </div>
@@ -2458,7 +2599,11 @@ function vdSectionAdmissionChange(){
   const sel = document.getElementById('vd-s-admission');
   const row = document.getElementById('vd-s-occ-row');
   if(!sel || !row) return;
-  row.style.display = sel.value === 'ga' ? 'block' : 'none';
+  const ga = sel.value === 'ga';
+  row.style.display = ga ? 'block' : 'none';
+  // GA sections don't produce individual seats yet, so they aren't priced.
+  const priceRow = document.getElementById('vd-s-price-row');
+  if(priceRow) priceRow.style.display = ga ? 'none' : '';
 }
 
 function vdCancelAdd(){
@@ -2476,16 +2621,23 @@ function vdNextLabel(type){
 
 // Seats drawn inside an element: a ring of dots for a table, the real seat
 // grid for a reserved section. Shared by the designer and the saved preview.
+// Table seats sit on an ellipse just outside the table block.
+function vdTableSeatPositions(el){
+  const n = Math.max(0, (el.opts||{}).tableSeats || 0);
+  const out = [];
+  for(let i=0;i<n;i++){
+    const a = (Math.PI*2*i)/Math.max(1,n) - Math.PI/2;
+    const rx = el.w/2+9, ry = el.h/2+9;
+    out.push({ i, x: el.w/2 + Math.cos(a)*rx, y: el.h/2 + Math.sin(a)*ry, label: 'S'+(i+1) });
+  }
+  return out;
+}
+
 function vdElementSeatsHtml(el){
   if(el.type === 'table'){
-    const n = el.opts.tableSeats||0;
-    let seats = '';
-    for(let i=0;i<n;i++){
-      const a = (Math.PI*2*i)/Math.max(1,n) - Math.PI/2;
-      const rx = el.w/2+9, ry = el.h/2+9;
-      seats += `<span class="vd-table-seat" style="left:${el.w/2+Math.cos(a)*rx}px;top:${el.h/2+Math.sin(a)*ry}px;background:${hexA(el.colour,.55)}"></span>`;
-    }
-    return seats;
+    return vdTableSeatPositions(el).map(p =>
+      `<span class="vd-table-seat" style="left:${p.x}px;top:${p.y}px;background:${hexA(el.colour,.55)}"></span>`
+    ).join('');
   }
   // Reserved sections show the real seat grid; GA sections show none.
   if(el.type === 'section' && el.opts.admission !== 'ga') return vdSectionSeatsHtml(el);
@@ -2496,11 +2648,14 @@ function vdElementSeatsHtml(el){
 function vdElementSubText(el){
   const live = vdLiveSeatCount(el);
   const gone = (el.opts.removedSeats||[]).length;
-  return el.type==='table' ? `${el.opts.tableSeats||0} seats`
+  const price = +((el.opts||{}).price) || 0;
+  const money = (el.type==='table' || (el.type==='section' && el.opts.admission!=='ga')) && price > 0
+    ? ` · $${price}` : '';
+  return el.type==='table' ? `${el.opts.tableSeats||0} seats${money}`
        : el.type==='section' ? (el.opts.admission==='ga'
            ? `${el.opts.capacity||0} occupancy · GA`
            : `${el.opts.rows||0} × ${el.opts.cols||0} = ${live} seats`
-             + (gone ? ` · ${gone} removed` : ''))
+             + (gone ? ` · ${gone} removed` : '') + money)
        : '';
 }
 
@@ -2559,7 +2714,7 @@ function renderVdCanvas(){
 //   row_prefix + row_start   label each ROW   (e.g. A1, A2, A3 …)
 //   seat_prefix + seat_start label each SEAT  (e.g. 1, 2, 3 …)
 // Returns absolutely-positioned <span> elements.
-function vdSectionSeatsHtml(el){
+function vdSectionSeatsHtml(el, sink){
   const o = el.opts || {};
   const rows = Math.max(0, o.rows||0);
   const cols = Math.max(0, o.cols||0);
@@ -2611,6 +2766,9 @@ function vdSectionSeatsHtml(el){
       const y = rowBaseY - arc;    // + curve raises, − curve lowers
       // Manual number if the organiser set one, otherwise the automatic label.
       const seatNo = vdSeatLabel(el, r, c);
+      // Callers that need the real seat positions (e.g. the booking layout)
+      // pass a sink and get centres relative to the element's top-left.
+      if(sink) sink.push({ r, c, x: x + seatPx/2, y: y + seatPx/2, label: seatNo });
       // In seat-edit or seat-pick mode the seat itself is the click target.
       const picked = vdSeatPick && vdIsSeatPicked(el.id, r, c);
       const click = (vdSeatEdit || vdSeatPick)
@@ -2911,11 +3069,70 @@ function renderVdEditPanel(){
     </div>
     <div class="ei-row single"><div><label>Label</label><input id="vd-label" value="${escapeAttr(el.label)}"></div></div>
     ${fields}
+    ${(el.type==='table' || (el.type==='section' && el.opts.admission!=='ga')) ? vdTicketFieldsHtml(el) : ''}
     <div class="vd-edit-actions">
       <button class="primary" onclick="vdApply()">✓ Apply</button>
       <button onclick="vdDuplicate()">⧉ Copy</button>
       <button class="danger" onclick="vdDelete()">🗑 Delete</button>
     </div>`;
+}
+
+// Ticket settings for one section / table. These are saved on the element and
+// become the price zone when the map is saved, so the same settings drive the
+// public booking page (early bird, group buy, max per booking).
+function vdTicketFieldsHtml(el){
+  const o = el.opts || {};
+  const p = o.promotions || {};
+  const eb = p.early_bird || {};
+  const gb = p.group_buy || {};
+  const price = (o.price === 0 || o.price) ? o.price : '';
+  const max = o.max_seats || '';
+  return `
+    <div class="vd-layout-group">
+      <div class="vd-layout-title">Tickets &amp; offers</div>
+      <div class="ei-row">
+        <div><label>Ticket price ($)</label><input type="number" id="vd-price" min="0" step="1" value="${escapeAttr(price)}" placeholder="0"></div>
+        <div><label>Max per booking</label><input type="number" id="vd-max" min="0" value="${escapeAttr(max)}" placeholder="No limit"></div>
+      </div>
+      <div class="zp-row">
+        <input type="checkbox" id="vd-eb-on" ${eb.enabled?'checked':''}>
+        <b>🎯 Early Bird</b> <span>Price</span>
+        <input type="number" id="vd-eb-price" min="0" step="0.5" value="${escapeAttr(eb.price ?? '')}" placeholder="$">
+        <span>until</span>
+        <input type="date" id="vd-eb-end" value="${eb.ends_at||''}">
+      </div>
+      <div class="zp-row">
+        <input type="checkbox" id="vd-gb-on" ${gb.enabled?'checked':''}>
+        <b>👥 Group Buy</b> <span>Min</span>
+        <input type="number" id="vd-gb-min" min="1" value="${gb.min_seats ?? 4}" style="width:52px">
+        <span>Max</span>
+        <input type="number" id="vd-gb-max" min="1" value="${gb.max_seats ?? 10}" style="width:52px">
+        <input type="number" id="vd-gb-pct" min="0" max="100" value="${escapeAttr(gb.discount_percent ?? '')}" placeholder="%" style="width:52px">
+      </div>
+      <div class="vd-setup-hint">The price covers every seat here. Early Bird and Group Buy apply to this ${el.type==='table'?'table':'section'} only.</div>
+    </div>`;
+}
+
+// Copy the ticket fields from the edit panel onto an element's opts.
+function vdReadTicketFields(opts){
+  const g = id => document.getElementById(id);
+  if(!g('vd-price')) return;
+  opts.price = Math.max(0, +g('vd-price').value || 0);
+  const mx = +g('vd-max').value || 0;
+  opts.max_seats = mx > 0 ? mx : null;
+  const promos = opts.promotions || {};
+  promos.early_bird = {
+    enabled: !!(g('vd-eb-on') && g('vd-eb-on').checked),
+    price: Math.max(0, +g('vd-eb-price').value || 0),
+    ends_at: (g('vd-eb-end') || {}).value || ''
+  };
+  promos.group_buy = {
+    enabled: !!(g('vd-gb-on') && g('vd-gb-on').checked),
+    min_seats: +g('vd-gb-min').value || 4,
+    max_seats: +g('vd-gb-max').value || 10,
+    discount_percent: Math.max(0, Math.min(100, +g('vd-gb-pct').value || 0))
+  };
+  opts.promotions = promos;
 }
 
 // Drop manual numbers that point at positions which no longer exist after the
@@ -2988,6 +3205,10 @@ function vdApply(){
       const p = OBJECT_PRESETS.find(x=>x.key===v('vd-preset').value);
       if(p){ el.opts.preset = p.label; el.label = p.label; el.w = p.w; el.h = p.h; }
     }
+  }
+  // Sections and tables carry their own ticket price / promotions.
+  if(el.type==='table' || (el.type==='section' && el.opts.admission!=='ga')){
+    vdReadTicketFields(el.opts);
   }
   renderVdCanvas(); renderVdEditPanel();
   showToast('Applied to ' + el.label,'success');
