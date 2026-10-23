@@ -17,6 +17,7 @@ SQL_MIGRATIONS = {
         ("promotions", "TEXT"),
         ("layout_mode", "VARCHAR DEFAULT 'auto'"),
         ("seat_layout", "TEXT DEFAULT '[]'"),
+        ("canvas_elements", "TEXT DEFAULT '[]'"),
         ("venue_address", "TEXT"),
         ("addons", "TEXT DEFAULT '[]'"),
         ("created_by", "VARCHAR DEFAULT ''"),
@@ -66,6 +67,30 @@ with engine.connect() as conn:
                 )
                 logging.info("Added column %s.%s", table, col_name)
     conn.commit()
+
+# `canvas_elements` was first introduced as TEXT, which makes Postgres hand back
+# a JSON *string* instead of a list. Convert it in place to a real json column so
+# it behaves like seat_layout. Guarded so it only runs while the column is text.
+if engine.dialect.name == "postgresql":
+    with engine.begin() as conn:
+        data_type = conn.execute(
+            text(
+                "SELECT data_type FROM information_schema.columns "
+                "WHERE table_name = 'events' AND column_name = 'canvas_elements'"
+            )
+        ).scalar()
+        if data_type and data_type.lower() != "json":
+            # The TEXT default has to go before the type can change, otherwise
+            # Postgres refuses the ALTER ("default cannot be cast automatically").
+            conn.execute(text("ALTER TABLE events ALTER COLUMN canvas_elements DROP DEFAULT"))
+            conn.execute(
+                text(
+                    "ALTER TABLE events ALTER COLUMN canvas_elements TYPE json "
+                    "USING NULLIF(canvas_elements, '')::json"
+                )
+            )
+            conn.execute(text("ALTER TABLE events ALTER COLUMN canvas_elements SET DEFAULT '[]'::json"))
+            logging.info("Converted events.canvas_elements to json")
 
 
 def _backfill_booking_refs():

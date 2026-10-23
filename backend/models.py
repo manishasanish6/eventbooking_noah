@@ -30,6 +30,7 @@ class Event(Base):
     promotions = Column(JSON, nullable=True)
     layout_mode = Column(String, default="auto")
     seat_layout = Column(JSON, default=list)
+    canvas_elements = Column(JSON, default=list)   # Venue Designer map
     venue_address = Column(JSON, default=None)
     addons = Column(JSON, default=list)   # list of {id, name, type, price, description}
     created_by = Column(String, default="")  # admin email who created the event

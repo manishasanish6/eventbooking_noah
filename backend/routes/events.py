@@ -5,8 +5,25 @@ from backend.database import get_db
 from backend.models import Event
 from pydantic import BaseModel
 from typing import Optional, List
+import json
 
 router = APIRouter()
+
+def _event_json(ev):
+    """Serialize an event, making sure canvas_elements is always a list.
+
+    The column was first added as TEXT on existing databases, where Postgres
+    returns the JSON as a string; this keeps the API shape stable regardless.
+    """
+    data = jsonable_encoder(ev)
+    value = data.get("canvas_elements")
+    if isinstance(value, str):
+        try:
+            value = json.loads(value) if value.strip() else []
+        except ValueError:
+            value = []
+    data["canvas_elements"] = value or []
+    return data
 
 class AddonSchema(BaseModel):
     id: str
@@ -43,6 +60,7 @@ class EventCreate(BaseModel):
     held_seats: Optional[list] = None
     layout_mode: Optional[str] = "auto"
     seat_layout: Optional[list] = None
+    canvas_elements: Optional[list] = None
     venue_address: Optional[dict] = None
     addons: Optional[list] = None
     created_by: Optional[str] = ""
@@ -70,15 +88,15 @@ def list_events(accessible_by: Optional[str] = None, db: Session = Depends(get_d
             editors = ev.editors or []
             if ev.created_by == accessible_by or accessible_by in editors:
                 result.append(ev)
-        return jsonable_encoder(result)
-    return jsonable_encoder(all_events)
+        return [_event_json(ev) for ev in result]
+    return [_event_json(ev) for ev in all_events]
 
 @router.get("/{event_id}")
 def get_event(event_id: int, db: Session = Depends(get_db)):
     ev = db.query(Event).filter(Event.id == event_id).first()
     if not ev:
         raise HTTPException(status_code=404, detail="Event not found")
-    return jsonable_encoder(ev)
+    return _event_json(ev)
 
 @router.post("/")
 def create_event(data: EventCreate, db: Session = Depends(get_db)):
@@ -92,6 +110,7 @@ def create_event(data: EventCreate, db: Session = Depends(get_db)):
         booked_seats=[], held_seats=data.held_seats or [],
         layout_mode=data.layout_mode or "auto",
         seat_layout=data.seat_layout or [],
+        canvas_elements=data.canvas_elements or [],
         venue_address=data.venue_address,
         addons=data.addons or [],
         created_by=data.created_by or "",
@@ -111,7 +130,7 @@ def create_event(data: EventCreate, db: Session = Depends(get_db)):
         organiser_summary=data.organiser_summary or ""
     )
     db.add(ev); db.commit(); db.refresh(ev)
-    return jsonable_encoder(ev)
+    return _event_json(ev)
 
 @router.put("/{event_id}")
 def update_event(event_id: int, data: EventCreate, db: Session = Depends(get_db)):
@@ -121,13 +140,17 @@ def update_event(event_id: int, data: EventCreate, db: Session = Depends(get_db)
     for k, v in data.dict().items():
         if k == "zones":
             setattr(ev, "zones", [z if isinstance(z, dict) else z.dict() for z in v])
+        elif k == "canvas_elements":
+            # An omitted map (None) keeps the saved one; [] explicitly clears it.
+            if v is not None:
+                setattr(ev, k, v)
         elif k in ("layout_mode", "seat_layout", "venue_address", "addons", "editors", "images"):
             setattr(ev, k, v)
         else:
             setattr(ev, k.replace("cols","cols").replace("rows","rows"), v)
     ev.total_seats = data.rows * data.cols if data.layout_mode != "manual" else len(data.seat_layout or [])
     db.commit(); db.refresh(ev)
-    return jsonable_encoder(ev)
+    return _event_json(ev)
 
 @router.patch("/{event_id}/status")
 def toggle_status(event_id: int, status: str, db: Session = Depends(get_db)):

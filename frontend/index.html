@@ -184,6 +184,21 @@ body{
 .canvas-open-btn:hover{background:#7a35e8;border-color:#7a35e8;transform:translateY(-1px)}
 .canvas-close-btn{border-color:var(--line)!important;color:var(--gray)!important}
 .canvas-close-btn:hover{border-color:var(--logo-red)!important;color:var(--logo-red)!important;background:rgba(255,62,55,.06)!important}
+/* Saved seat map preview, shown under ＋ Canvas once the designer is saved */
+.canvas-saved{background:#fff;border:1px solid var(--line);margin:-8px 0 20px;overflow:hidden}
+.canvas-saved-head{display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border-bottom:1px solid var(--line);background:#faf8fd}
+.canvas-saved-title{font-family:var(--font-b);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--logo-purple);font-weight:700}
+.canvas-saved-meta{font-size:11px;color:var(--gray);margin-right:auto}
+.canvas-saved-edit{background:#fff;border:1px solid var(--line);color:var(--text-on-light);cursor:pointer;
+  font-family:var(--font-b);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;
+  transition:all .2s}
+.canvas-saved-edit:hover{border-color:var(--logo-purple);color:var(--logo-purple);background:rgba(139,68,255,.06)}
+.canvas-saved-body{position:relative;background:#fcfcfd;overflow:hidden;height:260px}
+.canvas-saved-inner{position:absolute;top:0;left:0;transform-origin:top left}
+.canvas-saved-body .vd-el{pointer-events:none;cursor:default}
+.canvas-saved-empty{padding:28px;text-align:center;font-size:12px;color:var(--gray)}
 .element-toolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 0 12px}
 .element-toolbar .et-btn{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);
   color:var(--text-on-light);padding:7px 12px;cursor:pointer;font-family:var(--font-b);font-size:11px;
@@ -696,7 +711,16 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
       <!-- ＋ CANVAS — opens the Venue Designer -->
       <div class="canvas-entry">
         <button class="canvas-open-btn" id="canvas-open-btn" onclick="openVenueDesigner()">＋ Canvas</button>
-        <div class="canvas-entry-hint">Open the Venue Designer to build your seat map from scratch.</div>
+        <div class="canvas-entry-hint" id="canvas-entry-hint">Open the Venue Designer to build your seat map from scratch.</div>
+      </div>
+      <!-- SAVED CANVAS PREVIEW — what the Venue Designer last saved -->
+      <div class="canvas-saved" id="canvas-saved" style="display:none">
+        <div class="canvas-saved-head">
+          <span class="canvas-saved-title">Saved seat map</span>
+          <span class="canvas-saved-meta" id="canvas-saved-meta"></span>
+          <button type="button" class="canvas-saved-edit" onclick="openVenueDesigner()">✎ Edit</button>
+        </div>
+        <div class="canvas-saved-body" id="canvas-saved-body"></div>
       </div>
 
       <!-- AUTO SEATING SECTION -->
@@ -1149,6 +1173,7 @@ function goStep(n){
   const bar = document.getElementById('wiz-progress-bar');
   if(bar) bar.style.width = (n*33.33)+'%';
   if(n===3) renderReview();
+  if(n===2) renderSavedCanvasPreview();   // size the map to the now-visible panel
   const view = document.getElementById('view-create');
   if(view) view.scrollTop = 0;
   window.scrollTo({top:0,behavior:'smooth'});
@@ -1678,6 +1703,7 @@ async function saveEvent(publishAs){
     held_seats:heldSeats,
     layout_mode:layoutMode,
     seat_layout:layoutMode==='manual'?JSON.parse(JSON.stringify(canvasSeats)):[],
+    canvas_elements:JSON.parse(JSON.stringify(canvasElements)),
     venue_address,
     addons:JSON.parse(JSON.stringify(addons)),
     created_by: document.getElementById('f-creator').value || currentUser,
@@ -1778,6 +1804,10 @@ function editEvent(id){
   zones.forEach((z,i)=>{ if(z.walkway_mode===undefined){z.walkway_mode='none';z.walkway_width=1;z.walkway_numbering='flow';} });
   heldSeats=JSON.parse(JSON.stringify(e.held_seats||[]));
   canvasSeats=JSON.parse(JSON.stringify(e.seat_layout||[]));
+  // Restore the saved Venue Designer map so it shows under ＋ Canvas and can be
+  // reopened in the designer.
+  canvasElements=JSON.parse(JSON.stringify(e.canvas_elements||[]));
+  vdElements=JSON.parse(JSON.stringify(e.canvas_elements||[]));
   addons=JSON.parse(JSON.stringify(e.addons||[]));
   editors=JSON.parse(JSON.stringify(e.editors||[]));
   renderAddons();
@@ -1792,6 +1822,7 @@ function editEvent(id){
   }
   renderZones(); previewVenue(); renderHeldGrid();
   renderZonesManual(); renderCanvas(); updateCanvasHeldLegend();
+  renderSavedCanvasPreview();
   // restore address
   if(e.venue_address){
     document.getElementById('f-addr1').value=e.venue_address.address1||'';
@@ -1851,6 +1882,9 @@ function cancelEdit(){
   zones=[{name:'VIP',rows:2,price:198,color:'#8b44ff',seat_prefix:'A',seat_start:1,max_seats:8},{name:'Standard',rows:6,price:98,color:'#5b9cf6',seat_prefix:'B',seat_start:1,max_seats:8}];
   heldSeats=[];
   canvasSeats=[];
+  canvasElements=[];
+  vdElements=[];
+  vdSelectedId=null;
   addons=[];
   editors=[];
   _eventImagesData = [];
@@ -1865,6 +1899,7 @@ function cancelEdit(){
   setLayoutMode('auto');
   renderZones(); previewVenue(); renderHeldGrid();
   renderZonesManual();
+  renderSavedCanvasPreview();
   switchView('events');
 }
 function toggleArtistDetails(){
@@ -2087,8 +2122,80 @@ function closeVenueDesigner(){
   // flow can still see what was drawn (elements are display-only for now).
   canvasElements = vdElements.slice();
   renderCanvasElements();
+  renderSavedCanvasPreview();
   showToast('Canvas saved to this event','success');
 }
+
+// Draw the saved map under the ＋ Canvas button, scaled to fit. This is what
+// the organiser gets to see after closing the designer (and when reopening the
+// event) without having to re-enter the designer.
+function renderSavedCanvasPreview(){
+  const wrap = document.getElementById('canvas-saved');
+  const body = document.getElementById('canvas-saved-body');
+  const meta = document.getElementById('canvas-saved-meta');
+  const hint = document.getElementById('canvas-entry-hint');
+  if(!wrap || !body) return;
+
+  const els = canvasElements || [];
+  if(!els.length){
+    wrap.style.display = 'none';
+    body.innerHTML = '';
+    if(hint) hint.textContent = 'Open the Venue Designer to build your seat map from scratch.';
+    return;
+  }
+
+  wrap.style.display = 'block';
+  if(hint) hint.textContent = 'Your seat map is saved. Reopen the designer to change it.';
+
+  const pad = 26;
+  const minX = Math.min(...els.map(e=>e.x));
+  const minY = Math.min(...els.map(e=>e.y));
+  const maxX = Math.max(...els.map(e=>e.x+e.w));
+  const maxY = Math.max(...els.map(e=>e.y+e.h));
+  const contentW = Math.max(1, maxX-minX) + pad*2;
+  const contentH = Math.max(1, maxY-minY) + pad*2;
+
+  const availW = body.clientWidth || 600;
+  const availH = 260;
+  const scale = Math.min(availW/contentW, availH/contentH, 1);
+  // Shrink-wrap the frame so a small map doesn't sit in a tall empty box.
+  body.style.height = Math.max(90, Math.round(contentH*scale)) + 'px';
+
+  let html = `<div class="canvas-saved-inner" style="width:${contentW}px;height:${contentH}px;`
+           + `transform:scale(${scale})">`;
+  els.forEach(el=>{
+    const style = el.type==='text' ? 'dashed'
+                : (el.type==='section' || el.type==='table') ? 'none' : 'solid';
+    html += `<div class="vd-el" data-vdkind="${el.type}" style="left:${el.x-minX+pad}px;`
+          + `top:${el.y-minY+pad}px;width:${el.w}px;height:${el.h}px;`
+          + `background:${hexA(el.colour, el.type==='text' ? .10 : .16)};`
+          + `border-color:${el.colour};border-style:${style}">`
+          + vdElementSeatsHtml(el)
+          + `<span class="vd-el-label">${escapeHtml(el.label)}`
+          + (vdElementSubText(el) ? `<span class="vd-el-sub">${escapeHtml(vdElementSubText(el))}</span>` : '')
+          + `</span></div>`;
+  });
+  html += `</div>`;
+  body.innerHTML = html;
+
+  if(meta){
+    const secs = els.filter(e=>e.type==='section').length;
+    const tables = els.filter(e=>e.type==='table').length;
+    const seats = els.reduce((n,e)=> n + (e.type==='section' ? vdLiveSeatCount(e)
+                                     : e.type==='table' ? (e.opts.tableSeats||0) : 0), 0);
+    const bits = [];
+    if(secs) bits.push(secs + (secs===1?' section':' sections'));
+    if(tables) bits.push(tables + (tables===1?' table':' tables'));
+    if(seats) bits.push(seats + ' seats');
+    meta.textContent = bits.join(' · ');
+  }
+}
+
+// The preview is scaled to the panel width, so redraw it when that changes.
+window.addEventListener('resize', ()=>{
+  const wrap = document.getElementById('canvas-saved');
+  if(wrap && wrap.style.display !== 'none') renderSavedCanvasPreview();
+});
 
 function vdClearAll(){
   if(!vdElements.length){ showToast('Canvas is already empty','info'); return; }
@@ -2367,6 +2474,36 @@ function vdNextLabel(type){
   return 'Stage';
 }
 
+// Seats drawn inside an element: a ring of dots for a table, the real seat
+// grid for a reserved section. Shared by the designer and the saved preview.
+function vdElementSeatsHtml(el){
+  if(el.type === 'table'){
+    const n = el.opts.tableSeats||0;
+    let seats = '';
+    for(let i=0;i<n;i++){
+      const a = (Math.PI*2*i)/Math.max(1,n) - Math.PI/2;
+      const rx = el.w/2+9, ry = el.h/2+9;
+      seats += `<span class="vd-table-seat" style="left:${el.w/2+Math.cos(a)*rx}px;top:${el.h/2+Math.sin(a)*ry}px;background:${hexA(el.colour,.55)}"></span>`;
+    }
+    return seats;
+  }
+  // Reserved sections show the real seat grid; GA sections show none.
+  if(el.type === 'section' && el.opts.admission !== 'ga') return vdSectionSeatsHtml(el);
+  return '';
+}
+
+// The one-line summary under an element's name.
+function vdElementSubText(el){
+  const live = vdLiveSeatCount(el);
+  const gone = (el.opts.removedSeats||[]).length;
+  return el.type==='table' ? `${el.opts.tableSeats||0} seats`
+       : el.type==='section' ? (el.opts.admission==='ga'
+           ? `${el.opts.capacity||0} occupancy · GA`
+           : `${el.opts.rows||0} × ${el.opts.cols||0} = ${live} seats`
+             + (gone ? ` · ${gone} removed` : ''))
+       : '';
+}
+
 function renderVdCanvas(){
   const canvas = document.getElementById('vd-canvas');
   if(!canvas) return;
@@ -2391,27 +2528,8 @@ function renderVdCanvas(){
     if(el.type==='text') d.style.borderStyle = 'dashed';
     else if(el.type==='section' || el.type==='table') d.style.borderStyle = 'none';
 
-    let seats = '';
-    if(el.type==='table'){
-      const n = el.opts.tableSeats||0;
-      for(let i=0;i<n;i++){
-        const a = (Math.PI*2*i)/Math.max(1,n) - Math.PI/2;
-        const rx = el.w/2+9, ry = el.h/2+9;
-        seats += `<span class="vd-table-seat" style="left:${el.w/2+Math.cos(a)*rx}px;top:${el.h/2+Math.sin(a)*ry}px;background:${hexA(el.colour,.55)}"></span>`;
-      }
-    } else if(el.type==='section' && el.opts.admission !== 'ga'){
-      // Reserved sections show the real seat grid the organiser entered,
-      // shaped by the curve / skew / alignment settings.
-      seats = vdSectionSeatsHtml(el);
-    }
-    const live = vdLiveSeatCount(el);
-    const gone = (el.opts.removedSeats||[]).length;
-    const sub = el.type==='table' ? `${el.opts.tableSeats||0} seats`
-              : el.type==='section' ? (el.opts.admission==='ga'
-                  ? `${el.opts.capacity||0} occupancy · GA`
-                  : `${el.opts.rows||0} × ${el.opts.cols||0} = ${live} seats`
-                    + (gone ? ` · ${gone} removed` : ''))
-              : '';
+    let seats = vdElementSeatsHtml(el);
+    const sub = vdElementSubText(el);
     d.innerHTML = seats
       + `<span class="vd-el-label">${escapeHtml(el.label)}`
       + (sub ? `<span class="vd-el-sub">${escapeHtml(sub)}</span>` : '')
