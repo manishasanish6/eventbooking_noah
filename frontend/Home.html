@@ -1302,6 +1302,19 @@
           <div class="sum-row" id="sum-eb-row" style="display:none"><span>🎉 Early Bird</span><span id="sum-eb" style="color:var(--green)">—</span></div>
           <div class="sum-row" id="sum-gb-row" style="display:none"><span>👥 Group Buy</span><span id="sum-gb" style="color:var(--green)">—</span></div>
           <div class="sum-row" id="sum-addon-row" style="display:none"><span>Add-ons</span><span id="sum-addon">—</span></div>
+          <div style="display:flex;gap:6px;margin:8px 0 4px">
+            <input type="text" id="promo-input" placeholder="Promo code" maxlength="24"
+              style="flex:1;min-width:0;background:var(--dark3);border:1px solid rgba(245,241,235,0.1);
+              padding:8px 10px;color:var(--white);font-family:var(--font-b);font-size:12px;
+              font-weight:300;outline:none;text-transform:uppercase">
+            <button type="button" id="promo-apply-btn" onclick="applyPromoCode()"
+              style="background:var(--dark3);border:1px solid rgba(245,241,235,0.15);color:var(--white);
+              padding:0 12px;font-family:var(--font-b);font-size:10px;letter-spacing:.1em;cursor:pointer">APPLY</button>
+            <button type="button" id="promo-clear-btn" onclick="clearPromoCode()" title="Remove promo code"
+              style="display:none;background:transparent;border:1px solid rgba(245,241,235,0.15);color:var(--gray);
+              padding:0 9px;font-family:var(--font-b);font-size:12px;cursor:pointer">✕</button>
+          </div>
+          <div class="sum-row" id="sum-promo-row" style="display:none"><span id="sum-promo-label">Promo</span><span id="sum-promo" style="color:var(--green)">—</span></div>
           <div class="sum-row"><span>Service fee (8%)</span><span id="sum-fee">—</span></div>
           <div class="sum-row total"><span>Total</span><span id="sum-total">—</span></div>
         </div>
@@ -1469,6 +1482,7 @@
   let bookingEvent = null;
   let selectedSeats = [];
   let selectedAddons = [];
+  let appliedPromo = null;
 
   function renderEventCards(events) {
     return events.map(e => {
@@ -1627,7 +1641,11 @@
   function openBooking(id){
     const e = allEvents.find(x => String(x.id) === id);
     if (!e) return;
-    bookingEvent = e; selectedSeats = []; selectedAddons = [];
+    bookingEvent = e; selectedSeats = []; selectedAddons = []; appliedPromo = null;
+    const promoInput = document.getElementById('promo-input');
+    if(promoInput) promoInput.value = '';
+    document.getElementById('promo-clear-btn').style.display = 'none';
+    document.getElementById('sum-promo-row').style.display = 'none';
     const dateStr = e.date ? new Date(e.date+'T12:00').toLocaleDateString('en-SG',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) : 'TBA';
     document.getElementById('bm-name').textContent = e.name;
     const va=e.venue_address||{};
@@ -1696,7 +1714,7 @@
   function closeBooking(){
     document.getElementById('overlay').classList.remove('open');
     document.body.style.overflow = '';
-    bookingEvent = null; selectedSeats = []; selectedAddons = [];
+    bookingEvent = null; selectedSeats = []; selectedAddons = []; appliedPromo = null;
   }
   const overlayEl = document.getElementById('overlay');
   if (overlayEl) overlayEl.addEventListener('click',function(ev){if(ev.target===this) closeBooking();});
@@ -1799,6 +1817,44 @@
 
   function _todayStr(){ return new Date().toISOString().split('T')[0]; }
 
+  function applyPromoCode(){
+    if(!bookingEvent) return;
+    const input = document.getElementById('promo-input');
+    const code = (input.value || '').trim().toUpperCase();
+    if(!code){ showToast('Enter a promo code','error'); return; }
+    const codes = bookingEvent.promo_codes || [];
+    const p = codes.find(x => String(x.code || '').toUpperCase() === code);
+    if(!p){
+      appliedPromo = null;
+      updateSummary();
+      showToast('Invalid promo code','error');
+      return;
+    }
+    const used = Number(p.used || 0);
+    const max = Number(p.max_tickets || 0);
+    if(max && used >= max){
+      appliedPromo = null;
+      updateSummary();
+      showToast('This promo code is sold out','error');
+      return;
+    }
+    appliedPromo = { code: p.code, percent: Number(p.percent || 0), max_tickets: max, used };
+    updateSummary();
+    if(selectedSeats.length && max && used + selectedSeats.length > max){
+      const left = Math.max(0, max - used);
+      showToast('Only ' + left + ' ticket(s) left with this code','error');
+    } else {
+      showToast('Promo code applied — ' + p.percent + '% off', 'success');
+    }
+  }
+
+  function clearPromoCode(){
+    appliedPromo = null;
+    const input = document.getElementById('promo-input');
+    if(input) input.value = '';
+    updateSummary();
+  }
+
   function updateSummary(){
     document.getElementById('sum-count').textContent = selectedSeats.length;
     const tags = document.getElementById('sum-seat-tags');
@@ -1808,6 +1864,7 @@
       document.getElementById('sum-sub').textContent = '—';
       document.getElementById('sum-eb-row').style.display='none';
       document.getElementById('sum-gb-row').style.display='none';
+      document.getElementById('sum-promo-row').style.display='none';
       document.getElementById('sum-fee').textContent = '—';
       document.getElementById('sum-total').textContent = '—';
       btn.disabled = true; return;
@@ -1926,6 +1983,43 @@
       addonRow.style.display = 'none';
     }
 
+    // Promo code: percentage off the ticket subtotal (not add-ons).
+    let promoDiscount = 0;
+    let promoProblem = '';
+    if(appliedPromo && selectedSeats.length){
+      const remaining = appliedPromo.max_tickets
+        ? Math.max(0, appliedPromo.max_tickets - Number(appliedPromo.used || 0))
+        : Infinity;
+      if(selectedSeats.length > remaining){
+        promoProblem = remaining === 0
+          ? 'Sold out'
+          : 'Only ' + remaining + ' ticket(s) left';
+      } else {
+        promoDiscount = Math.round(finalSubtotal * appliedPromo.percent) / 100;
+        finalSubtotal = Math.round((finalSubtotal - promoDiscount) * 100) / 100;
+      }
+    }
+
+    const promoRow = document.getElementById('sum-promo-row');
+    const promoEl = document.getElementById('sum-promo');
+    const promoLabel = document.getElementById('sum-promo-label');
+    const promoClear = document.getElementById('promo-clear-btn');
+    if(appliedPromo){
+      promoRow.style.display = 'flex';
+      promoLabel.textContent = 'Promo ' + appliedPromo.code;
+      promoClear.style.display = 'inline-block';
+      if(promoProblem){
+        promoEl.textContent = promoProblem;
+        promoEl.style.color = 'var(--logo-red)';
+      } else {
+        promoEl.textContent = '-$' + promoDiscount + ' (' + appliedPromo.percent + '% off)';
+        promoEl.style.color = 'var(--green)';
+      }
+    } else {
+      promoRow.style.display = 'none';
+      promoClear.style.display = 'none';
+    }
+
     const fee = Math.round((finalSubtotal + addonTotal) * 0.08);
     const total = finalSubtotal + addonTotal + fee;
     document.getElementById('sum-fee').textContent = '$' + fee;
@@ -1944,11 +2038,23 @@
     const alreadyTaken = newBooked.filter(s=>(e.booked_seats||e.booked||[]).includes(s));
     if(alreadyTaken.length){showToast('Some seats just got taken. Please re-select.','error');buildPublicSeatGrid(e);selectedSeats=[];updateSummary();return;}
 
+    if(appliedPromo){
+      const remaining = appliedPromo.max_tickets
+        ? Math.max(0, appliedPromo.max_tickets - Number(appliedPromo.used || 0))
+        : Infinity;
+      if(newBooked.length > remaining){
+        showToast(remaining === 0
+          ? 'That promo code is sold out'
+          : 'Only ' + remaining + ' ticket(s) left with this promo code','error');
+        return;
+      }
+    }
+
     try {
       const res = await fetch(API_BASE + '/bookings/', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ event_id: Number(e.id), seats:newBooked, user_id: null, email, addons: selectedAddons })
+        body: JSON.stringify({ event_id: Number(e.id), seats:newBooked, user_id: null, email, addons: selectedAddons, promo_code: appliedPromo ? appliedPromo.code : null })
       });
       if(!res.ok){
         const err = await res.json().catch(()=>null);

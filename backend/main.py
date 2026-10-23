@@ -18,6 +18,7 @@ SQL_MIGRATIONS = {
         ("layout_mode", "VARCHAR DEFAULT 'auto'"),
         ("seat_layout", "TEXT DEFAULT '[]'"),
         ("canvas_elements", "TEXT DEFAULT '[]'"),
+        ("promo_codes", "JSON DEFAULT '[]'"),
         ("venue_address", "TEXT"),
         ("addons", "TEXT DEFAULT '[]'"),
         ("created_by", "VARCHAR DEFAULT ''"),
@@ -40,6 +41,8 @@ SQL_MIGRATIONS = {
         ("email", "VARCHAR"),
         ("addons", "TEXT DEFAULT '[]'"),
         ("booking_ref", "VARCHAR DEFAULT ''"),
+        ("promo_code", "VARCHAR DEFAULT ''"),
+        ("promo_discount", "FLOAT DEFAULT 0"),
     ],
     "users": [
         ("totp_secret", "VARCHAR"),

@@ -142,7 +142,8 @@ def export_event_bookings(event_id: int, db: Session = Depends(get_db)):
     b_header = [
         {"value": h, "style": HEADER_STYLE}
         for h in ("Booking Ref", "Buyer Email", "Seats", "Seat Count",
-                  "Zones", "Add-ons", "Total Paid", "Status", "Booking ID")
+                  "Zones", "Add-ons", "Promo Code", "Promo Discount",
+                  "Total Paid", "Status", "Booking ID")
     ]
     b_rows = [b_header]
     for b in bookings:
@@ -159,6 +160,8 @@ def export_event_bookings(event_id: int, db: Session = Depends(get_db)):
             len(seats),
             ", ".join(zones),
             ", ".join(addon_names),
+            b.promo_code or "",
+            float(b.promo_discount or 0),
             float(b.total_paid or 0),
             b.status or "",
             b.id,

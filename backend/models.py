@@ -31,6 +31,7 @@ class Event(Base):
     layout_mode = Column(String, default="auto")
     seat_layout = Column(JSON, default=list)
     canvas_elements = Column(JSON, default=list)   # Venue Designer map
+    promo_codes = Column(JSON, default=list)       # [{code, percent, max_tickets}]
     venue_address = Column(JSON, default=None)
     addons = Column(JSON, default=list)   # list of {id, name, type, price, description}
     created_by = Column(String, default="")  # admin email who created the event
@@ -60,6 +61,8 @@ class Booking(Base):
     status = Column(String, default="confirmed")
     addons = Column(JSON, default=[])   # ["add_1", "add_3"]
     booking_ref = Column(String, default="")  # per-event ref, e.g. "NOAH-ONAM-3"
+    promo_code = Column(String, default="")   # promo code used, uppercase
+    promo_discount = Column(Float, default=0) # amount taken off by the promo
 
 class GalleryPhoto(Base):
     __tablename__ = "gallery_photos"

@@ -1,4 +1,5 @@
 import logging
+import json
 import re
 from datetime import date as dt_date
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -18,6 +19,42 @@ class BookingCreate(BaseModel):
     user_id: Optional[int] = None
     email: str
     addons: Optional[list] = None
+    promo_code: Optional[str] = None
+
+
+def _promo_list(ev):
+    """The event's promo codes as a list (Postgres may return a JSON string)."""
+    value = getattr(ev, "promo_codes", None)
+    if isinstance(value, str):
+        try:
+            value = json.loads(value) if value.strip() else []
+        except ValueError:
+            value = []
+    return value if isinstance(value, list) else []
+
+
+def _norm_promo(code):
+    return str(code or "").strip().upper()
+
+
+def _find_promo(ev, code):
+    wanted = _norm_promo(code)
+    for p in _promo_list(ev):
+        if isinstance(p, dict) and _norm_promo(p.get("code")) == wanted:
+            return p
+    return None
+
+
+def _promo_used(db, event_id, code):
+    """Tickets already sold with this promo code for the event."""
+    canonical = _norm_promo(code)
+    total = 0
+    for booking in db.query(Booking).filter(
+        Booking.event_id == event_id, Booking.status == "confirmed"
+    ):
+        if _norm_promo(booking.promo_code) == canonical:
+            total += len(booking.seats or [])
+    return total
 
 
 def event_code_for(name: str) -> str:
@@ -295,6 +332,37 @@ def create_booking(data: BookingCreate, bg: BackgroundTasks, db: Session = Depen
 
     total, subtotal, fee, discount_items, raw_subtotal, addon_total, addon_items = _calc_total(ev, data.seats, data.addons)
 
+    # Promo code: percentage off the ticket subtotal (add-ons are not discounted)
+    # and a hard cap on how many tickets may be sold with the code.
+    promo = None
+    promo_code = _norm_promo(data.promo_code)
+    promo_discount = 0.0
+    if promo_code:
+        promo = _find_promo(ev, promo_code)
+        if not promo:
+            raise HTTPException(status_code=400, detail="Invalid promo code")
+        promo_code = _norm_promo(promo.get("code"))
+        max_tickets = int(promo.get("max_tickets") or 0)
+        used = _promo_used(db, data.event_id, promo_code)
+        if max_tickets and used + len(data.seats) > max_tickets:
+            left = max(0, max_tickets - used)
+            raise HTTPException(
+                status_code=400,
+                detail=(f"Promo code {promo_code} is sold out" if left == 0
+                        else f"Only {left} ticket(s) left with promo code {promo_code}"),
+            )
+        pct = max(0.0, min(100.0, float(promo.get("percent") or 0)))
+        ticket_subtotal = round(float(subtotal) - float(addon_total), 2)
+        promo_discount = round(ticket_subtotal * pct / 100, 2)
+        if promo_discount:
+            subtotal = round(subtotal - promo_discount, 2)
+            fee = round(subtotal * 0.08, 2)
+            total = round(subtotal + fee, 2)
+            discount_items.append({
+                "label": f"Promo {promo_code} ({pct:g}%)",
+                "amount": promo_discount,
+            })
+
     ev.booked_seats = booked + data.seats
     db.add(ev)
 
@@ -303,7 +371,8 @@ def create_booking(data: BookingCreate, bg: BackgroundTasks, db: Session = Depen
         event_id=data.event_id, seats=data.seats,
         total_paid=total, status="confirmed",
         user_id=data.user_id, email=data.email,
-        addons=data.addons or [], booking_ref=booking_ref
+        addons=data.addons or [], booking_ref=booking_ref,
+        promo_code=promo_code, promo_discount=promo_discount
     )
     db.add(booking); db.commit(); db.refresh(booking)
 
@@ -327,7 +396,7 @@ def create_booking(data: BookingCreate, bg: BackgroundTasks, db: Session = Depen
         event_image=(ev.images or [None])[0] if getattr(ev, "images", None) else None
     )
 
-    return {"booking_id": booking.id, "booking_ref": booking_ref, "seats": data.seats, "total": total, "status": "confirmed", "addon_total": addon_total}
+    return {"booking_id": booking.id, "booking_ref": booking_ref, "seats": data.seats, "total": total, "status": "confirmed", "addon_total": addon_total, "promo_code": promo_code, "promo_discount": promo_discount}
 
 @router.get("/")
 def list_bookings(db: Session = Depends(get_db)):

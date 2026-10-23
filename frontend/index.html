@@ -740,6 +740,34 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
 
     </div>
 
+    <!-- CARD: Promo Codes -->
+    <div class="form-card">
+      <div class="form-card-title">🏷️ Promo Codes</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:14px">
+        Give buyers a percentage discount. Each code stops working once its ticket limit is reached.
+      </div>
+      <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr auto;gap:12px;align-items:end">
+        <div class="field" style="margin-bottom:0">
+          <label>Code</label>
+          <div style="display:flex;gap:6px">
+            <input type="text" id="promo-code" placeholder="SAVE10" maxlength="24" style="text-transform:uppercase">
+            <button type="button" class="btn btn-outline btn-sm" onclick="generatePromoCode()" title="Generate a random code">⟳</button>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Discount %</label>
+          <input type="number" id="promo-percent" min="1" max="100" step="1" value="10">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Max tickets</label>
+          <input type="number" id="promo-max" min="1" step="1" value="50">
+        </div>
+        <button type="button" class="btn btn-accent" onclick="addPromoCode()">＋ Add</button>
+      </div>
+      <div id="promo-list" class="zone-list" style="margin-top:14px;margin-bottom:0"></div>
+      <div id="promo-empty" style="font-size:12px;color:var(--muted);margin-top:12px">No promo codes yet.</div>
+    </div>
+
     <!-- CARD: Organiser Details -->
     <div class="form-card" id="organiser-card">
       <div class="form-card-title">📋 Organiser Details</div>
@@ -974,6 +1002,7 @@ let zones = [];
 let editingId = null;
 let bookedSeats = {};
 let addons = [];
+let promoCodes = [];
 let editors = [];
 let currentUser = '';
 let _artistPhotoData = '';
@@ -1018,6 +1047,7 @@ function init(){
   renderSavedCanvasPreview();
   renderCanvasHeldGrid();
   renderAddons();
+  renderPromoCodes();
   renderEditors();
   // default date to today+14
   const d=new Date(); d.setDate(d.getDate()+14);
@@ -1132,6 +1162,9 @@ function renderReview(){
     row('Ticket zones', selling) +
     row('Seats', totalSeats ? `${totalSeats} seats across ${zones.length} zone(s)` : '—') +
     row('Build mode', (layoutMode==='manual' ? 'Venue Designer' : 'Auto seating (legacy)')) +
+    row('Promo codes', promoCodes.length
+      ? promoCodes.map(p=>`${p.code} · ${p.percent}% off · max ${p.max_tickets}`).join('<br>')
+      : 'None') +
     row('Status after saving', eventStatusLabel(status));
   const hint = document.getElementById('wiz-publish-hint');
   if(hint){
@@ -1278,6 +1311,69 @@ function addAddon(){
 function removeAddon(i){
   addons.splice(i,1);
   renderAddons();
+}
+
+// ─────────────────── PROMO CODES ───────────────────
+function generatePromoCode(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code='';
+  for(let i=0;i<6;i++) code += chars[Math.floor(Math.random()*chars.length)];
+  const input=document.getElementById('promo-code');
+  if(input){ input.value=code; input.focus(); }
+}
+function addPromoCode(){
+  const codeEl=document.getElementById('promo-code');
+  const pctEl=document.getElementById('promo-percent');
+  const maxEl=document.getElementById('promo-max');
+  const code=(codeEl.value||'').trim().toUpperCase().replace(/\s+/g,'');
+  const pct=Number(pctEl.value);
+  const max=Number(maxEl.value);
+  if(!code){ showToast('Enter a promo code','error'); codeEl.focus(); return; }
+  if(!/^[A-Z0-9_-]{2,24}$/.test(code)){ showToast('Use 2–24 letters, numbers, - or _ only','error'); codeEl.focus(); return; }
+  if(promoCodes.some(p=>String(p.code).toUpperCase()===code)){ showToast('That promo code already exists','error'); return; }
+  if(!(pct>=1 && pct<=100)){ showToast('Discount must be between 1% and 100%','error'); pctEl.focus(); return; }
+  if(!(max>=1)){ showToast('Max tickets must be at least 1','error'); maxEl.focus(); return; }
+  promoCodes.push({code,percent:pct,max_tickets:Math.floor(max),used:0});
+  codeEl.value='';
+  renderPromoCodes();
+  showToast('Promo code added — save the event to activate it','success');
+}
+function removePromoCode(i){
+  promoCodes.splice(i,1);
+  renderPromoCodes();
+}
+function renderPromoCodes(){
+  const list=document.getElementById('promo-list');
+  const empty=document.getElementById('promo-empty');
+  if(!list) return;
+  if(!promoCodes.length){
+    list.innerHTML='';
+    if(empty) empty.style.display='block';
+    return;
+  }
+  if(empty) empty.style.display='none';
+  list.innerHTML=promoCodes.map((p,i)=>{
+    const used=Number(p.used||0);
+    const max=Number(p.max_tickets||0);
+    const left=Math.max(0,max-used);
+    const pctBar=max?Math.min(100,Math.round(used/max*100)):0;
+    return `<div style="display:grid;grid-template-columns:1.3fr .8fr 1.4fr 30px;gap:12px;align-items:center;background:var(--dark3);border:1px solid rgba(255,78,54,0.12);padding:10px 12px">
+      <div>
+        <span style="font-family:var(--font-d);font-size:16px;letter-spacing:1.5px">${escapeHtml(p.code)}</span>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${p.percent}% off tickets</div>
+      </div>
+      <div style="font-size:12px;color:var(--text-on-light);font-weight:500">−${p.percent}%</div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:8px">
+          <span>${used} of ${max} tickets used</span><span>${left} left</span>
+        </div>
+        <div style="height:4px;background:rgba(0,0,0,.08);margin-top:5px">
+          <div style="height:100%;width:${pctBar}%;background:var(--logo-purple)"></div>
+        </div>
+      </div>
+      <button class="zone-del" onclick="removePromoCode(${i})" title="Remove promo code">×</button>
+    </div>`;
+  }).join('');
 }
 
 // ─────────────────── EDITOR TAGS ───────────────────
@@ -1668,6 +1764,7 @@ async function saveEvent(publishAs){
     canvas_elements:JSON.parse(JSON.stringify(canvasElements)),
     venue_address,
     addons:JSON.parse(JSON.stringify(addons)),
+    promo_codes:promoCodes.map(p=>({code:p.code,percent:p.percent,max_tickets:p.max_tickets})),
     created_by: document.getElementById('f-creator').value || currentUser,
     editors: JSON.parse(JSON.stringify(editors)),
     images: _eventImagesData,
@@ -1770,8 +1867,10 @@ function editEvent(id){
   canvasElements=JSON.parse(JSON.stringify(e.canvas_elements||[]));
   vdElements=JSON.parse(JSON.stringify(e.canvas_elements||[]));
   addons=JSON.parse(JSON.stringify(e.addons||[]));
+  promoCodes=JSON.parse(JSON.stringify(e.promo_codes||[]));
   editors=JSON.parse(JSON.stringify(e.editors||[]));
   renderAddons();
+  renderPromoCodes();
   renderEditors();
   document.getElementById('f-creator').value=e.created_by||'';
   const isCreator=e.created_by===currentUser;
@@ -1849,12 +1948,14 @@ function cancelEdit(){
   vdElements=[];
   vdSelectedId=null;
   addons=[];
+  promoCodes=[];
   editors=[];
   _eventImagesData = [];
   document.getElementById('f-images').value = '';
   document.getElementById('images-preview').style.display = 'none';
   document.getElementById('images-preview').innerHTML = '';
   renderAddons();
+  renderPromoCodes();
   renderEditors();
   document.getElementById('f-creator').value=currentUser;
   document.getElementById('editors-field').style.display='block';
