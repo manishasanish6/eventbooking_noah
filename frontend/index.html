@@ -236,6 +236,14 @@ body{
 .vd-btn-primary{background:var(--logo-purple);border-color:var(--logo-purple);color:#fff}
 .vd-btn-primary:hover{background:#7a35e8;border-color:#7a35e8}
 
+/* Canvas zoom controls */
+.vd-zoom{display:flex;align-items:stretch;border:1px solid var(--line);background:#fff;height:36px}
+.vd-zoom button{border:none;border-left:1px solid var(--line);background:#fff;color:var(--text-on-light);
+  font-family:var(--font-b);font-size:13px;line-height:1;padding:0 11px;cursor:pointer;transition:all .15s}
+.vd-zoom button:first-child{border-left:none}
+.vd-zoom button:hover{background:rgba(139,68,255,.08);color:var(--logo-purple)}
+.vd-zoom .vd-zoom-value{min-width:56px;font-size:11px;font-weight:600;letter-spacing:.03em}
+
 .vd-body{display:grid;grid-template-columns:1fr 250px;flex:1;min-height:0}
 .vd-canvas-area{display:flex;flex-direction:column;min-width:0;min-height:0}
 .vd-canvas-scroll{flex:1;overflow:auto;padding:22px;min-height:0}
@@ -887,6 +895,12 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
           <span class="vd-title-sub" id="vd-subtitle">Empty canvas · place sections, tables, objects and text yourself</span>
         </div>
         <div class="vd-topbar-actions">
+          <div class="vd-zoom" aria-label="Canvas zoom">
+            <button type="button" onclick="vdZoomBy(-0.1)" title="Zoom out (Ctrl −)">−</button>
+            <button type="button" class="vd-zoom-value" id="vd-zoom-value" onclick="vdZoomSet(1)" title="Reset to 100% (Ctrl 0)">100%</button>
+            <button type="button" onclick="vdZoomBy(0.1)" title="Zoom in (Ctrl +)">＋</button>
+            <button type="button" onclick="vdZoomFit()" title="Fit the whole canvas">Fit</button>
+          </div>
           <button class="vd-btn vd-btn-ghost" onclick="vdClearAll()" title="Remove everything from the canvas">✕ Clear canvas</button>
           <button class="vd-btn vd-btn-primary" onclick="closeVenueDesigner()">✓ Done</button>
         </div>
@@ -895,7 +909,7 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
       <!-- BODY: canvas on the left, tool rail on the RIGHT -->
       <div class="vd-body">
         <div class="vd-canvas-area">
-          <div class="vd-canvas-scroll">
+          <div class="vd-canvas-scroll" onwheel="vdCanvasWheel(event)">
             <div class="vd-canvas" id="vd-canvas" oncontextmenu="return false">
               <div class="vd-empty" id="vd-empty">
                 <div class="vd-empty-icon">▦</div>
@@ -906,7 +920,7 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
           </div>
           <div class="vd-statusbar">
             <span id="vd-status">0 elements</span>
-            <span class="vd-status-hint">Drag to move · corner handle to resize · select then Edit on the right</span>
+            <span class="vd-status-hint">Drag to move · corner handle to resize · Ctrl +/− to zoom · select then Edit on the right</span>
           </div>
         </div>
 
@@ -2157,15 +2171,81 @@ let vdSeatEdit = false;         // seat-editing mode: delete individual seats
 let vdSeatPick = false;         // seat-picking mode: choose seats to renumber
 let vdPickedSeats = [];         // picked seats, in the order they were clicked
 let vdRenoScope = 'all';        // renumber target: all | row | pick
+let vdZoom = 1;                 // canvas zoom (0.4 – 2.0)
+const VD_ZOOM_MIN = 0.4, VD_ZOOM_MAX = 2, VD_ZOOM_STEP = 0.1;
 
 function openVenueDesigner(){
   const ov = document.getElementById('vd-overlay');
   if(!ov) return;
   ov.style.display = 'flex';
   renderVdCanvas();
+  vdZoomSet(1);
   vdGrowCanvas();
+  const scroller = document.getElementById('vd-canvas')?.parentElement;
+  if(scroller){ scroller.scrollLeft = 0; scroller.scrollTop = 0; }
   showToast('Venue Designer opened','success');
 }
+
+// ── Canvas zoom ──────────────────────────────────────────────────────────
+// CSS zoom scales the canvas inside its scroll area. Pointer coordinates are
+// divided by the zoom so dragging and resizing stay exact while zoomed.
+function vdZoomSet(value){
+  const z = Math.max(VD_ZOOM_MIN, Math.min(VD_ZOOM_MAX,
+    Math.round((+value || 1) * 100) / 100));
+  const canvas = document.getElementById('vd-canvas');
+  const scroller = canvas ? canvas.parentElement : null;
+  const old = vdZoom;
+  vdZoom = z;
+
+  if(canvas) canvas.style.zoom = z;
+  const label = document.getElementById('vd-zoom-value');
+  if(label) label.textContent = Math.round(z * 100) + '%';
+
+  // Keep the middle of the viewport anchored while zooming.
+  if(scroller && old !== z){
+    const ratio = z / old;
+    const midX = scroller.scrollLeft + scroller.clientWidth / 2;
+    const midY = scroller.scrollTop + scroller.clientHeight / 2;
+    scroller.scrollLeft = Math.max(0, Math.round(midX * ratio - scroller.clientWidth / 2));
+    scroller.scrollTop  = Math.max(0, Math.round(midY * ratio - scroller.clientHeight / 2));
+  }
+  if(canvas) vdGrowCanvas();
+}
+
+function vdZoomBy(delta){
+  vdZoomSet(vdZoom + delta);
+}
+
+function vdZoomFit(){
+  const canvas = document.getElementById('vd-canvas');
+  const scroller = canvas ? canvas.parentElement : null;
+  if(!canvas || !scroller) return;
+  if(!vdElements.length){ vdZoomSet(1); return; }
+  const maxX = Math.max(600, ...vdElements.map(el=>el.x + el.w + 40));
+  const maxY = Math.max(560, ...vdElements.map(el=>el.y + el.h + 40));
+  const availW = Math.max(200, scroller.clientWidth - 44);
+  const availH = Math.max(200, scroller.clientHeight - 44);
+  const fit = Math.min(availW / maxX, availH / maxY, 1);
+  vdZoomSet(fit);
+  scroller.scrollLeft = 0;
+  scroller.scrollTop = 0;
+}
+
+function vdCanvasWheel(e){
+  // Ctrl+wheel (or a trackpad pinch) zooms the canvas, not the whole page.
+  if(!e.ctrlKey) return;
+  e.preventDefault();
+  vdZoomBy(e.deltaY < 0 ? VD_ZOOM_STEP : -VD_ZOOM_STEP);
+}
+
+document.addEventListener('keydown', function(e){
+  const ov = document.getElementById('vd-overlay');
+  if(!ov || ov.style.display === 'none') return;
+  if(!(e.ctrlKey || e.metaKey)) return;
+  if(e.key === '+' || e.key === '='){ e.preventDefault(); vdZoomBy(VD_ZOOM_STEP); }
+  else if(e.key === '-' || e.key === '_'){ e.preventDefault(); vdZoomBy(-VD_ZOOM_STEP); }
+  else if(e.key === '0'){ e.preventDefault(); vdZoomSet(1); }
+});
 
 // Turn the designer map into the seat layout + price zones that the booking
 // page already understands. Only reserved sections and tables produce tickets;
@@ -2874,12 +2954,13 @@ function vdMouseDown(e, id){
     if(!isNaN(r) && !isNaN(c)){ vdSeatToggle(e, id, r, c); return; }
   }
   const cr = canvas.getBoundingClientRect();
-  // Include scroll offsets so a scrolled canvas doesn't make the item jump.
-  const sx = canvas.parentElement ? canvas.parentElement.scrollLeft : 0;
-  const sy = canvas.parentElement ? canvas.parentElement.scrollTop  : 0;
+  // The canvas may be zoomed; convert screen pixels back to canvas units.
+  // getBoundingClientRect already includes the scroll position, so no extra
+  // scroll offset is needed (adding it would make a scrolled drag jump).
+  const z = vdZoom || 1;
   vdDrag = { id, moved:false,
-             offX: e.clientX - cr.left + sx - el.x,
-             offY: e.clientY - cr.top  + sy - el.y };
+             offX: (e.clientX - cr.left) / z - el.x,
+             offY: (e.clientY - cr.top) / z - el.y };
   vdSelectedId = id;
   document.addEventListener('mousemove', vdMouseMove);
   document.addEventListener('mouseup', vdMouseUp);
@@ -2907,10 +2988,9 @@ function vdMouseMove(e){
   const el = vdElements.find(x=>x.id===vdDrag.id);
   if(!el || !canvas) return;
   const cr = canvas.getBoundingClientRect();
-  const sx = canvas.parentElement ? canvas.parentElement.scrollLeft : 0;
-  const sy = canvas.parentElement ? canvas.parentElement.scrollTop  : 0;
-  const x = e.clientX - cr.left + sx - vdDrag.offX;
-  const y = e.clientY - cr.top  + sy - vdDrag.offY;
+  const z = vdZoom || 1;
+  const x = (e.clientX - cr.left) / z - vdDrag.offX;
+  const y = (e.clientY - cr.top) / z - vdDrag.offY;
   if(Math.abs(x-el.x)>2 || Math.abs(y-el.y)>2) vdDrag.moved = true;
   // Free movement inside the current canvas area; the area grows as you go.
   el.x = Math.max(0, x);
@@ -2930,7 +3010,7 @@ function vdMouseUp(){
 function vdResizeDown(e, id){
   const el = vdElements.find(x=>x.id===id);
   if(!el) return;
-  vdResize = { id, sx:e.clientX, sy:e.clientY, w0:el.w, h0:el.h };
+  vdResize = { id, sx:e.clientX, sy:e.clientY, w0:el.w, h0:el.h, zoom:vdZoom || 1 };
   document.addEventListener('mousemove', vdResizeMove);
   document.addEventListener('mouseup', vdResizeUp);
   e.preventDefault(); e.stopPropagation();
@@ -2940,8 +3020,9 @@ function vdResizeMove(e){
   const el = vdElements.find(x=>x.id===vdResize.id);
   const canvas = document.getElementById('vd-canvas');
   if(!el) return;
-  el.w = Math.max(50, vdResize.w0 + (e.clientX-vdResize.sx));
-  el.h = Math.max(30, vdResize.h0 + (e.clientY-vdResize.sy));
+  const z = vdResize.zoom || vdZoom || 1;
+  el.w = Math.max(50, vdResize.w0 + (e.clientX-vdResize.sx) / z);
+  el.h = Math.max(30, vdResize.h0 + (e.clientY-vdResize.sy) / z);
   const node = canvas && canvas.querySelector(`.vd-el[data-vdid="${el.id}"]`);
   if(node){ node.style.width = el.w+'px'; node.style.height = el.h+'px'; }
   vdGrowCanvas();
