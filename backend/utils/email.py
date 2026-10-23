@@ -230,59 +230,182 @@ def _cover_crop(img, w, h):
     return resized.crop((left, top, left + w, top + h))
 
 
+def _ellipsize(draw, text, font, max_width):
+    """Trim text with … so it fits on one line."""
+    text = str(text or "").strip()
+    if draw.textlength(text, font=font) <= max_width:
+        return text
+    ellipsis = "…"
+    while text and draw.textlength(text + ellipsis, font=font) > max_width:
+        text = text[:-1]
+    return (text.rstrip() + ellipsis) if text else ellipsis
+
+
+def _wrap_text(draw, text, font, max_width, max_lines=2):
+    """Word-wrap text, hard-splitting long words, and ellipsize the last line."""
+    text = " ".join(str(text or "").split())
+    if not text:
+        return ["—"]
+
+    lines, current = [], ""
+    for word in text.split(" "):
+        # A single very long token has to be split mid-word.
+        while draw.textlength(word, font=font) > max_width:
+            cut = len(word)
+            while cut > 1 and draw.textlength(word[:cut], font=font) > max_width:
+                cut -= 1
+            if current:
+                lines.append(current)
+                current = ""
+            lines.append(word[:cut])
+            word = word[cut:]
+        candidate = (current + " " + word).strip()
+        if not current or draw.textlength(candidate, font=font) <= max_width:
+            current = candidate
+        else:
+            lines.append(current)
+            current = word
+    if current:
+        lines.append(current)
+
+    if len(lines) > max_lines:
+        lines = lines[:max_lines]
+        lines[-1] = _ellipsize(draw, lines[-1] + "…", font, max_width)
+    return lines
+
+
+def _readable_on_light(rgb):
+    """Darken very light zone colours so labels stay readable on white."""
+    r, g, b = rgb
+    if (r * 0.299 + g * 0.587 + b * 0.114) > 170:
+        return (int(r * 0.62), int(g * 0.62), int(b * 0.62))
+    return rgb
+
+
 def _ticket_page(event_name, seat, code, date_str, time_str, venue,
                  zone="", zone_color="", event_image=None):
-    """Render one ticket page (PIL image): full event photo header on top,
-    then the ticket details, then the entry QR (sharp, on a white panel).
+    """Render one portrait A5-ish ticket page (PIL image).
+
+    The tall portrait layout keeps text large when a phone fits the PDF to
+    screen width — unlike the old landscape page, which shrank everything.
+    Text is deliberately high-contrast on a light body, with the event photo
+    as a full-width header and a large, centred entry QR.
     """
     from PIL import Image, ImageDraw
 
-    W, H = 1200, 940
-    img = Image.new("RGB", (W, H), (13, 11, 18))
+    W, H = 1000, 1700
+    HEADER_H = 590
+    BODY = (248, 247, 251)
+    INK = (24, 21, 32)
+    MUTED = (112, 107, 125)
+    PURPLE = (139, 68, 255)
+    RED = (255, 62, 55)
 
+    img = Image.new("RGB", (W, H), BODY)
+
+    # ── Header: event photo (or a deep purple gradient when there is none) ──
     photo = _load_event_photo(event_image)
     if photo:
-        img.paste(_cover_crop(photo, W, 460), (0, 0))
-        # fade the photo's bottom into the dark body so the event name reads
-        grad = Image.new("L", (1, 130))
-        for i in range(130):
-            grad.putpixel((0, i), int(235 * (i / 129)))
-        scrim = Image.new("RGBA", (W, 130), (13, 11, 18, 255))
-        scrim.putalpha(grad.resize((W, 130)))
-        img.paste(scrim, (0, 330), scrim)
+        img.paste(_cover_crop(photo, W, HEADER_H), (0, 0))
+        # Fade the photo's bottom into the header so the title always reads.
+        grad = Image.new("L", (1, 270))
+        for i in range(270):
+            grad.putpixel((0, i), int(250 * (i / 269)))
+        scrim = Image.new("RGBA", (W, 270), (10, 8, 15, 255))
+        scrim.putalpha(grad.resize((W, 270)))
+        img.paste(scrim, (0, HEADER_H - 270), scrim)
     else:
-        ImageDraw.Draw(img).rectangle([0, 0, W, 460], fill=(24, 20, 34))
+        grad = Image.new("RGB", (1, HEADER_H))
+        for i in range(HEADER_H):
+            t = i / (HEADER_H - 1)
+            grad.putpixel((0, i), (
+                int(47 - 27 * t), int(33 - 20 * t), int(72 - 50 * t)
+            ))
+        img.paste(grad.resize((W, HEADER_H)), (0, 0))
 
     d = ImageDraw.Draw(img)
-    # Brand accents + stub divider between details (left) and QR (right)
-    d.rectangle([0, 0, W, 8], fill=(139, 68, 255))
-    d.rectangle([0, H - 8, W, H], fill=(255, 62, 55))
-    d.line([(760, 500), (760, 890)], fill=(58, 53, 72), width=2)
+    d.rectangle([0, 0, W, 10], fill=PURPLE)
+    d.rectangle([0, H - 10, W, H], fill=RED)
 
-    d.text((50, 334), "NOAH EVENTS", font=_ticket_font(20, bold=True), fill=(196, 160, 255))
-    d.text((50, 366), str(event_name)[:28], font=_ticket_font(44, bold=True), fill=(255, 255, 255))
+    # Brand + wrap-friendly event title over the photo.
+    d.text((60, 402), "NOAH EVENTS", font=_ticket_font(26, bold=True), fill=(205, 178, 255))
+    title_font = _ticket_font(56, bold=True)
+    title_lines = _wrap_text(d, event_name, title_font, W - 120, max_lines=2)
+    title_y = 440
+    for line in title_lines:
+        d.text((60, title_y), line, font=title_font, fill=(255, 255, 255))
+        title_y += 64
 
-    # Ticket details — left side
-    d.text((50, 524), "SEAT", font=_ticket_font(15, bold=True), fill=(120, 115, 135))
-    seat_color = _hex_rgb(zone_color, (61, 220, 132)) if zone else (61, 220, 132)
-    d.text((50, 548), str(seat), font=_ticket_font(60, bold=True), fill=seat_color)
+    # ── Seat + zone ────────────────────────────────────────────────────────
+    d.rectangle([60, 640, 76, 656], fill=PURPLE)
+    d.text((88, 632), "SEAT", font=_ticket_font(22, bold=True), fill=MUTED)
+
+    seat_text = str(seat or "—")
+    seat_size = 82
+    while seat_size > 46 and d.textlength(
+        seat_text, font=_ticket_font(seat_size, bold=True)
+    ) > W - 120:
+        seat_size -= 2
+    seat_font = _ticket_font(seat_size, bold=True)
+    seat_lines = _wrap_text(d, seat_text, seat_font, W - 120, max_lines=2)
+    seat_y = 668
+    for line in seat_lines:
+        d.text((60, seat_y), line, font=seat_font, fill=INK)
+        seat_y += seat_size + 8
+
+    zone_rgb = _readable_on_light(_hex_rgb(zone_color, PURPLE)) if zone else PURPLE
+    zone_y = max(seat_y + 16, 856)
     if zone:
-        d.text((50, 648), "ZONE", font=_ticket_font(15, bold=True), fill=(120, 115, 135))
-        d.text((50, 676), str(zone)[:20], font=_ticket_font(30, bold=True),
-               fill=_hex_rgb(zone_color, (139, 68, 255)))
+        d.text((60, zone_y), "ZONE", font=_ticket_font(22, bold=True), fill=MUTED)
+        zone_font = _ticket_font(38, bold=True)
+        d.text((60, zone_y + 30),
+               _ellipsize(d, zone, zone_font, W - 120),
+               font=zone_font, fill=zone_rgb)
+        divider_y = zone_y + 88
+    else:
+        divider_y = max(seat_y + 30, 910)
 
-    for i, (label, value) in enumerate((("DATE", date_str), ("TIME", time_str),
-                                        ("VENUE", venue))):
-        y = 740 + i * 46
-        d.text((50, y), label, font=_ticket_font(13, bold=True), fill=(120, 115, 135))
-        d.text((160, y - 4), str(value or "—")[:46], font=_ticket_font(18), fill=(235, 235, 240))
+    d.line([(60, divider_y), (W - 60, divider_y)], fill=(228, 225, 237), width=2)
 
-    # QR — right side, sharp on a white panel
-    d.rectangle([825, 560, 1115, 850], fill=(255, 255, 255))
-    img.paste(qrcode.make(code).convert("RGB").resize((250, 250)), (840, 575))
-    d.rectangle([825, 560, 1115, 850], outline=(90, 85, 110), width=2)
-    code_w = d.textlength(code, font=_ticket_font(16, bold=True))
-    d.text((980 - code_w / 2, 866), code, font=_ticket_font(16, bold=True), fill=(255, 255, 255))
+    # ── Date / time / venue ────────────────────────────────────────────────
+    def detail(label, value, x, y, width, lines=1):
+        d.text((x, y), label, font=_ticket_font(22, bold=True), fill=MUTED)
+        value_font = _ticket_font(34)
+        wrapped = _wrap_text(d, value or "—", value_font, width, max_lines=lines)
+        vy = y + 32
+        for line in wrapped:
+            d.text((x, vy), line, font=value_font, fill=INK)
+            vy += 40
+
+    detail("DATE", date_str, 60, 1000, 400)
+    detail("TIME", time_str, 520, 1000, 420)
+    detail("VENUE", venue, 60, 1088, W - 120, lines=2)
+
+    d.line([(60, 1206), (W - 60, 1206)], fill=(228, 225, 237), width=2)
+
+    # ── Entry QR — large and sharp, centred for easy scanning ─────────────
+    d.rounded_rectangle([290, 1226, 710, 1646], radius=20,
+                        fill=(255, 255, 255), outline=(224, 221, 234), width=2)
+    # Use whole-pixel QR modules instead of resizing the code image, so it
+    # stays sharp at any zoom level and scans reliably from a phone screen.
+    qr_obj = qrcode.QRCode(border=2, box_size=1)
+    qr_obj.add_data(code)
+    qr_obj.make(fit=True)
+    module_total = qr_obj.modules_count + 2 * qr_obj.border
+    qr_obj.box_size = max(1, 360 // module_total)
+    qr = qr_obj.make_image(fill_color="black", back_color="white").convert("RGB")
+    qr_at = (320 + (360 - qr.width) // 2, 1246 + (360 - qr.height) // 2)
+    img.paste(qr, qr_at)
+
+    code_font = _ticket_font(19, bold=True)
+    code_text = _ellipsize(d, code, code_font, 380)
+    code_w = d.textlength(code_text, font=code_font)
+    d.text(((W - code_w) / 2, 1614), code_text, font=code_font, fill=(72, 67, 84))
+
+    footer_font = _ticket_font(16, bold=True)
+    footer = "SHOW THIS TICKET AT THE DOOR"
+    footer_w = d.textlength(footer, font=footer_font)
+    d.text(((W - footer_w) / 2, 1662), footer, font=footer_font, fill=MUTED)
 
     return img
 
@@ -291,7 +414,7 @@ def _tickets_pdf(pages):
     """One PDF with a different ticket per page. Returns PDF bytes."""
     buf = io.BytesIO()
     pages[0].save(buf, format="PDF", save_all=True, append_images=pages[1:],
-                  resolution=150.0)
+                  resolution=200.0)
     return buf.getvalue()
 
 
@@ -378,17 +501,26 @@ def send_booking_confirmation(to_email, event_name, seats, total, venue, venue_a
     body_html = f"""\
 <!DOCTYPE html>
 <html>
-<head><meta charset="UTF-8"><style>
-body{{font-family:Arial,sans-serif;background:#fff;color:#000;padding:40px 20px}}
-.container{{max-width:560px;margin:0 auto;background:#fff;border:1px solid #ddd;padding:32px}}
-h1{{font-family:'Bebas Neue',sans-serif;font-size:32px;color:#000;margin:0 0 4px;letter-spacing:2px}}
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>
+body{{font-family:Arial,sans-serif;background:#fff;color:#000;padding:40px 20px;margin:0}}
+.container{{width:100%;max-width:560px;box-sizing:border-box;margin:0 auto;background:#fff;border:1px solid #ddd;padding:32px}}
+h1{{font-family:'Bebas Neue',sans-serif;font-size:32px;line-height:1.15;color:#000;margin:0 0 4px;letter-spacing:2px;word-break:break-word}}
 .tag{{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#8b44ff;margin-bottom:16px}}
-.detail{{padding:8px 0;border-bottom:1px solid #eee;font-size:14px}}
+.detail{{padding:8px 0;border-bottom:1px solid #eee;font-size:14px;line-height:1.5;word-break:break-word}}
 .detail span{{color:#555}}
 .total{{margin-top:16px;font-size:18px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:#ff3e37}}
-.footer{{margin-top:24px;font-size:11px;color:#666;text-align:center}}
+.footer{{margin-top:24px;font-size:11px;color:#666;text-align:center;line-height:1.6}}
 .tkt-table{{width:100%;border-collapse:collapse;margin:12px 0}}
-.ref{{font-size:12px;color:#8b44ff;letter-spacing:2px;margin-bottom:16px}}
+.ref{{font-size:12px;color:#8b44ff;letter-spacing:2px;margin-bottom:16px;word-break:break-word}}
+@media only screen and (max-width:600px){{
+  body{{padding:12px 8px !important}}
+  .container{{padding:20px 16px !important;border:none !important}}
+  h1{{font-size:26px !important;letter-spacing:1px !important}}
+  .detail{{font-size:13px !important}}
+  .total{{font-size:16px !important}}
+  .tkt-table img{{width:64px !important;height:64px !important}}
+  .footer{{font-size:10px !important}}
+}}
 </style></head>
 <body>
 <div class="container">

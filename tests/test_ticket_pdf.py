@@ -2,6 +2,7 @@
 event photo and the seat's zone, sent through Graph."""
 
 import base64
+import re
 from types import SimpleNamespace
 
 from backend.routes.bookings import _seat_zone_info
@@ -53,10 +54,45 @@ def test_ticket_pages_render_as_real_pdfs():
                               "2026-12-31", "20:00", "Grand Hall",
                               zone="VIP", zone_color="#8b44ff",
                               event_image=PNG_DATA_URL)
-    assert page.size == (1200, 940)
+    # Tall portrait page: phone PDF viewers fit it to width, so text stays
+    # readable instead of being shrunk into a wide landscape strip.
+    assert page.size == (1000, 1700)
+    assert page.height > page.width
     two_pages = email._tickets_pdf([page, page])
     assert two_pages[:5] == b"%PDF-"
     assert b"/Count 2" in two_pages  # two ticket pages in ONE pdf
+    # 1000 x 1700 px at 200 dpi -> a 5 x 8.5 inch printable ticket.
+    assert re.search(
+        rb"/MediaBox\s*\[\s*0\s+0\s+360(?:\.0+)?\s+612(?:\.0+)?\s*\]",
+        two_pages,
+    )
+
+
+def test_long_text_wraps_instead_of_overflowing():
+    from PIL import Image, ImageDraw
+
+    draw = ImageDraw.Draw(Image.new("RGB", (1000, 400)))
+    font = email._ticket_font(56, bold=True)
+    lines = email._wrap_text(
+        draw,
+        "A Very Long Event Name That Needs To Wrap Across Two Lines Gracefully",
+        font,
+        880,
+        max_lines=2,
+    )
+    assert 1 <= len(lines) <= 2
+    assert all(draw.textlength(line, font=font) <= 880 for line in lines)
+    assert lines[-1].endswith("…")
+
+
+def test_long_unbroken_word_is_split():
+    from PIL import Image, ImageDraw
+
+    draw = ImageDraw.Draw(Image.new("RGB", (1000, 400)))
+    font = email._ticket_font(40, bold=True)
+    lines = email._wrap_text(draw, "X" * 200, font, 400, max_lines=2)
+    assert len(lines) == 2
+    assert all(draw.textlength(line, font=font) <= 400 for line in lines)
 
 
 def test_confirmation_attaches_one_multi_page_pdf(monkeypatch):
@@ -71,6 +107,9 @@ def test_confirmation_attaches_one_multi_page_pdf(monkeypatch):
     # inline QR preview images still embedded alongside the PDF
     assert [cid for cid, _ in captured["inline_images"]] == ["qr_A1", "qr_A2"]
     assert "attached" in captured["body"]
+    # The email itself also adapts to narrow phone screens.
+    assert 'name="viewport"' in captured["body"]
+    assert "@media only screen and (max-width:600px)" in captured["body"]
 
 
 def test_confirmation_without_ref_falls_back_to_booking_id(monkeypatch):
