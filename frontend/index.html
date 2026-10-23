@@ -511,6 +511,13 @@ body{
 .held-seat.is-held::after{content:'🔒';font-size:7px;position:absolute;top:-3px;right:-3px}
 .held-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
 .held-leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gray)}
+.held-chips-wrap{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto}
+.held-group-title{font-family:var(--font-b);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-on-light);margin-bottom:5px}
+.held-group-title span{font-weight:300;color:var(--gray);letter-spacing:0;text-transform:none}
+.held-chips{display:flex;flex-wrap:wrap;gap:4px}
+.held-chip{font-family:var(--font-b);font-size:10px;line-height:1;padding:4px 6px;border:1px solid var(--line-soft);background:#fff;color:var(--text-on-light);cursor:pointer;transition:all .15s;white-space:nowrap}
+.held-chip:hover{border-color:var(--logo-purple)}
+.held-chip.is-held{background:rgba(255,62,55,.16)!important;border-color:var(--logo-red)!important;color:var(--logo-red)}
 
 /* ── ZONE PROMOTIONS ── */
 .zone-promo{grid-column:1/-1;margin-top:6px;padding:10px 12px;background:rgba(0,0,0,0.15);border-left:2px solid rgba(255,78,54,0.15);display:flex;flex-direction:column;gap:8px}
@@ -702,12 +709,6 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
     <div class="form-card">
       <div class="form-card-title">■ Seating</div>
 
-      <!-- LAYOUT MODE TOGGLE (button tabs) -->
-      <div class="layout-toggle">
-        <button class="lm-btn active" data-mode="auto" onclick="setLayoutMode('auto')">■ Auto Seating</button>
-        <button class="lm-btn" data-mode="manual" onclick="setLayoutMode('manual')">✎ Manual Seating</button>
-      </div>
-
       <!-- ＋ CANVAS — opens the Venue Designer -->
       <div class="canvas-entry">
         <button class="canvas-open-btn" id="canvas-open-btn" onclick="openVenueDesigner()">＋ Canvas</button>
@@ -723,121 +724,18 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
         <div class="canvas-saved-body" id="canvas-saved-body"></div>
       </div>
 
-      <!-- AUTO SEATING SECTION -->
-      <div id="auto-seating-section">
-        <div class="field-row">
-          <div class="field">
-            <label>Rows</label>
-            <input type="number" id="f-rows" min="1" max="26" value="8" oninput="previewVenue();renderHeldGrid()">
-          </div>
-          <div class="field">
-            <label>Seats per row</label>
-            <input type="number" id="f-cols" min="1" max="50" value="12" oninput="previewVenue();renderHeldGrid()">
-          </div>
-        </div>
-
-        <hr class="div">
-
-        <!-- ZONE PRICING BUILDER -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div>
-            <div style="font-family:var(--font-d);font-size:16px;letter-spacing:2px">SEAT ZONES</div>
-            <div style="font-size:11px;color:var(--muted)">Zones assigned top→bottom by rows</div>
-          </div>
-        </div>
-        <div class="zone-header">
-          <span></span>
-          <span>Zone Name</span>
-          <span>Rows</span>
-          <span>Prefix</span>
-          <span>Start</span>
-          <span>Price</span>
-          <span></span>
-        </div>
-        <div class="zone-list" id="zone-list"></div>
-        <button class="add-zone-btn" onclick="addZone()">＋ Add Zone</button>
-
-        <hr class="div">
-
-        <!-- VENUE PREVIEW -->
-        <div style="margin-bottom:8px">
-          <div style="font-family:var(--font-d);font-size:16px;letter-spacing:2px;margin-bottom:2px">PREVIEW</div>
-        </div>
-        <div class="venue-preview" id="venue-preview">
-          <div class="vp-stage">◆ STAGE ◆</div>
-          <div class="vp-grid" id="vp-grid"></div>
-          <div class="vp-legend" id="vp-legend"></div>
-        </div>
-
-        <!-- HELD SEATS -->
+      <!-- HELD SEATS (from the saved canvas) -->
+      <div id="canvas-held-wrap" style="display:none">
         <hr class="div">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <div>
             <div style="font-family:var(--font-d);font-size:16px;letter-spacing:2px">HELD SEATS</div>
-            <div style="font-size:11px;color:var(--muted)">Click seats to hold / release them</div>
+            <div style="font-size:11px;color:var(--muted)">Click a seat to hold / release it</div>
           </div>
+          <span style="font-size:11px;color:var(--muted)" id="canvas-held-count"></span>
         </div>
-        <div class="held-grid" id="held-grid"></div>
-        <div class="held-legend" id="held-legend"></div>
-      </div>
-
-      <!-- MANUAL SEATING SECTION -->
-      <div id="manual-seating-section" style="display:none">
-
-        <hr class="div">
-
-        <!-- ZONES (without rows) -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div>
-            <div style="font-family:var(--font-d);font-size:16px;letter-spacing:2px">ZONE CATEGORIES</div>
-            <div style="font-size:11px;color:var(--muted)">Define price categories for manual seating</div>
-          </div>
-        </div>
-        <div class="zone-header">
-          <span></span>
-          <span>Category</span>
-          <span></span>
-          <span>Prefix</span>
-          <span>Start</span>
-          <span>Price</span>
-          <span></span>
-        </div>
-        <div class="zone-list" id="zone-list-manual"></div>
-        <button class="add-zone-btn" onclick="addZoneManual()">＋ Add Category</button>
-
-        <hr class="div">
-
-        <!-- SEAT CANVAS (existing reserved-seating placement) -->
-        <div style="margin-bottom:8px">
-          <div style="font-family:var(--font-d);font-size:16px;letter-spacing:2px;margin-bottom:2px">SEAT CANVAS</div>
-          <div style="font-size:11px;color:var(--muted)">Click on the canvas to place seats · Drag to reposition</div>
-        </div>
-        <div class="seat-canvas-wrap">
-          <div class="sc-toolbar">
-            <label>Zone:</label>
-            <select id="sc-zone-select"></select>
-            <button onclick="autoGenerateSeats()">Auto Fill</button>
-            <button onclick="clearCanvasSeats()">✕ Clear All</button>
-            <button onclick="openVenueDesigner()">▦ Venue Designer</button>
-          </div>
-
-          <!-- ELEMENT INSPECTOR (select an element, then Edit, then Apply) -->
-          <div class="element-inspector" id="element-inspector"></div>
-
-          <div class="seat-canvas" id="seat-canvas" oncontextmenu="return false"></div>
-          <div class="sc-info" id="sc-info">0 seats placed</div>
-          <div class="ei-hint">Click an element to select it · drag to reposition · click the corner handle to resize</div>
-        </div>
-
-        <!-- HELD SEATS (canvas) -->
-        <hr class="div">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div>
-            <div style="font-family:var(--font-d);font-size:16px;letter-spacing:2px">HELD SEATS</div>
-            <div style="font-size:11px;color:var(--muted)">Click a seat on the canvas to hold / release it</div>
-          </div>
-        </div>
-        <div class="held-legend" id="held-legend-manual"></div>
+        <div class="held-chips-wrap" id="canvas-held-grid"></div>
+        <div class="held-legend" id="canvas-held-legend"></div>
       </div>
 
     </div>
@@ -1072,7 +970,7 @@ hr.div{border:none;border-top:1px solid rgba(255,78,54,0.15);margin:20px 0}
 // ─────────────────── STATE ───────────────────
 const ZONE_COLORS = ['#8b44ff','#ff3e37','#3ddc84','#5b9cf6','#c97bff','#ff9f43','#00cec9','#fd79a8'];
 let events = [];
-let zones = [{name:'VIP',rows:2,price:198,color:'#8b44ff'},{name:'Standard',rows:6,price:98,color:'#5b9cf6'}];
+let zones = [];
 let editingId = null;
 let bookedSeats = {};
 let addons = [];
@@ -1115,14 +1013,10 @@ function init(){
   currentUser=user;
   document.getElementById('nav-admin-email').textContent=user;
   document.getElementById('f-creator').value=user;
-  renderZones();
-  previewVenue();
-  renderHeldGrid();
   loadEvents();
   updateBadge();
-  setLayoutMode('auto');
-  renderZonesManual();
-  updateCanvasHeldLegend();
+  renderSavedCanvasPreview();
+  renderCanvasHeldGrid();
   renderAddons();
   renderEditors();
   // default date to today+14
@@ -1186,7 +1080,8 @@ function validateWizardStep(step){
     if(!document.getElementById('f-date').value){ showToast('Date required','error'); goStepPinned(1); return false; }
   }
   if(step===2){
-    if(!zones.length){ showToast('Add at least one zone','error'); goStepPinned(2); return false; }
+    if(layoutMode==='manual' && !canvasSeats.length){ showToast('Open ＋ Canvas and build your seat map first','error'); goStepPinned(2); return false; }
+    if(!zones.length){ showToast('Build your seat map in ＋ Canvas first','error'); goStepPinned(2); return false; }
   }
   return true;
 }
@@ -1221,11 +1116,14 @@ function renderReview(){
   const time = val('f-time');
   const endTime = val('f-end-time');
   const status = val('f-status');
-  const selling = zones.map(z=>`${z.name} — $${z.price} (${z.rows} row${z.rows===1?'':'s'})`).join('<br>') || '(none)';
-  const manual = document.querySelector('.lm-btn.active')?.dataset.mode==='manual';
-  const totalSeats = manual
-    ? canvasSeats.length
-    : zones.reduce((a,z)=>a+(+z.rows||0),0) * (+document.getElementById('f-cols').value||0);
+  const selling = zones.map(z=>{
+    const n = layoutMode==='auto' ? Number(z.rows||0) : canvasSeats.filter(s=>s.zone===z.name).length;
+    const unit = layoutMode==='auto' ? 'row' : 'seat';
+    return `${z.name} — $${z.price} (${n} ${unit}${n===1?'':'s'})`;
+  }).join('<br>') || '(none)';
+  const totalSeats = layoutMode==='auto'
+    ? zones.reduce((a,z)=>a+(+z.rows||0),0) * eventCols
+    : canvasSeats.length;
   const row = (k,v)=>`<div class="wiz-review-row"><span class="wr-k">${k}</span><span class="wr-v">${v}</span></div>`;
   box.innerHTML =
     row('Event', name + (artist?`<br><span style="color:#777">${artist}</span>`:'')) +
@@ -1233,7 +1131,7 @@ function renderReview(){
     row('Where', venue) +
     row('Ticket zones', selling) +
     row('Seats', totalSeats ? `${totalSeats} seats across ${zones.length} zone(s)` : '—') +
-    row('Build mode', (document.querySelector('.lm-btn.active')?.dataset.mode==='manual' ? 'Manual seating' : 'Auto seating')) +
+    row('Build mode', (layoutMode==='manual' ? 'Venue Designer' : 'Auto seating (legacy)')) +
     row('Status after saving', eventStatusLabel(status));
   const hint = document.getElementById('wiz-publish-hint');
   if(hint){
@@ -1470,6 +1368,11 @@ function getSeatId(row,col,zones,cols,zoneMap){
 // ─────────────────── HELD SEATS ───────────────────
 let heldSeats = [];
 let canvasSeats = [];
+// New events are built with the Venue Designer only. `layoutMode` is still
+// tracked so existing auto-seating events keep their layout when re-saved.
+let layoutMode = 'manual';
+let eventRows = 8;
+let eventCols = 12;
 
 // ─────────────────── CANVAS ELEMENTS (sections · tables · objects · text) ──
 // A separate layer that sits alongside seats on the same canvas. Seats keep
@@ -1528,6 +1431,61 @@ function toggleHeldSeat(sid){
   if(idx>-1) heldSeats.splice(idx,1);
   else heldSeats.push(sid);
   renderHeldGrid();
+}
+
+// Held seats for the canvas-only flow: one chip per generated seat, grouped by
+// zone. Replaces the old auto/manual seating grids.
+function renderCanvasHeldGrid(){
+  const wrap = document.getElementById('canvas-held-wrap');
+  const grid = document.getElementById('canvas-held-grid');
+  const legend = document.getElementById('canvas-held-legend');
+  const count = document.getElementById('canvas-held-count');
+  if(!wrap || !grid) return;
+  if(!canvasSeats.length){
+    wrap.style.display = 'none';
+    grid.innerHTML = '';
+    if(legend) legend.innerHTML = '';
+    return;
+  }
+  wrap.style.display = 'block';
+  if(count) count.textContent = heldSeats.length + ' held';
+
+  const order = [];
+  const groups = {};
+  canvasSeats.forEach(s=>{
+    const z = s.zone || 'General';
+    if(!groups[z]){ groups[z] = []; order.push(z); }
+    groups[z].push(s);
+  });
+
+  grid.innerHTML = order.map(zone=>{
+    const z = zones.find(x=>x.name===zone) || {color:'#8b44ff'};
+    const seats = groups[zone];
+    const chips = seats.map(s=>{
+      const held = heldSeats.includes(s.id);
+      const short = s.id.startsWith(zone+' · ') ? s.id.slice(zone.length+3) : s.id;
+      return `<button type="button" class="held-chip${held?' is-held':''}"`
+        + ` style="border-color:${z.color}66;background:${held?'':z.color+'18'}"`
+        + ` onclick="toggleCanvasHeldSeat('${escapeAttr(s.id)}')"`
+        + ` title="${escapeAttr(s.id)}">${escapeHtml(short)}</button>`;
+    }).join('');
+    return `<div><div class="held-group-title">${escapeHtml(zone)} <span>${seats.length} seats</span></div>`
+      + `<div class="held-chips">${chips}</div></div>`;
+  }).join('');
+
+  if(legend){
+    legend.innerHTML = order.map(zone=>{
+      const z = zones.find(x=>x.name===zone) || {color:'#8b44ff'};
+      return `<div class="held-leg-item"><div class="vp-leg-dot" style="background:${z.color}44;border:1px solid ${z.color}88"></div>${escapeHtml(zone)}</div>`;
+    }).join('')
+    + `<div class="held-leg-item"><div class="vp-leg-dot" style="background:rgba(255,62,55,.25);border:1px solid var(--logo-red)"></div>Held (${heldSeats.length})</div>`;
+  }
+}
+function toggleCanvasHeldSeat(sid){
+  const idx = heldSeats.indexOf(sid);
+  if(idx > -1) heldSeats.splice(idx,1);
+  else heldSeats.push(sid);
+  renderCanvasHeldGrid();
 }
 
 // ─────────────────── IMAGE UPLOAD ───────────────────
@@ -1676,8 +1634,6 @@ function renderImagePreviews() {
 async function saveEvent(publishAs){
   const name=document.getElementById('f-name').value.trim();
   const artist=document.getElementById('f-artist').value.trim();
-  const activeLm=document.querySelector('.lm-btn.active');
-  const layoutMode=activeLm?activeLm.dataset.mode:'auto';
   const venue=document.getElementById('f-venue').value.trim();
   const date=document.getElementById('f-date').value;
   const time=document.getElementById('f-time').value;
@@ -1686,12 +1642,15 @@ async function saveEvent(publishAs){
   // The Publish step's button sets the final status (live / draft)
   if(publishAs==='live' || publishAs==='draft') statusSelect.value = publishAs;
   const status=statusSelect.value;
-  const rows=layoutMode==='auto'?+document.getElementById('f-rows').value||8:1;
-  const cols=layoutMode==='auto'?+document.getElementById('f-cols').value||12:1;
+  const rows=layoutMode==='auto'?eventRows:1;
+  const cols=layoutMode==='auto'?eventCols:1;
   if(!name){showToast('Event name required','error');goStepPinned(1);return;}
   if(!venue){showToast('Venue name required','error');goStepPinned(1);return;}
   if(!date){showToast('Date required','error');goStepPinned(1);return;}
-  if(!zones.length){showToast('Add at least one zone','error');goStepPinned(2);return;}
+  if(layoutMode==='manual' && !canvasSeats.length){
+    showToast('Open ＋ Canvas and build your seat map first','error');goStepPinned(2);return;
+  }
+  if(!zones.length){showToast('Build your seat map in ＋ Canvas first','error');goStepPinned(2);return;}
 
   const a1=document.getElementById('f-addr1').value.trim();
   const a2=document.getElementById('f-addr2').value.trim();
@@ -1768,8 +1727,9 @@ function editEvent(id){
   switchView('create');
   const e=events.find(x=>x.id===id); if(!e) return;
   editingId=id;
-  const lm=e.layout_mode||'auto';
-  setLayoutMode(lm);
+  layoutMode = e.layout_mode==='auto' ? 'auto' : 'manual';
+  eventRows = +e.rows || 8;
+  eventCols = +e.cols || 12;
   document.getElementById('f-name').value=e.name;
   document.getElementById('f-artist').value=e.artist||'';
   document.getElementById('f-venue').value=e.venue;
@@ -1801,8 +1761,6 @@ function editEvent(id){
     document.getElementById('artistCollapse').style.display = 'block';
     document.getElementById('toggleArtistBtn').textContent = '− Artist Info';
   }
-  document.getElementById('f-rows').value=e.rows;
-  document.getElementById('f-cols').value=e.cols;
   zones=JSON.parse(JSON.stringify(e.zones||[]));
   zones.forEach((z,i)=>{ if(z.walkway_mode===undefined){z.walkway_mode='none';z.walkway_width=1;z.walkway_numbering='flow';} });
   heldSeats=JSON.parse(JSON.stringify(e.held_seats||[]));
@@ -1823,9 +1781,8 @@ function editEvent(id){
   } else {
     document.getElementById('editor-input').disabled=true;
   }
-  renderZones(); previewVenue(); renderHeldGrid();
-  renderZonesManual(); renderCanvas(); updateCanvasHeldLegend();
   renderSavedCanvasPreview();
+  renderCanvasHeldGrid();
   // restore address
   if(e.venue_address){
     document.getElementById('f-addr1').value=e.venue_address.address1||'';
@@ -1882,7 +1839,10 @@ function cancelEdit(){
   document.getElementById('save-btn-text').textContent='✦ PUBLISH EVENT';
   document.getElementById('cancel-edit-btn').style.display='none';
   goStep(1);
-  zones=[{name:'VIP',rows:2,price:198,color:'#8b44ff',seat_prefix:'A',seat_start:1,max_seats:8},{name:'Standard',rows:6,price:98,color:'#5b9cf6',seat_prefix:'B',seat_start:1,max_seats:8}];
+  layoutMode='manual';
+  eventRows=8;
+  eventCols=12;
+  zones=[];
   heldSeats=[];
   canvasSeats=[];
   canvasElements=[];
@@ -1899,10 +1859,8 @@ function cancelEdit(){
   document.getElementById('f-creator').value=currentUser;
   document.getElementById('editors-field').style.display='block';
   document.getElementById('editor-input').disabled=false;
-  setLayoutMode('auto');
-  renderZones(); previewVenue(); renderHeldGrid();
-  renderZonesManual();
   renderSavedCanvasPreview();
+  renderCanvasHeldGrid();
   switchView('events');
 }
 function toggleArtistDetails(){
@@ -1935,12 +1893,6 @@ function updateMapLink(){
   } else {
     link.style.display='none';
   }
-}
-function setLayoutMode(mode){
-  document.querySelectorAll('.lm-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
-  document.getElementById('auto-seating-section').style.display=mode==='auto'?'block':'none';
-  document.getElementById('manual-seating-section').style.display=mode==='auto'?'none':'block';
-  if(mode==='manual'){ renderZonesManual(); renderCanvas(); }
 }
 function cycleZoneColor(i){
   const used=new Set(zones.map((z,idx)=>idx!==i?z.color:null).filter(Boolean));
@@ -2241,13 +2193,12 @@ function closeVenueDesigner(){
     // Drop holds that point at seats which no longer exist.
     const ids = new Set(canvasSeats.map(s=>s.id));
     heldSeats = heldSeats.filter(id=>ids.has(id));
-    setLayoutMode('manual');
-    updateScZoneSelect();
+    layoutMode = 'manual';
   }
 
   canvasElements = vdElements.slice();
-  renderCanvasElements();
   renderSavedCanvasPreview();
+  renderCanvasHeldGrid();
   showToast(built
     ? 'Canvas saved — ' + built.seats.length + ' seats ready to book'
     : 'Canvas saved to this event', 'success');
