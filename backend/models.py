@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, JSON
+from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, JSON, Text
 from backend.database import Base
 
 class User(Base):
@@ -68,5 +68,5 @@ class GalleryPhoto(Base):
     __tablename__ = "gallery_photos"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, default="")      # event name / caption
-    image = Column(String, default="")      # base64 data URL
+    image = Column(Text, default="")        # base64 data URL (can be large)
     created_at = Column(String, default="")

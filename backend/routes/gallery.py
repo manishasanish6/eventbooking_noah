@@ -5,6 +5,7 @@ GET is public; POST/DELETE are used by the admin dashboard.
 """
 
 from datetime import datetime, timezone
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -13,6 +14,7 @@ from backend.models import GalleryPhoto
 from pydantic import BaseModel
 
 router = APIRouter()
+logger = logging.getLogger("noah.gallery")
 
 
 class GalleryCreate(BaseModel):
@@ -40,15 +42,20 @@ def add_photo(data: GalleryCreate, db: Session = Depends(get_db)):
     image = (data.image or "").strip()
     if not image.startswith("data:image"):
         raise HTTPException(status_code=400, detail="A valid image is required")
-    photo = GalleryPhoto(
-        title=title,
-        image=image,
-        created_at=datetime.now(timezone.utc).isoformat(),
-    )
-    db.add(photo)
-    db.commit()
-    db.refresh(photo)
-    return {"id": photo.id, "title": photo.title, "created_at": photo.created_at}
+    try:
+        photo = GalleryPhoto(
+            title=title,
+            image=image,
+            created_at=datetime.now(timezone.utc).isoformat(),
+        )
+        db.add(photo)
+        db.commit()
+        db.refresh(photo)
+        return {"id": photo.id, "title": photo.title, "created_at": photo.created_at}
+    except Exception as e:
+        db.rollback()
+        logger.exception("Failed to upload gallery photo")
+        raise HTTPException(status_code=500, detail=f"Could not save photo: {e}")
 
 
 @router.delete("/{photo_id}")

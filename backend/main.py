@@ -37,6 +37,9 @@ SQL_MIGRATIONS = {
         ("organiser_address", "VARCHAR DEFAULT ''"),
         ("organiser_summary", "VARCHAR DEFAULT ''"),
     ],
+    "gallery_photos": [
+        ("image", "TEXT"),
+    ],
     "bookings": [
         ("email", "VARCHAR"),
         ("addons", "TEXT DEFAULT '[]'"),
